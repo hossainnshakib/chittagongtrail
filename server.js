@@ -1,4 +1,6 @@
 const http = require('http');
+
+// cPanel / Phusion Passenger requires using process.env.PORT exactly as provided
 const PORT = process.env.PORT || 3000;
 
 const htmlContent = `<!DOCTYPE html>
@@ -259,7 +261,6 @@ const htmlContent = `<!DOCTYPE html>
     </footer>
 
     <script>
-        // Set target date 45 days from now
         const targetDate = new Date().getTime() + (45 * 24 * 60 * 60 * 1000);
 
         function updateCountdown() {
@@ -291,5 +292,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(\`Server is running on port \${PORT}\`);
+    console.log(`Server listening on port ${PORT}`);
 });
