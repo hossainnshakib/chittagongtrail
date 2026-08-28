@@ -1,7 +1,7 @@
 # Chittagong Trail — Backend & CMS Architecture (Major Phase A Revision)
 
 **Document:** `BACKEND-ARCHITECTURE.md`
-**Version:** 1.1 — Revised Architecture Proposal
+**Version:** 1.2 — Final Architecture Proposal
 **Status:** Awaiting Owner Approval
 **Project:** Chittagong Trail
 **Domain:** `chittagongtrail.com`
@@ -59,7 +59,7 @@ The previous region/upazila proposal is insufficient. Chittagong Trail covers th
 
 ### V1 Location Schema & Fields
 To support precise geographic filtering, mapping, and breadcrumbs without false assumptions:
-* `district`: Controlled enum (`CHITTAGONG`, `COX_BAZAR`, `RANGAMATI`, `BANDARBAN`, `KHAGRACHARI`)
+* `district`: Controlled enum (`CHITTAGONG`, `COX_BAZAR`, `RANGAMATI`, `BANDARBAN`, `KHAGRACHARI`) — **Required, no default**. Must be explicitly selected by the admin to prevent silent misclassification.
 * `administrativeArea`: Neutral string field representing Upazila, Thana, or Municipality (e.g., "Raozan", "Teknaf", "Sadar", "Lama")
 * `localArea`: Optional string field representing specific neighborhoods, valleys, beaches, or trailheads (e.g., "Patenga Beach", "Bogakine Lake", "Boga Lake Trailhead")
 * `terrainType`: Optional editorial/geographic classification enum (`COAST`, `HILLS`, `RIVER`, `CITY`, `RURAL`) kept separate from administrative geography.
@@ -70,7 +70,7 @@ To support precise geographic filtering, mapping, and breadcrumbs without false 
 * **Controlled Enum vs Normalized Model vs Validated String:**
   * *Normalized District Model:* Over-engineered for V1 since Chittagong division districts are fixed and static.
   * *Validated String:* Risk of typo variations (`Chittagong`, `Ctg`, `chittagong`).
-  * *Controlled Enum:* **Recommended.** Provides strict type safety, zero database lookup overhead, clean Prisma queries, and perfect alignment with the 5 target districts.
+  * *Controlled Enum:* **Selected.** Provides strict type safety, zero database lookup overhead, clean Prisma queries, and perfect alignment with the 5 target districts.
 * **`localArea` Optionality:** `localArea` is optional (`String?`). Many trails span broader administrative areas or remote hill tracts where a granular local neighborhood name does not apply.
 * **Required Indexes:**
   * `@@index([district])` for district archive filters.
@@ -89,7 +89,7 @@ The `TrailLocation` V1 schema includes the following exact fields:
 | `slug` | String | Required | — | @unique | URL routing & SEO | None |
 | `excerpt` | String? | Nullable | — | — | Card summaries & meta | None |
 | `description` | String | Required | — | @db.LongText | Full narrative content | None |
-| `district` | District | Required | `CHITTAGONG` | @@index | Primary geographic filter | Backfill default |
+| `district` | District | Required | — | @@index | Primary geographic filter | Explicit selection required |
 | `administrativeArea` | String? | Nullable | — | @@index | Upazila/Thana classification | None |
 | `localArea` | String? | Nullable | — | — | Specific neighborhood/trailhead | None |
 | `terrainType` | TerrainType? | Nullable | — | — | Optional geographic/editorial tag | None |
@@ -100,9 +100,9 @@ The `TrailLocation` V1 schema includes the following exact fields:
 | `isFeatured` | Boolean | Required | `false` | @@index | Homepage curation flag | Default false |
 | `featuredOrder` | Int? | Nullable | — | — | Manual sorting position | None |
 | `coverMediaId` | Int? | Nullable | — | — | Primary cover image relation | None |
-| `seoTitle` | String? | Nullable | — | — | Custom meta title | None |
-| `seoDescription` | String? | Nullable | — | — | Custom meta description | None |
-| `ogImage` | String? | Nullable | — | — | Social share image override | None |
+| `ogMediaId` | Int? | Nullable | — | — | Social share image relation | None |
+| `metaTitle` | String? | Nullable | — | — | Custom meta title (SEO) | Preserved from existing |
+| `metaDescription` | String? | Nullable | — | — | Custom meta description (SEO) | Preserved from existing |
 | `placeType` | PlaceType | Required | `PLACE` | — | Structured data classification | Default PLACE |
 | `createdAt` | DateTime | Required | `now()` | — | Audit trail | None |
 | `updatedAt` | DateTime | Required | @updatedAt | — | Audit trail | None |
@@ -170,10 +170,10 @@ The `JournalPost` V1 schema includes the following exact fields:
 | `isFeatured` | Boolean | Required | `false` | @@index | Homepage curation flag | Default false |
 | `featuredOrder` | Int? | Nullable | — | — | Manual sorting position | None |
 | `coverMediaId` | Int? | Nullable | — | — | Cover image relation | None |
-| `seoTitle` | String? | Nullable | — | — | Custom meta title | None |
-| `seoDescription` | String? | Nullable | — | — | Custom meta description | None |
-| `ogImage` | String? | Nullable | — | — | Social share image override | None |
-| `trailId` | Int? | Nullable | — | @@index | Optional relation to TrailLocation | Preserved |
+| `ogMediaId` | Int? | Nullable | — | — | Social share image relation | None |
+| `metaTitle` | String? | Nullable | — | — | Custom meta title (SEO) | Preserved from existing |
+| `metaDescription` | String? | Nullable | — | — | Custom meta description (SEO) | Preserved from existing |
+| `trailId` | Int? | Nullable | — | @@index | Optional relation to TrailLocation | Preserved with strict onDelete behavior |
 | `createdAt` | DateTime | Required | `now()` | — | Audit trail | None |
 | `updatedAt` | DateTime | Required | @updatedAt | — | Audit trail | None |
 
@@ -183,18 +183,19 @@ The `JournalPost` V1 schema includes the following exact fields:
 
 * **Chosen V1 Format:** **Sanitized HTML.**
 * **Audit & Justification:** The existing application renders rich text content. Sanitized HTML provides immediate flexibility for rich editorial formatting (headings, blockquotes, lists, inline images) without enforcing rigid Markdown syntax on the single owner.
-* **Server-Side Sanitization:** All HTML input must be sanitized on the server before database persistence (using an established sanitizer such as `sanitize-html`) to prevent XSS.
-* **Public Rendering Safety:** Rendered using React `dangerouslySetInnerHTML` exclusively with server-sanitized markup.
-* **Inline-Image Handling:** Inline images within content bodies are uploaded via Cloudinary and stored as standard `<img>` tags within the sanitized HTML string.
-* **Editor Enhancement:** **Should Have.** Basic textarea with formatting toolbar or clean HTML editing for V1; heavy WYSIWYG editor plugins deferred.
+* **Server-Side Sanitization (Must Have):** All HTML input must be sanitized on the server before database persistence using an established sanitizer (`sanitize-html`) to prevent XSS.
+* **Sanitization Allowlist & Rules:**
+  * **Allowed Tags:** Standard structural and typographic tags (`p`, `h1`-`h4`, `blockquote`, `ul`, `ol`, `li`, `strong`, `em`, `a`, `img`, `br`, `hr`, `code`, `pre`).
+  * **Disallowed Elements & Attributes:** Scripts (`<script>`), event handlers (`onclick`, `onload`, etc.), unsafe protocols (`javascript:`), iframes, embedded forms, and arbitrary style injection are strictly prohibited.
+  * **Images:** Cloudinary HTTPS image URLs are permitted with controlled safe attributes (`src`, `alt`, `width`, `height`, `loading`).
+  * **Links:** External links (`target="_blank"`) automatically receive `rel="noopener noreferrer"`.
+* **Public Rendering Safety:** Rendered using React `dangerouslySetInnerHTML` exclusively with server-sanitized markup. Existing stored HTML is also sanitized at render time as defense in depth.
+* **Editor UI:** Basic textarea with formatting toolbar or clean HTML editing for V1 (Should Have).
 
 ---
 
 ## 9. Media Architecture Exactly
 
-Since the database currently contains 0 content records, adopting a clean relational `MediaAsset` model is fully viable and eliminates comma-separated string parsing fragility.
-
-### Chosen Strategy: Relational `MediaAsset` Model
 A lightweight `MediaAsset` model tracks every uploaded Cloudinary asset with complete metadata.
 
 ```prisma
@@ -210,20 +211,24 @@ model MediaAsset {
   createdAt    DateTime @default(now())
 
   // Relations
-  trailCovers       TrailLocation[] @relation("TrailCoverMedia")
+  trailCovers       TrailLocation[]   @relation("TrailCoverMedia")
+  trailOgMedias     TrailLocation[]   @relation("TrailOgMedia")
   trailGalleries    TrailGallery[]
-  journalCovers     JournalPost[]   @relation("JournalCoverMedia")
+  journalCovers     JournalPost[]     @relation("JournalCoverMedia")
+  journalOgMedias   JournalPost[]     @relation("JournalOgMedia")
   homepageGalleries HomepageGallery[]
+  siteHeroMedias    SiteSettings[]    @relation("SiteHeroMedia")
+  siteSeasonalMedias SiteSettings[]   @relation("SiteSeasonalMedia")
 
   @@map("media_assets")
 }
 
 model TrailGallery {
-  trailId       Int
-  mediaAssetId  Int
-  sortOrder     Int           @default(0)
-  trail         TrailLocation @relation(fields: [trailId], references: [id], onDelete: Cascade)
-  mediaAsset    MediaAsset    @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+  trailId      Int
+  mediaAssetId Int
+  sortOrder    Int           @default(0)
+  trail        TrailLocation @relation(fields: [trailId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset    @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
   @@id([trailId, mediaAssetId])
   @@map("trail_galleries")
@@ -233,73 +238,81 @@ model HomepageGallery {
   id           Int        @id @default(autoincrement())
   mediaAssetId Int
   sortOrder    Int        @default(0)
-  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
   @@map("homepage_galleries")
 }
 ```
 
-### Media Lifecycle & Deletion Rules
-* **Asset Creation:** Uploads go directly to Cloudinary via server actions, returning metadata stored in `MediaAsset`.
-* **Asset Deletion Rules:**
-  1. Check references across `TrailLocation`, `TrailGallery`, `JournalPost`, and `HomepageGallery`.
-  2. If referenced, block deletion or require unlinking first.
-  3. If unreferenced, delete asset from Cloudinary via Cloudinary API, then delete database record.
-  4. **Partial Failure Handling:** If Cloudinary deletion fails due to network error, log the error and decide whether to retain or retry; database transaction rolls back if DB write fails.
+### Media Lifecycle, Deletion & Inline Reference Rules
+* **Direct Media Library Deletion:** Blocked while any structured relation (`coverMediaId`, `ogMediaId`, `heroMediaId`, `seasonalMediaId`, `TrailGallery`, `HomepageGallery`) points to it.
+* **Inline HTML Image References:**
+  * Every uploaded inline image is first registered as a `MediaAsset`.
+  * Before `MediaAsset` deletion, the service checks structured relations *and* scans `TrailLocation.description` and `JournalPost.content` for the asset's `secureUrl` or `publicId`.
+  * If referenced in inline HTML, deletion is blocked.
+* **Content / Trail Deletion Rules:**
+  * Content deletion may delete join records (`TrailGallery`) but must not automatically delete the underlying `MediaAsset` records.
+  * `TrailLocation` deletion cascades to its `TrailGallery` join rows, while preserving `MediaAsset` records for later reference-aware cleanup.
+  * Cloudinary destruction happens only after the asset has zero known structured and inline references.
 
 ---
 
-## 10. Correct Homepage Curation & Site Settings
+## 10. Correct SiteSettings Singleton & Homepage Architecture
 
-To provide absolute editorial control over homepage presentation without a heavy page builder, a singleton `SiteSettings` model is introduced.
+### Singleton Enforcement Strategy
+* **Application Services:** Always read and update record `id = 1`.
+* **Initialization:** Uses upsert for `id = 1`.
+* **Admin Routes:** Do not accept arbitrary settings IDs. No generic create/delete endpoint exists for `SiteSettings`.
+* **Database & Admin Guard:** While the database table technically permits multiple primary keys, application authorization, service design, and absence of delete/create endpoints enforce a strict singleton. `SiteSettings` cannot be deleted through the Admin interface.
+
+### SiteSettings Fields & Curation Limits
+The singleton model manages site-wide identity and homepage presentation without a heavy page builder:
 
 ```prisma
 model SiteSettings {
-  id                 Int      @id @default(1)
-  siteName           String   @default("Chittagong Trail")
-  heroTitle          String   @default("Discover the Soul of Chittagong")
-  heroSubtitle       String   @default("Independent exploration and storytelling across hills, coast, city, and rivers.")
-  heroBackgroundImage String?
-  aboutHeading       String?
-  aboutContent       String?  @db.Text
-  contactEmail       String?  @default("admin@chittagongtrail.com")
-  socialFacebook     String?
-  socialInstagram    String?
-  socialYouTube      String?
-  footerText         String?
-  updatedAt          DateTime @updatedAt
+  id                  Int         @id @default(1)
+  siteName            String      @default("Chittagong Trail")
+  heroTitle           String      @default("")
+  heroSubtitle        String      @default("")
+  heroMediaId         Int?
+  heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  introductionHeading String      @default("")
+  introductionContent String      @default("") @db.Text
+  seasonalEyebrow     String      @default("")
+  seasonalTitle       String      @default("")
+  seasonalContent     String      @default("") @db.Text
+  seasonalMediaId     Int?
+  seasonalMedia       MediaAsset? @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
+  aboutHeading        String      @default("")
+  aboutContent        String      @default("") @db.Text
+  contactEmail        String      @default("")
+  socialFacebook      String?
+  socialInstagram     String?
+  socialYouTube       String?
+  footerText          String      @default("")
+  updatedAt           DateTime    @updatedAt
 
   @@map("site_settings")
 }
 ```
 
-### Homepage Curation Rules
-* **Hero Content:** Managed via `SiteSettings`.
-* **Featured Trails:** Queried where `isFeatured: true`, ordered by `featuredOrder ASC`, limited to top 3-4 items.
-* **Featured Stories & Food:** Queried where `isFeatured: true`, ordered by `featuredOrder ASC`, categorized by `JournalType`.
-* **Homepage Gallery:** Curated via `HomepageGallery` relation model linked to `MediaAsset`.
+### Homepage Curation Limits & Query Rules
+* **Homepage Trails:** Maximum intended count: 4 items (`isFeatured: true`, ordered by `featuredOrder ASC`, fallback `publishedAt DESC`).
+* **Homepage Story Posts:** Maximum intended count: 3 items (`type: STORY`, `isFeatured: true`, ordered by `featuredOrder ASC`, fallback `publishedAt DESC`).
+* **Homepage Food Posts:** Maximum intended count: 3 items (`type: FOOD`, `isFeatured: true`, ordered by `featuredOrder ASC`, fallback `publishedAt DESC`).
+* **Homepage Gallery:** Maximum intended count: 6-8 items (`HomepageGallery` relation ordered by `sortOrder ASC`).
+* **Query Execution:** Public queries strictly filter `status: PUBLISHED`, `isFeatured: true`, sort non-null `featuredOrder` ascending, apply `publishedAt DESC` deterministic fallback, and apply section limits.
 
 ---
 
-## 11. Correct Featured Ordering
+## 11. Correct Delete Safety
 
-For any content using `isFeatured`:
-* **`featuredOrder` Type:** `Int?` (nullable integer).
-* **Ordering Fallback:** Items with `featuredOrder` set are sorted ascending (`0, 1, 2...`). Items with `null` fallback to `publishedAt DESC`.
-* **Duplicate-Order Handling:** Handled gracefully by secondary sort (`publishedAt DESC`).
-* **Admin Validation:** Admin UI allows setting numeric order values or drag-and-drop sequencing in future iterations; V1 provides a simple number input in the edit form.
-* **Index Requirement:** `@@index([isFeatured, featuredOrder])` on both `TrailLocation` and `JournalPost`.
+* **TrailLocation Deletion:** Must verify whether any `JournalPost` is linked via `trailId` (enforced with `onDelete: Restrict` or application-level check). If active journal posts exist (regardless of `DRAFT`, `PUBLISHED`, or `ARCHIVED` status), deletion is blocked with a clear error requiring the admin to reassign or unlink the posts first. No silent cascading deletion of editorial content is allowed.
+* **MediaAsset Deletion:** Blocked if referenced in any cover, OG, hero, seasonal, gallery, or homepage relation, or detected within HTML content strings.
 
 ---
 
-## 12. Correct Delete Safety
-
-* **TrailLocation Deletion:** Must verify whether any `JournalPost` is linked via `trailId`. If active journal posts exist, deletion is blocked with a clear error requiring the admin to reassign or unlink the posts first. No silent cascading deletion of editorial content.
-* **MediaAsset Deletion:** Blocked if referenced in any cover, gallery, or homepage relation.
-
----
-
-## 13. Correct Admin V1 Scope
+## 12. Correct Admin V1 Scope
 
 ### Functional Areas
 * **Dashboard:** Quick stats (published trails, published journal posts, draft counts, total media assets), recent activity.
@@ -312,7 +325,7 @@ For any content using `isFeatured`:
 
 ---
 
-## 14. Correct Security Requirements
+## 13. Correct Security Requirements
 
 | Security Control | Implementation Status | Action Required for Production |
 | :--- | :--- | :--- |
@@ -321,15 +334,13 @@ For any content using `isFeatured`:
 | **Mutation Authorization** | Must improve | Ensure `requireAdmin()` guards all Server Actions and API routes |
 | **Login Rate Limiting** | Must fix before production | Implement simple sliding-window IP/email rate limiting on login action |
 | **CSRF Protection** | Already implemented | Next.js Server Actions built-in origin verification |
-| **HTML Sanitization** | Must fix before production | Integrate server-side HTML sanitizer before saving journal/trail content |
+| **HTML Sanitization** | **Must Have (V1)** | Integrate server-side HTML sanitizer before saving journal/trail content |
 | **Input Validation** | Must improve | Use Zod schemas for all mutation payloads |
 | **Environment Secrets** | Already implemented | Strict `.env` usage (`AUTH_SECRET`, `ADMIN_PASSWORD_HASH`) |
 
 ---
 
-## 15. Correct SEO Modeling
-
-To prevent inaccurate semantic markup, `PlaceType` enum is introduced for `TrailLocation`:
+## 14. Correct SEO & PlaceType Modeling
 
 ```prisma
 enum PlaceType {
@@ -337,17 +348,16 @@ enum PlaceType {
   PLACE
   NATURAL_FEATURE
   PARK
-  FOOD_ESTABLISHMENT
 }
 ```
-
-* **TouristAttraction:** Used only for recognized monuments, viewpoints, and major visitor destinations.
-* **Place / NaturalFeature:** Used for generalized regions, trailheads, rural areas, rivers, and coastal segments.
-* **Journal / Food:** Structured as `Article` or `BlogPosting` JSON-LD schemas.
+* **Note on Food Establishments:** Food establishments and culinary destinations are managed primarily within `JournalPost` (type `FOOD`). `TrailLocation` focuses on geographical places, trailheads, and attractions; `FOOD_ESTABLISHMENT` is omitted from `PlaceType` to maintain clean semantic separation.
+* **Generic Fallback:** `PLACE` is used as the default structured-data type.
+* **TouristAttraction:** Used only when genuinely appropriate for major visitor monuments or viewpoints.
+* **Meta Fields:** `metaTitle` and `metaDescription` are preserved across both content models to maintain seamless compatibility with existing SEO helper utilities (`lib/seo.ts`).
 
 ---
 
-## 16. Proposed Target Schema (PROPOSED ONLY — NOT IMPLEMENTED)
+## 15. Proposed Target Schema (PROPOSED ONLY — NOT IMPLEMENTED)
 
 ```prisma
 datasource db {
@@ -391,7 +401,6 @@ enum PlaceType {
   PLACE
   NATURAL_FEATURE
   PARK
-  FOOD_ESTABLISHMENT
 }
 
 model MediaAsset {
@@ -405,10 +414,14 @@ model MediaAsset {
   altText      String?
   createdAt    DateTime @default(now())
 
-  trailCovers       TrailLocation[]   @relation("TrailCoverMedia")
-  trailGalleries    TrailGallery[]
-  journalCovers     JournalPost[]     @relation("JournalCoverMedia")
-  homepageGalleries HomepageGallery[]
+  trailCovers        TrailLocation[]   @relation("TrailCoverMedia")
+  trailOgMedias      TrailLocation[]   @relation("TrailOgMedia")
+  trailGalleries     TrailGallery[]
+  journalCovers      JournalPost[]     @relation("JournalCoverMedia")
+  journalOgMedias    JournalPost[]     @relation("JournalOgMedia")
+  homepageGalleries  HomepageGallery[]
+  siteHeroMedias     SiteSettings[]    @relation("SiteHeroMedia")
+  siteSeasonalMedias SiteSettings[]    @relation("SiteSeasonalMedia")
 
   @@map("media_assets")
 }
@@ -418,7 +431,7 @@ model TrailGallery {
   mediaAssetId Int
   sortOrder    Int           @default(0)
   trail        TrailLocation @relation(fields: [trailId], references: [id], onDelete: Cascade)
-  mediaAsset   MediaAsset    @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset    @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
   @@id([trailId, mediaAssetId])
   @@map("trail_galleries")
@@ -428,7 +441,7 @@ model HomepageGallery {
   id           Int        @id @default(autoincrement())
   mediaAssetId Int
   sortOrder    Int        @default(0)
-  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
   @@map("homepage_galleries")
 }
@@ -439,7 +452,7 @@ model TrailLocation {
   slug               String        @unique
   excerpt            String?       @db.Text
   description        String        @db.LongText
-  district           District      @default(CHITTAGONG)
+  district           District      // Explicit selection required (no default)
   administrativeArea String?
   localArea          String?
   terrainType        TerrainType?
@@ -451,9 +464,10 @@ model TrailLocation {
   featuredOrder      Int?
   coverMediaId       Int?
   coverMedia         MediaAsset?   @relation("TrailCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
-  seoTitle           String?
-  seoDescription     String?
-  ogImage            String?
+  ogMediaId          Int?
+  ogMedia            MediaAsset?   @relation("TrailOgMedia", fields: [ogMediaId], references: [id], onDelete: SetNull)
+  metaTitle          String?
+  metaDescription    String?
   placeType          PlaceType     @default(PLACE)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -481,9 +495,10 @@ model JournalPost {
   featuredOrder   Int?
   coverMediaId    Int?
   coverMedia      MediaAsset?   @relation("JournalCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
-  seoTitle        String?
-  seoDescription  String?
-  ogImage         String?
+  ogMediaId       Int?
+  ogMedia         MediaAsset?   @relation("JournalOgMedia", fields: [ogMediaId], references: [id], onDelete: SetNull)
+  metaTitle       String?
+  metaDescription String?
   trailId         Int?
   trail           TrailLocation? @relation(fields: [trailId], references: [id], onDelete: SetNull)
   createdAt       DateTime      @default(now())
@@ -497,19 +512,27 @@ model JournalPost {
 }
 
 model SiteSettings {
-  id                  Int      @id @default(1)
-  siteName            String   @default("Chittagong Trail")
-  heroTitle           String   @default("Discover the Soul of Chittagong")
-  heroSubtitle        String   @default("Independent exploration and storytelling across hills, coast, city, and rivers.")
-  heroBackgroundImage String?
-  aboutHeading        String?
-  aboutContent        String?  @db.Text
-  contactEmail        String?  @default("admin@chittagongtrail.com")
+  id                  Int         @id @default(1)
+  siteName            String      @default("Chittagong Trail")
+  heroTitle           String      @default("")
+  heroSubtitle        String      @default("")
+  heroMediaId         Int?
+  heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  introductionHeading String      @default("")
+  introductionContent String      @default("") @db.Text
+  seasonalEyebrow     String      @default("")
+  seasonalTitle       String      @default("")
+  seasonalContent     String      @default("") @db.Text
+  seasonalMediaId     Int?
+  seasonalMedia       MediaAsset? @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
+  aboutHeading        String      @default("")
+  aboutContent        String      @default("") @db.Text
+  contactEmail        String      @default("")
   socialFacebook      String?
   socialInstagram     String?
   socialYouTube       String?
-  footerText          String?
-  updatedAt           DateTime @updatedAt
+  footerText          String      @default("")
+  updatedAt           DateTime    @updatedAt
 
   @@map("site_settings")
 }
@@ -517,76 +540,65 @@ model SiteSettings {
 
 ---
 
-## 17. Field-by-Field Migration Table
+## 16. Complete Field-by-Field Migration Table
 
 | Model | Field / Change | Existing State | Proposed State | Risk | Backfill Strategy | Rollback Consideration |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `TrailLocation` | `district` | None | `District` Enum | Low | Default to `CHITTAGONG` (0 records) | Drop column |
+| `TrailLocation` | `excerpt` | None | `String?` | Low | Null | Drop column |
+| `TrailLocation` | `district` | None | `District` Enum (Required) | Low | Explicit admin selection / technical migration default if required | Drop column |
 | `TrailLocation` | `administrativeArea` | None | `String?` | Low | Null | Drop column |
+| `TrailLocation` | `localArea` | None | `String?` | Low | Null | Drop column |
+| `TrailLocation` | `terrainType` | None | `TerrainType?` | Low | Null | Drop column |
 | `TrailLocation` | `status` | Implicit public | `ContentStatus` | Low | Default `DRAFT` | Drop column |
+| `TrailLocation` | `publishedAt` | None | `DateTime?` | Low | Null | Drop column |
 | `TrailLocation` | `isFeatured` | None | `Boolean` | Low | Default `false` | Drop column |
+| `TrailLocation` | `featuredOrder` | None | `Int?` | Low | Null | Drop column |
 | `TrailLocation` | `coverMediaId` | `photos` (String) | Relational `MediaAsset?` | Low | Null | Restore `photos` column |
+| `TrailLocation` | `ogMediaId` | `ogImage` (String) | Relational `MediaAsset?` | Low | Null | Restore `ogImage` column |
+| `TrailLocation` | `metaTitle` | `metaTitle` (String) | Preserved (`metaTitle`) | None | Preserved | None |
+| `TrailLocation` | `metaDescription` | `metaDescription` (String) | Preserved (`metaDescription`) | None | Preserved | None |
+| `TrailLocation` | `placeType` | None | `PlaceType` | Low | Default `PLACE` | Drop column |
 | `JournalPost` | `type` | `category` (String) | `JournalType` Enum | Low | Map `"food"` to `FOOD`, others to `STORY` | Restore `category` string |
 | `JournalPost` | `status` | Implicit public | `ContentStatus` | Low | Default `DRAFT` | Drop column |
-| `JournalPost` | `publishedDate` | `DateTime @default(now())` | `publishedAt DateTime?` | Low | Copy existing timestamps | Restore `publishedDate` |
-| New Models | `media_assets`, `trail_galleries`, `homepage_galleries`, `site_settings` | None | New Tables | None | N/A | Drop tables |
+| `JournalPost` | `publishedAt` | `publishedDate` (DateTime) | `DateTime?` | Low | Copy existing timestamps | Restore `publishedDate` |
+| `JournalPost` | `isFeatured` | None | `Boolean` | Low | Default `false` | Drop column |
+| `JournalPost` | `featuredOrder` | None | `Int?` | Low | Null | Drop column |
+| `JournalPost` | `coverMediaId` | `coverImage` (String) | Relational `MediaAsset?` | Low | Null | Restore `coverImage` |
+| `JournalPost` | `ogMediaId` | `ogImage` (String) | Relational `MediaAsset?` | Low | Null | Restore `ogImage` |
+| `JournalPost` | `metaTitle` | `metaTitle` (String) | Preserved (`metaTitle`) | None | Preserved | None |
+| `JournalPost` | `metaDescription` | `metaDescription` (String) | Preserved (`metaDescription`) | None | Preserved | None |
+| `JournalPost` | `trailId` | `trailId` (Int?) | Preserved with strict onDelete | Low | Preserved | None |
+| New Models | `media_assets`, `trail_galleries`, `homepage_galleries`, `site_settings` | None | New Tables & Relations | Low (0 records) | N/A | Drop tables and relations |
 
-*Note: Since the database currently contains 0 TrailLocation and 0 JournalPost records, content migration risk is zero.*
-
----
-
-## 18. Define Phase A2 Deliverables Safely
-
-Phase A2 will prepare (without executing any database writes):
-1. Database backup checkpoint.
-2. Prisma schema diff inspection.
-3. Migration SQL review (`prisma migrate diff` / generated migration files).
-4. Prisma validation (`prisma validate`).
-5. Rollback verification plan.
-6. Owner approval gate.
-
-No database writes or migrations will be executed automatically.
+*Note: Since the database currently contains 0 TrailLocation and 0 JournalPost records, content migration risk is minimal.*
 
 ---
 
-## 19. Updated V1 Scope
+## 17. Safe Rollback Strategy
 
-* **Must Have:**
-  * Full Chittagong 5-district location hierarchy
-  * Publication workflow (`DRAFT`, `PUBLISHED`, `ARCHIVED`) with safe `DRAFT` default
-  * Controlled `JournalType` (`STORY`, `FOOD`)
-  * Relational `MediaAsset` architecture with Cloudinary lifecycle tracking
-  * Singleton `SiteSettings` and homepage curation flags (`isFeatured`, `featuredOrder`)
-  * Delete protection for trails linked to journal posts
-  * Admin search, filtering, pagination, and mutation authorization
-
-* **Should Have:**
-  * Rich HTML sanitization
-  * Scheduled publishing (deferred state handling)
-  * Basic admin activity dashboard stats
-
-* **Defer:**
-  * Multi-user permissions
-  * Standalone generic page builder
-  * Automated social media syndication
-
-* **Reject:**
-  * Enterprise heavy CMS packages
-  * Multi-vendor booking systems
+* **Pre-Migration Preparation:** Create a fully verified database backup before applying any migration.
+* **Schema Preservation:** Preserve the exact pre-migration Prisma schema version in version control.
+* **SQL Review:** Thoroughly review generated migration SQL files prior to execution.
+* **Rollback Execution Path:**
+  * If rollback occurs before content entry (empty state), restoring the pre-migration database backup is the preferred and safest path.
+  * If new `MediaAsset` or content records have been created post-migration, dropping tables would cause unrecoverable data loss and is **not** an acceptable automatic rollback mechanism.
+  * **Cloudinary Reconciliation:** Cloudinary assets require separate manual or script-based reconciliation because database backup restoration/rollback does not delete or restore remote Cloudinary assets.
+  * **No Automatic Destructive Rollback:** No automatic destructive rollback command is authorized.
 
 ---
 
-## 20. Open Owner Decisions
+## 18. Owner Decisions Summary
 
-| Decision | Recommended Option | Alternative | Impact |
+| Decision | Selected Option | Alternative | Impact |
 | :--- | :--- | :--- | :--- |
-| **District Field Type** | Controlled Enum (5 districts) | Free-form String | Enum enforces strict filtering and prevents typo fragmentation across the 5 target districts. |
+| **District Field Type** | Controlled Enum (5 districts, required) | Free-form String / Default | Enum enforces strict filtering and prevents typo fragmentation; required selection prevents silent misclassification. |
 | **Content Storage Format** | Sanitized HTML | Markdown / JSON Editor | HTML matches existing rendering patterns and gives the solo author maximum formatting freedom. |
 | **Media Storage Strategy** | Relational `MediaAsset` model | Comma-separated string URLs | Relational asset tracking enables orphan prevention, dimensions, and Cloudinary public ID maintenance. |
+| **Settings Management** | Fixed singleton `SiteSettings` service | Generic Page Builder | Provides structured control over hero, about, and seasonal sections without over-engineering. |
 
 ---
 
-## 21. Version and Status
+## 19. Version and Status
 
-* **Version:** 1.1 — Revised Architecture Proposal
+* **Version:** 1.2 — Final Architecture Proposal
 * **Status:** Awaiting Owner Approval
