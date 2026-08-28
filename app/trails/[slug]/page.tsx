@@ -5,6 +5,12 @@ import Image from "next/image";
 import { PublicLayout } from "@/components/layout";
 import { Container, Button } from "@/components/ui";
 import { getTrailBySlug, getTrails } from "@/lib/data";
+import {
+  buildMetadata,
+  buildTouristAttractionJsonLd,
+  buildBreadcrumbJsonLd,
+  getSiteUrl,
+} from "@/lib/seo";
 
 interface TrailPageProps {
   params: Promise<{ slug: string }>;
@@ -20,12 +26,18 @@ export async function generateMetadata({
     return { title: "Trail Not Found" };
   }
 
-  return {
-    title: trail.metaTitle || trail.name,
-    description:
-      trail.metaDescription ||
-      trail.description.substring(0, 160),
-  };
+  const title = trail.metaTitle || `${trail.name} — Chittagong Trail`;
+  const description =
+    trail.metaDescription ||
+    trail.description.replace(/<[^>]*>/g, "").substring(0, 160);
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/trails/${trail.slug}`,
+    image: trail.ogImage || trail.photos?.split(",")[0]?.trim(),
+    type: "article",
+  });
 }
 
 export async function generateStaticParams() {
@@ -45,8 +57,31 @@ export default async function TrailPage({ params }: TrailPageProps) {
 
   const coverImage = trail.photos?.split(",")[0]?.trim() || null;
 
+  const trailJsonLd = buildTouristAttractionJsonLd({
+    name: trail.name,
+    description: trail.description.replace(/<[^>]*>/g, "").substring(0, 300),
+    url: getSiteUrl(`/trails/${trail.slug}`),
+    image: coverImage,
+    latitude: trail.latitude,
+    longitude: trail.longitude,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "Trails", url: getSiteUrl("/trails") },
+    { name: trail.name, url: getSiteUrl(`/trails/${trail.slug}`) },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(trailJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] flex items-end">
         {coverImage ? (

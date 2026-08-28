@@ -4,6 +4,12 @@ import Image from "next/image";
 import { PublicLayout } from "@/components/layout";
 import { Container, Button } from "@/components/ui";
 import { getFoodPostBySlug, getFoodPosts } from "@/lib/data";
+import {
+  buildMetadata,
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  getSiteUrl,
+} from "@/lib/seo";
 
 interface FoodPageProps {
   params: Promise<{ slug: string }>;
@@ -19,12 +25,20 @@ export async function generateMetadata({
     return { title: "Food Story Not Found" };
   }
 
-  return {
-    title: story.metaTitle || story.title,
-    description:
-      story.metaDescription ||
-      (story.excerpt || story.content.replace(/<[^>]*>/g, "").substring(0, 160)),
-  };
+  const title = story.metaTitle || `${story.title} — Chittagong Trail`;
+  const description =
+    story.metaDescription ||
+    (story.excerpt || story.content.replace(/<[^>]*>/g, "").substring(0, 160));
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/food/${story.slug}`,
+    image: story.ogImage || story.coverImage,
+    type: "article",
+    publishedTime: story.publishedDate.toISOString(),
+    modifiedTime: story.updatedAt.toISOString(),
+  });
 }
 
 export async function generateStaticParams() {
@@ -42,8 +56,35 @@ export default async function FoodDetailPage({ params }: FoodPageProps) {
     notFound();
   }
 
+  const articleJsonLd = buildArticleJsonLd({
+    title: story.title,
+    description:
+      story.metaDescription ||
+      story.excerpt ||
+      story.content.replace(/<[^>]*>/g, "").substring(0, 200),
+    image: story.ogImage || story.coverImage,
+    datePublished: story.publishedDate.toISOString(),
+    dateModified: story.updatedAt.toISOString(),
+    url: getSiteUrl(`/food/${story.slug}`),
+    category: "food",
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "Food", url: getSiteUrl("/food") },
+    { name: story.title, url: getSiteUrl(`/food/${story.slug}`) },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] flex items-end">
         {story.coverImage ? (

@@ -3,18 +3,28 @@ import { PublicLayout } from "@/components/layout";
 import { Container, SectionHeading } from "@/components/ui";
 import { JournalCard } from "@/components/journal/JournalCard";
 import { getFoodPosts } from "@/lib/data";
+import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Food",
-  description:
-    "Exploring Chittagong's culinary traditions, street food, regional flavors, and the food culture that defines this extraordinary city.",
-};
+export const metadata: Metadata = buildPageMetadata(
+  "Food — Chittagong's Culinary Traditions",
+  "Exploring Chittagong's culinary traditions, street food, regional flavors, and the food culture that defines this extraordinary city.",
+  "/food"
+);
 
 export default async function FoodPage() {
   const stories = await getFoodPosts();
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "Food", url: getSiteUrl("/food") },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero Section */}
       <section className="section bg-background pt-32">
         <Container>

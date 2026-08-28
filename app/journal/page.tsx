@@ -3,18 +3,28 @@ import { PublicLayout } from "@/components/layout";
 import { Container, SectionHeading } from "@/components/ui";
 import { JournalCard } from "@/components/journal/JournalCard";
 import { getJournalPosts } from "@/lib/data";
+import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Journal",
-  description:
-    "Stories, observations, and discoveries from across Chittagong — places, culture, history, food, and the experiences that shape this city.",
-};
+export const metadata: Metadata = buildPageMetadata(
+  "Journal — Stories from Chittagong",
+  "Stories, observations, and discoveries from across Chittagong — places, culture, history, food, and the experiences that shape this city.",
+  "/journal"
+);
 
 export default async function JournalPage() {
   const stories = await getJournalPosts();
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "Journal", url: getSiteUrl("/journal") },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero Section */}
       <section className="section bg-background pt-32">
         <Container>

@@ -1,16 +1,26 @@
 import { Metadata } from "next";
 import { PublicLayout } from "@/components/layout";
 import { Container, SectionHeading } from "@/components/ui";
+import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "About Chittagong Trail — an independent exploration and storytelling platform documenting Chittagong's places, culture, history, and people.",
-};
+export const metadata: Metadata = buildPageMetadata(
+  "About — Chittagong Trail",
+  "About Chittagong Trail — an independent exploration and storytelling platform documenting Chittagong's places, culture, history, and people.",
+  "/about"
+);
 
 export default function AboutPage() {
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "About", url: getSiteUrl("/about") },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero Section */}
       <section className="section bg-background pt-32">
         <Container>

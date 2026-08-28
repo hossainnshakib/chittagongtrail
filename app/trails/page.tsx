@@ -3,18 +3,28 @@ import { PublicLayout } from "@/components/layout";
 import { Container, SectionHeading } from "@/components/ui";
 import { TrailCard } from "@/components/trails/TrailCard";
 import { getTrails } from "@/lib/data";
+import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Trails",
-  description:
-    "Discover the places that make Chittagong extraordinary — coastal shores, misty hills, ancient temples, bustling markets, and hidden gems across the region.",
-};
+export const metadata: Metadata = buildPageMetadata(
+  "Trails — Explore Places in Chittagong",
+  "Discover the places that make Chittagong extraordinary — coastal shores, misty hills, ancient temples, bustling markets, and hidden gems across the region.",
+  "/trails"
+);
 
 export default async function TrailsPage() {
   const trails = await getTrails();
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: getSiteUrl("/") },
+    { name: "Trails", url: getSiteUrl("/trails") },
+  ]);
+
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Hero Section */}
       <section className="section bg-background pt-32">
         <Container>
