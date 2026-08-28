@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 import { verifySession } from "@/lib/auth";
+import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, UploadFolder } from "@/lib/cloudinary";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -11,21 +10,6 @@ const ALLOWED_TYPES = [
 ];
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-
-function sanitizeFilename(filename: string): string {
-  const ext = filename.split(".").pop()?.toLowerCase() || "";
-  const base = filename
-    .replace(/\.[^.]+$/, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 100);
-
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).slice(2, 8);
-  return `${base}-${timestamp}-${random}.${ext}`;
-}
 
 export async function POST(request: NextRequest) {
   const session = await verifySession(
@@ -39,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "uploads";
+    const requestedFolder = (formData.get("folder") as string) || "chittagong-trail/general";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -61,23 +45,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const safeFolder = folder
-      .replace(/[^a-z0-9/-]/gi, "")
-      .replace(/\/+/g, "/")
-      .replace(/^\/|\/$/g, "");
+    const folder: UploadFolder = ALLOWED_UPLOAD_FOLDERS.includes(requestedFolder as UploadFolder)
+      ? (requestedFolder as UploadFolder)
+      : "chittagong-trail/general";
 
-    const uploadDir = join(process.cwd(), "public", safeFolder);
-    await mkdir(uploadDir, { recursive: true });
-
-    const safeFilename = sanitizeFilename(file.name);
-    const filePath = join(uploadDir, safeFilename);
-
+    const cloudinary = getCloudinaryClient();
     const bytes = await file.arrayBuffer();
-    await writeFile(filePath, Buffer.from(bytes));
+    const buffer = Buffer.from(bytes);
 
-    const url = `/${safeFolder}/${safeFilename}`;
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: "image",
+          transformation: [{ quality: "auto", fetch_format: "auto" }],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
 
-    return NextResponse.json({ url, filename: safeFilename });
+    const res = uploadResult as {
+      secure_url: string;
+      public_id: string;
+      width: number;
+      height: number;
+      format: string;
+      resource_type: string;
+    };
+
+    return NextResponse.json({
+      url: res.secure_url,
+      publicId: res.public_id,
+      width: res.width,
+      height: res.height,
+      format: res.format,
+      resourceType: res.resource_type,
+    });
   } catch (error) {
     console.error("[upload]", error);
     return NextResponse.json(
