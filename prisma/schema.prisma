@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model JournalPost {
+  id               Int      @id @default(autoincrement())
+  title            String
+  slug             String   @unique
+  content          String   @db.LongText
+  coverImage       String?
+  coverImageAlt    String?
+  metaTitle        String?
+  metaDescription  String?
+  ogImage          String?
+  publishedDate    DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("journal_posts")
+}
+
+model TrailLocation {
+  id               Int      @id @default(autoincrement())
+  name             String
+  slug             String   @unique
+  description      String   @db.LongText
+  latitude         Float?
+  longitude        Float?
+  photos           String?  @db.Text
+  photoAlt         String?
+  metaTitle        String?
+  metaDescription  String?
+  ogImage          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("trail_locations")
+}
