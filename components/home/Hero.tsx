@@ -3,13 +3,14 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { Container } from "@/components/ui";
+import { useHeroReveal } from "@/hooks/useGsap";
 
 export function Hero() {
-  const heroRef = useRef<HTMLDivElement>(null);
+  const heroRef = useHeroReveal();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Simple scroll indicator animation
-    const scrollIndicator = document.querySelector(".scroll-indicator");
+    const scrollIndicator = scrollRef.current;
     if (scrollIndicator) {
       const animation = scrollIndicator.animate(
         [{ transform: "translateY(0)" }, { transform: "translateY(10px)" }],
@@ -26,10 +27,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section
-      ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-    >
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -44,9 +42,9 @@ export function Hero() {
 
       {/* Content */}
       <Container className="relative z-10 text-center">
-        <div className="max-w-4xl mx-auto">
+        <div ref={heroRef} className="max-w-4xl mx-auto">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="hero-title mb-8">
             <Image
               src="/images/chittagongtrail_logo.png"
               alt="Chittagong Trail"
@@ -58,18 +56,18 @@ export function Hero() {
           </div>
 
           {/* Title */}
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-dark-text mb-6">
+          <h1 className="hero-title font-display text-5xl md:text-6xl lg:text-7xl font-bold text-dark-text mb-6">
             Chittagong Trail
           </h1>
 
           {/* Tagline */}
-          <p className="text-xl md:text-2xl text-dark-text/80 max-w-2xl mx-auto mb-8">
+          <p className="hero-subtitle text-xl md:text-2xl text-dark-text/80 max-w-2xl mx-auto mb-8">
             A personal journal of touring Chittagong — places I visit, stories
             I find, and everything in between.
           </p>
 
           {/* Scroll Indicator */}
-          <div className="scroll-indicator mt-12">
+          <div ref={scrollRef} className="hero-cta mt-12">
             <svg
               className="w-6 h-6 mx-auto text-dark-text/60"
               fill="none"

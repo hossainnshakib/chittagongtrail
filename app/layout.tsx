@@ -16,11 +16,11 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Chittagong Trail — A Personal Journal of Touring Chittagong",
+    default: "Chittagong Trail — Exploring Chittagong's Places, Stories, and Culture",
     template: "%s | Chittagong Trail",
   },
   description:
-    "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.",
+    "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people through genuine discovery and authentic editorial voice.",
   keywords: [
     "Chittagong",
     "travel",
@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     "exploration",
     "places",
     "stories",
+    "culture",
+    "history",
+    "food",
   ],
   authors: [{ name: "Chittagong Trail" }],
   creator: "Chittagong Trail",
@@ -37,9 +40,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://chittagongtrail.com",
     siteName: "Chittagong Trail",
-    title: "Chittagong Trail — A Personal Journal of Touring Chittagong",
+    title: "Chittagong Trail — Exploring Chittagong's Places, Stories, and Culture",
     description:
-      "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.",
+      "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people.",
     images: [
       {
         url: "/images/chittagongtrail_logo.png",
@@ -51,9 +54,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Chittagong Trail — A Personal Journal of Touring Chittagong",
+    title: "Chittagong Trail — Exploring Chittagong's Places, Stories, and Culture",
     description:
-      "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.",
+      "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people.",
     images: ["/images/chittagongtrail_logo.png"],
   },
   icons: {
@@ -71,7 +74,15 @@ export default function RootLayout({
       lang="en"
       className={`${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-dark-bg focus:text-dark-text focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          Skip to main content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

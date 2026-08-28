@@ -7,20 +7,22 @@ export function Introduction() {
         <div className="max-w-3xl mx-auto text-center">
           <SectionHeading
             title="Welcome to Chittagong Trail"
-            subtitle="A personal exploration journal documenting one person's journeys through Chittagong, Bangladesh."
+            subtitle="An independent exploration and storytelling platform documenting Chittagong in its full geographic, cultural, and human context."
             centered
           />
           <div className="space-y-4 text-text-secondary text-lg">
             <p>
-              This journal is about more than just visiting places. It&apos;s about
-              discovering the stories that make Chittagong unique — the people,
-              the culture, the food, the landscapes, and the moments that happen
-              when you take the time to look closer.
+              Chittagong Trail is a personally operated project dedicated to
+              exploring, documenting, and sharing the places, stories, food,
+              culture, history, and people that make Chittagong extraordinary.
+              From the hills to the coast, from ancient temples to bustling
+              markets — every corner of this city has a story worth telling.
             </p>
             <p>
-              Every trail I walk, every corner I turn, every conversation I have
-              — it all becomes part of this ongoing story about a city that
-              continues to surprise me.
+              This platform is guided by genuine exploration and careful
+              observation, presented through an authentic editorial voice that
+              values both personal discovery and meaningful, accurate knowledge
+              about Chittagong.
             </p>
           </div>
         </div>
