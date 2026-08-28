@@ -7,7 +7,7 @@ import {
   createTrail,
   updateTrail,
   type TrailActionResult,
-} from "@/app/admin/trails/actions";
+} from "@/app/admin/(protected)/trails/actions";
 import DeleteButton from "@/components/admin/DeleteButton";
 
 interface TrailFormProps {

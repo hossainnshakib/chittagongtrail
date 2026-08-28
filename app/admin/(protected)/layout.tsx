@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AdminLogoutButton from "@/components/admin/AdminLogoutButton";
 
-export default async function AdminLayout({
+export default async function AdminProtectedLayout({
   children,
 }: {
   children: React.ReactNode;

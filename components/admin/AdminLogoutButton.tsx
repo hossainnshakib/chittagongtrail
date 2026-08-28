@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { logout } from "@/app/admin/login/actions";
+import { logout } from "@/app/admin/(auth)/login/actions";
 
 export default function AdminLogoutButton() {
   const router = useRouter();

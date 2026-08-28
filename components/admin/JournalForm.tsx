@@ -7,7 +7,7 @@ import {
   createJournalPost,
   updateJournalPost,
   type JournalActionResult,
-} from "@/app/admin/journal/actions";
+} from "@/app/admin/(protected)/journal/actions";
 import DeleteButton from "@/components/admin/DeleteButton";
 
 interface JournalFormProps {
