@@ -1,48 +1,176 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model JournalPost {
-  id               Int      @id @default(autoincrement())
-  title            String
-  slug             String   @unique
-  content          String   @db.LongText
-  excerpt          String?  @db.Text
-  category         String   @default("story")
-  coverImage       String?
-  coverImageAlt    String?
-  metaTitle        String?
-  metaDescription  String?
-  ogImage          String?
-  publishedDate    DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  trailId          Int?
-  trail            TrailLocation? @relation(fields: [trailId], references: [id])
+generator client {
+  provider = "prisma-client-js"
+}
 
-  @@map("journal_posts")
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum JournalType {
+  STORY
+  FOOD
+}
+
+enum District {
+  CHITTAGONG
+  COX_BAZAR
+  RANGAMATI
+  BANDARBAN
+  KHAGRACHARI
+}
+
+enum TerrainType {
+  COAST
+  HILLS
+  RIVER
+  CITY
+  RURAL
+}
+
+enum PlaceType {
+  TOURIST_ATTRACTION
+  PLACE
+  NATURAL_FEATURE
+  PARK
+}
+
+model MediaAsset {
+  id           Int      @id @default(autoincrement())
+  publicId     String   @unique
+  secureUrl    String
+  width        Int?
+  height       Int?
+  format       String?
+  resourceType String   @default("image")
+  altText      String?
+  createdAt    DateTime @default(now())
+
+  trailCovers        TrailLocation[]   @relation("TrailCoverMedia")
+  trailOgMedias      TrailLocation[]   @relation("TrailOgMedia")
+  trailGalleries     TrailGallery[]
+  journalCovers      JournalPost[]     @relation("JournalCoverMedia")
+  journalOgMedias    JournalPost[]     @relation("JournalOgMedia")
+  homepageGalleries  HomepageGallery[]
+  siteHeroMedias     SiteSettings[]    @relation("SiteHeroMedia")
+  siteSeasonalMedias SiteSettings[]    @relation("SiteSeasonalMedia")
+
+  @@map("media_assets")
+}
+
+model TrailGallery {
+  trailId      Int
+  mediaAssetId Int
+  sortOrder    Int           @default(0)
+  trail        TrailLocation @relation(fields: [trailId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset    @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  @@id([trailId, mediaAssetId])
+  @@map("trail_galleries")
+}
+
+model HomepageGallery {
+  id           Int        @id @default(autoincrement())
+  mediaAssetId Int
+  sortOrder    Int        @default(0)
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  @@map("homepage_galleries")
 }
 
 model TrailLocation {
-  id               Int      @id @default(autoincrement())
-  name             String
-  slug             String   @unique
-  description      String   @db.LongText
-  latitude         Float?
-  longitude        Float?
-  photos           String?  @db.Text
-  photoAlt         String?
-  metaTitle        String?
-  metaDescription  String?
-  ogImage          String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  journalPosts     JournalPost[]
+  id                 Int           @id @default(autoincrement())
+  name               String
+  slug               String        @unique
+  excerpt            String?       @db.Text
+  description        String        @db.LongText
+  district           District
+  administrativeArea String?
+  localArea          String?
+  terrainType        TerrainType?
+  latitude           Float?
+  longitude          Float?
+  status             ContentStatus @default(DRAFT)
+  publishedAt        DateTime?
+  isFeatured         Boolean       @default(false)
+  featuredOrder      Int?
+  coverMediaId       Int?
+  coverMedia         MediaAsset?   @relation("TrailCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  ogMediaId          Int?
+  ogMedia            MediaAsset?   @relation("TrailOgMedia", fields: [ogMediaId], references: [id], onDelete: SetNull)
+  metaTitle          String?
+  metaDescription    String?
+  placeType          PlaceType     @default(PLACE)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
+  gallery      TrailGallery[]
+  journalPosts JournalPost[]
+
+  @@index([district])
+  @@index([district, administrativeArea])
+  @@index([status])
+  @@index([isFeatured, featuredOrder])
   @@map("trail_locations")
+}
+
+model JournalPost {
+  id              Int            @id @default(autoincrement())
+  title           String
+  slug            String         @unique
+  excerpt         String?        @db.Text
+  content         String         @db.LongText
+  type            JournalType    @default(STORY)
+  status          ContentStatus  @default(DRAFT)
+  publishedAt     DateTime?
+  isFeatured      Boolean        @default(false)
+  featuredOrder   Int?
+  coverMediaId    Int?
+  coverMedia      MediaAsset?    @relation("JournalCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  ogMediaId       Int?
+  ogMedia         MediaAsset?    @relation("JournalOgMedia", fields: [ogMediaId], references: [id], onDelete: SetNull)
+  metaTitle       String?
+  metaDescription String?
+  trailId         Int?
+  trail           TrailLocation? @relation(fields: [trailId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([isFeatured, featuredOrder])
+  @@index([trailId])
+  @@map("journal_posts")
+}
+
+model SiteSettings {
+  id                  Int         @id @default(1)
+  siteName            String      @default("Chittagong Trail")
+  heroTitle           String      @default("")
+  heroSubtitle        String      @default("")
+  heroMediaId         Int?
+  heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  introductionHeading String      @default("")
+  introductionContent String      @default("") @db.Text
+  seasonalEyebrow     String      @default("")
+  seasonalTitle       String      @default("")
+  seasonalContent     String      @default("") @db.Text
+  seasonalMediaId     Int?
+  seasonalMedia       MediaAsset? @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
+  aboutHeading        String      @default("")
+  aboutContent        String      @default("") @db.Text
+  contactEmail        String      @default("")
+  socialFacebook      String?
+  socialInstagram     String?
+  socialYouTube       String?
+  footerText          String      @default("")
+  updatedAt           DateTime    @updatedAt
+
+  @@map("site_settings")
 }
