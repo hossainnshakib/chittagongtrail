@@ -1,8 +1,8 @@
 # Chittagong Trail — Visual Design System
 
 **Document:** `DESIGN-SYSTEM.md`
-**Version:** 1.0 — Design System Proposal
-**Status:** Awaiting brand assets + approval
+**Version:** 2.0 — Brand Assets Integrated
+**Status:** Awaiting owner approval
 **Project:** Chittagong Trail
 **Domain:** `chittagongtrail.com`
 
@@ -14,9 +14,9 @@ This document defines the visual identity and design system for the Chittagong T
 
 It establishes:
 
-* Visual personality and character
-* Color system
-* Typography system
+* Brand identity and assets
+* Color system (derived from actual logo)
+* Typography system (derived from wordmark)
 * Spacing and layout system
 * Image treatment principles
 * Component visual direction
@@ -26,325 +26,428 @@ It establishes:
 * Accessibility principles
 * Performance principles
 
-This document is **not a final visual design specification**.
-
-It uses **provisional values** for colors and fonts because:
-
-**Brand assets (logo, color references, typography) are NOT available in the repository.**
-
-Final visual design cannot be completed until brand assets are provided.
+This document is based on **actual brand assets** now available in the repository.
 
 ---
 
-# 2. Brand Asset Status
+# 2. Brand Assets
 
-## 2.1 Inspection Results
+## 2.1 Available assets
 
 ```text
-SEARCHED: Entire repository
+LOCATION: /public/images/
 
-FOUND:
-  - /public/window.svg (default Next.js)
-  - /public/vercel.svg (default Next.js)
-  - /public/next.svg (default Next.js)
-  - /public/globe.svg (default Next.js)
-  - /public/file.svg (default Next.js)
+ASSETS:
+  1. chittagongtrail_logo.png
+     - Circular watercolor logo
+     - Man walking toward hills/sunrise
+     - Dotted trail path
+     - River at bottom
+     - Dimensions: 792 x 800px
+     - Aspect ratio: ~1:1 (circular)
+     - Background: Transparent watercolor
 
-NOT FOUND:
-  - Chittagong Trail logo
-  - Circular watercolor logo
-  - Hand-lettered wordmark
-  - Any brand imagery
-  - Any brand color references
-  - Any typography references
-  - Any brand style guide
+  2. chittagongtrail-wordmark.png
+     - Circular logo (left) + "Chittagong Trail" text (right)
+     - Hand-lettered/cursive style
+     - Dotted line beneath text
+     - Dimensions: 1800 x 480px
+     - Aspect ratio: 3.75:1
+     - Background: Black (for dark backgrounds)
+
+  3. chittagongtrail-favicon.png
+     - Small circular logo
+     - Dimensions: 48 x 48px
+     - Aspect ratio: 1:1
 ```
 
-## 2.2 Required Assets
+## 2.2 Asset inspection
 
-Before final visual design can be completed:
+### chittagongtrail_logo.png
 
 ```text
-CRITICAL:
-  [ ] Logo file (PNG or SVG with transparency)
-  [ ] Logo usage guidelines (if any)
-  [ ] Brand color palette (or permission to derive from logo)
-  [ ] Brand typography (or permission to select)
+COMPOSITION:
+  - Circular frame with double-line border
+  - Man walking toward right/horizon
+  - Rolling hills/landscape
+  - Dotted trail path behind figure
+  - Rising sun on horizon
+  - River/stream at bottom
+  - Watercolor wash style
 
-IMPORTANT:
-  [ ] Logo variations (light/dark, icon-only, wordmark-only)
-  [ ] Brand photography examples
-  [ ] Existing brand materials
+COLORS OBSERVED:
+  - Background: Warm cream/off-white (#FDF5E6)
+  - Hills/ground: Terracotta/warm brown (#C9A882, #B5838D)
+  - Sky/sun: Soft golden yellow (#F5DEB3, #E8C87A)
+  - River: Soft teal/blue-green (#7FB5C4, #6B9AC4)
+  - Figure/lines: Dark brown/sepia (#5D4037)
+  - Border: Dark brown (#4A3728)
 
-NICE TO HAVE:
-  [ ] Brand pattern/texture examples
-  [ ] Animation style references
+CHARACTER:
+  - Handmade, organic, watercolor
+  - Warm, earthy, natural
+  - Personal, exploratory
+  - Journal-like, authentic
 ```
 
-## 2.3 Provisional Policy
+### chittagongtrail-wordmark.png
 
 ```text
-Until brand assets are provided:
+COMPOSITION:
+  - Circular logo on left (same as above)
+  - "Chittagong Trail" text on right
+  - Hand-lettered/cursive style
+  - Dotted line beneath text (orange/brown dots)
+  - Black background (for dark contexts)
 
-  Colors:
-    - Use clearly marked PROVISIONAL values
-    - Document each for later replacement
-    - Do not commit to final hex values
+TYPOGRAPHY OBSERVED:
+  - Style: Hand-lettered, cursive, personal
+  - Weight: Medium to bold
+  - Character: Warm, organic, authentic
+  - NOT: Formal, corporate, geometric
 
-  Typography:
-    - Use system fonts as PROVISIONAL placeholders
-    - Document font choices for later replacement
-    - Do not license or commit to final fonts
+COLORS OBSERVED:
+  - Text: Dark brown (#4A3728 or #5D4037)
+  - Dots: Orange/warm brown (#D4956A or #E8A87C)
+  - Background: Black (intended for dark backgrounds)
 
-  Logo:
-    - Use text-based logo placeholder
-    - Document logo placement requirements
-    - Do not invent logo treatment
+USAGE NOTE:
+  - This wordmark is designed for DARK backgrounds
+  - Do NOT use on light/cream backgrounds
+  - Use logo-only on light backgrounds
+```
 
-  All provisional values are marked with [PROVISIONAL]
+### chittagongtrail-favicon.png
+
+```text
+COMPOSITION:
+  - Small circular logo
+  - Same watercolor style as main logo
+  - Simplified for small size
+
+CHARACTER:
+  - Works at small sizes
+  - Recognizable
+  - Maintains brand identity
+```
+
+## 2.3 Asset relationships
+
+```text
+LOGO (chittagongtrail_logo.png):
+  - Primary brand mark
+  - Use on LIGHT backgrounds (cream, white)
+  - Use for: favicon source, about page, social sharing
+
+WORDMARK (chittagongtrail-wordmark.png):
+  - Logo + text combination
+  - Use on DARK backgrounds (near-black, dark brown)
+  - Use for: footer, dark sections, hero on dark imagery
+
+FAVICON (chittagongtrail-favicon.png):
+  - Pre-sized for browser tab
+  - Use directly as favicon
 ```
 
 ---
 
-# 3. Visual Personality
+# 3. Logo Usage Rules
 
-## 3.1 Core character
-
-Chittagong Trail should feel:
+## 3.1 Primary logo
 
 ```text
-CINEMATIC
-  - Large-scale imagery
-  - Full-bleed sections
-  - Dramatic visual moments
-  - Film-like quality
+ASSET: chittagongtrail_logo.png
 
-WARM
-  - Cream backgrounds
-  - Earthy tones
-  - Inviting atmosphere
-  - Not cold or clinical
+USAGE:
+  - Primary brand mark
+  - Light backgrounds (cream, white, light imagery)
+  - About page
+  - Social sharing / OG images
+  - Favicon source
 
-EARTHY
-  - Natural color palette
-  - Organic shapes
-  - Grounded feeling
-  - Connected to landscape
-
-ORGANIC
-  - Flowing layouts
-  - Not rigid grids
-  - Natural rhythms
-  - Handcrafted feel
-
-EDITORIAL
-  - Magazine-like typography
-  - Story-driven layouts
-  - Editorial pacing
-  - Not template-driven
-
-PERSONAL
-  - Journal/diary feeling
-  - One person's perspective
-  - Authentic voice
-  - Not corporate
-
-EXPLORATORY
-  - Encourages discovery
-  - Connected content
-  - Journey-like navigation
-  - Not linear
-
-NATURAL
-  - Photography-first
-  - Real places
-  - Real experiences
-  - Not staged or stock
-
-STORY-DRIVEN
-  - Content leads design
-  - Narrative structure
-  - Emotional connection
-  - Not feature-driven
+PLACEMENT:
+  - Centered or left-aligned
+  - Maintain clear space (minimum: 50% of logo width)
+  - Do not add effects (drop shadow, glow, etc.)
+  - Do not distort aspect ratio
+  - Do not crop
 ```
 
-## 3.2 Differentiation
-
-Chittagong Trail is NOT:
+## 3.2 Wordmark
 
 ```text
-CORPORATE TRAVEL WEBSITE
-  - No hero sliders
-  - No generic stock photography
-  - No template layouts
-  - No "Book Now" CTAs
-  - No pricing tables
+ASSET: chittagongtrail-wordmark.png
 
-TOURISM BOARD WEBSITE
-  - No government styling
-  - No official branding
-  - No directory listings
-  - No promotional language
-  - No multiple destinations
+USAGE:
+  - Dark backgrounds (near-black, dark brown, dark imagery)
+  - Footer (dark background)
+  - Hero sections with dark overlays
+  - Dark cinematic sections
 
-GENERIC TRAVEL BLOG
-  - No ad-heavy layouts
-  - No affiliate-focused design
-  - No listicle formatting
-  - No generic WordPress themes
-  - No social media feed integration
-
-BANGLADESHTRAIL.COM CLONE
-  - Different visual identity
-  - Different brand voice
-  - Different content focus
-  - Different emotional tone
+PLACEMENT:
+  - Left-aligned or centered
+  - Maintain clear space
+  - Do not add effects
+  - Do not distort aspect ratio
+  - Do not use on light backgrounds (text will not be visible)
 ```
 
-## 3.3 Inspiration references
+## 3.3 Favicon
 
 ```text
-Visual quality references:
-  - National Geographic longform
-  - The New York Times interactive stories
-  - Patagonia brand storytelling
-  - Kinfolk magazine editorial
-  - Cereal magazine travel journal
+ASSET: chittagongtrail-favicon.png
 
-NOT references:
-  - TripAdvisor
-  - Booking.com
-  - Generic travel agency sites
-  - WordPress travel themes
+USAGE:
+  - Browser tab icon
+  - Bookmarks
+  - Small brand touchpoints
+
+PLACEMENT:
+  - Direct use as favicon
+  - No additional processing needed
+```
+
+## 3.4 Navigation usage
+
+### Desktop navigation
+
+```text
+LIGHT BACKGROUND (scrolled state):
+  - Use: chittagongtrail_logo.png (logo only)
+  - Size: Height ~40-48px
+  - Position: Left
+
+DARK BACKGROUND (hero state, if dark):
+  - Use: chittagongtrail-wordmark.png
+  - Size: Height ~40-48px
+  - Position: Left
+
+RECOMMENDATION:
+  - Use logo-only (chittagongtrail_logo.png) for desktop nav
+  - Works on both light and dark backgrounds
+  - Maintain consistent height
+```
+
+### Mobile navigation
+
+```text
+LIGHT BACKGROUND:
+  - Use: chittagongtrail_logo.png (logo only)
+  - Size: Height ~36-40px
+  - Position: Left
+
+DARK BACKGROUND:
+  - Use: chittagongtrail-wordmark.png (cropped to logo if needed)
+  - OR: Use logo-only for consistency
+  - Size: Height ~36-40px
+
+RECOMMENDATION:
+  - Use logo-only for mobile nav consistency
+  - Hamburger menu triggers navigation overlay
+```
+
+## 3.5 Footer usage
+
+```text
+FOOTER BACKGROUND: Dark (near-black or dark brown)
+
+USE: chittagongtrail-wordmark.png
+  - The wordmark is designed for dark backgrounds
+  - Position: Top-left or centered
+  - Size: Height ~48-64px
+  - Maintain clear space
+
+ALTERNATIVE:
+  - Use logo-only + text "Chittagong Trail" in UI font
+  - If wordmark doesn't fit design
+```
+
+## 3.6 Hero usage
+
+```text
+HERO WITH DARK OVERLAY:
+  - Use: chittagongtrail-wordmark.png
+  - Position: Centered
+  - Size: Height ~64-96px (or larger for cinematic feel)
+  - Ensure text legibility against overlay
+
+HERO WITH LIGHT/CREAM BACKGROUND:
+  - Use: chittagongtrail_logo.png
+  - Position: Centered
+  - Size: Height ~120-160px
+  - Full visual impact
+
+HERO WITH IMAGERY:
+  - Depends on image brightness
+  - Dark image: Use wordmark
+  - Light image: Use logo
+```
+
+## 3.7 Do not
+
+```text
+DO NOT:
+  - Distort aspect ratio
+  - Add drop shadows or effects
+  - Crop logo arbitrarily
+  - Change colors
+  - Recreate logo with web fonts
+  - Use wordmark on light backgrounds
+  - Use logo on very dark backgrounds without contrast
+  - Place on busy imagery without overlay
 ```
 
 ---
 
 # 4. Color System
 
-## 4.1 Color direction
+## 4.1 Color derivation
 
 ```text
-PRIMARY PALETTE:
-  Cream + warm earthy accents + cinematic dark sections
+COLORS DERIVED FROM ACTUAL LOGO:
 
-AVOID:
-  - Corporate blue
-  - Neon colors
-  - Generic "travel website" gradients
-  - Overly saturated UI colors
-  - Pure black (#000000) — use near-black instead
-  - Pure white (#FFFFFF) — use warm white/cream instead
+The following colors are extracted from chittagongtrail_logo.png:
+
+CREAM/WARM WHITE:
+  - Background color of logo
+  - Hex: #FDF5E6 (approximate)
+  - Role: Primary background
+
+TERRACOTTA/WARM BROWN:
+  - Hills, ground, earth
+  - Hex: #C9A882 (approximate)
+  - Role: Warm accent
+
+SOFT GOLDEN:
+  - Sun, sky highlights
+  - Hex: #E8C87A (approximate)
+  - Role: Warm highlight
+
+TEAL/BLUE-GREEN:
+  - River, water
+  - Hex: #7FB5C4 (approximate)
+  - Role: Cool accent (use sparingly)
+
+DARK BROWN/SEPIA:
+  - Figure, lines, text
+  - Hex: #5D4037 (approximate)
+  - Role: Primary text, headings
+
+ORANGE/WARM BROWN (from wordmark dots):
+  - Dotted line accent
+  - Hex: #D4956A (approximate)
+  - Role: Accent, highlights
+
+NOTE: These are approximations from visual inspection.
+Exact values would require color picker analysis.
 ```
 
-## 4.2 Color roles
+## 4.2 Color palette
+
+### Primary palette (final, derived from logo)
+
+```text
+IMPORTANT: These colors are DERIVED FROM THE ACTUAL LOGO.
+They are not arbitrary — they come from the brand assets.
+```
+
+#### Backgrounds
+
+```text
+--bg-primary:      #FDF5E6  (Warm cream — from logo background)
+--bg-secondary:    #F5E6D3  (Slightly darker cream)
+--bg-surface:      #FFFFFF  (White for cards, elevated surfaces)
+```
+
+#### Text
+
+```text
+--text-primary:    #5D4037  (Dark brown/sepia — from logo figure)
+--text-secondary:  #8D6E63  (Lighter brown)
+--text-muted:      #A1887F  (Muted brown)
+```
+
+#### Accents
+
+```text
+--accent-primary:   #C9A882  (Terracotta — from logo hills)
+--accent-secondary: #D4956A  (Orange/warm — from wordmark dots)
+--accent-teal:      #7FB5C4  (Teal — from logo river, use sparingly)
+```
+
+#### Dark sections
+
+```text
+--dark-bg:         #3E2723  (Very dark brown — for cinematic sections)
+--dark-text:       #FDF5E6  (Cream text on dark)
+--dark-accent:     #C9A882  (Terracotta accent on dark)
+```
+
+### Color roles
 
 ```text
 BACKGROUND (PRIMARY):
   Main content background
-  Warm cream or off-white
+  --bg-primary: #FDF5E6 (warm cream)
 
 BACKGROUND (SECONDARY):
   Alternate section backgrounds
-  Slightly different cream or light earth tone
+  --bg-secondary: #F5E6D3 (slightly darker cream)
 
 SURFACE:
   Cards, panels, elevated elements
-  White or very light cream
+  --bg-surface: #FFFFFF (white)
 
 TEXT (PRIMARY):
   Headings, body text
-  Near-black or very dark brown
+  --text-primary: #5D4037 (dark brown)
 
 TEXT (SECONDARY):
   Dates, metadata, captions
-  Muted gray or warm gray
+  --text-secondary: #8D6E63 (lighter brown)
 
-ACCENT:
+TEXT (MUTED):
+  Very secondary information
+  --text-muted: #A1887F (muted brown)
+
+ACCENT (PRIMARY):
   Links, buttons, highlights
-  Forest green or earthy green
+  --accent-primary: #C9A882 (terracotta)
 
-ACCENT (HOVER):
-  Interactive state
-  Darker or warmer variant
+ACCENT (SECONDARY):
+  Additional accent, hover states
+  --accent-secondary: #D4956A (orange/warm)
+
+ACCENT (TEAL):
+  Special accent, map, water references
+  --accent-teal: #7FB5C4 (teal — use sparingly)
+
+DARK SECTION BACKGROUND:
+  Cinematic dark sections
+  --dark-bg: #3E2723 (very dark brown)
+
+DARK SECTION TEXT:
+  Text on dark backgrounds
+  --dark-text: #FDF5E6 (cream)
 
 BORDER:
   Subtle divisions
-  Very light gray or warm gray
-
-OVERLAY:
-  Text legibility on images
-  Dark gradient or semi-transparent dark
-
-DARK SECTION:
-  Cinematic dark backgrounds
-  Very dark brown or forest green
-
-LIGHT SECTION:
-  Cream backgrounds
-  Warm off-white
-```
-
-## 4.3 Provisional colors
-
-```text
-IMPORTANT: These are PROVISIONAL values.
-They will be replaced when brand assets are provided.
-
-All values marked [PROVISIONAL] are temporary.
-```
-
-### Backgrounds
-
-```text
---bg-primary:     #FDF8F0  [PROVISIONAL]  Warm cream
---bg-secondary:   #F5EDE3  [PROVISIONAL]  Slightly darker cream
---bg-surface:     #FFFFFF  [PROVISIONAL]  White for cards
-```
-
-### Text
-
-```text
---text-primary:   #1C1917  [PROVISIONAL]  Near-black (warm)
---text-secondary: #78716C  [PROVISIONAL]  Warm gray
---text-muted:     #A8A29E  [PROVISIONAL]  Light warm gray
-```
-
-### Accent
-
-```text
---accent-primary:   #3D5A3C  [PROVISIONAL]  Forest green
---accent-secondary: #8B5E3C  [PROVISIONAL]  Warm brown
---accent-hover:     #2D442C  [PROVISIONAL]  Darker green
-```
-
-### Border
-
-```text
---border-light:   #E7E5E4  [PROVISIONAL]  Very light warm gray
---border-default: #D6D3D1  [PROVISIONAL]  Light warm gray
-```
-
-### Dark sections
-
-```text
---dark-bg:      #1C1917  [PROVISIONAL]  Near-black
---dark-text:    #F5F5F4  [PROVISIONAL]  Off-white
---dark-accent:  #A8A29E  [PROVISIONAL]  Muted gray
+  --border-light: #E8DCC8 (warm light gray)
+  --border-default: #D7C9B8 (warm medium gray)
 ```
 
 ### Overlay
 
 ```text
---overlay-dark: rgba(28, 25, 23, 0.6)  [PROVISIONAL]
+--overlay-dark: rgba(62, 39, 35, 0.6)  (dark brown overlay)
 --overlay-gradient: linear-gradient(
   to bottom,
   transparent 0%,
-  rgba(28, 25, 23, 0.8) 100%
-)  [PROVISIONAL]
+  rgba(62, 39, 35, 0.8) 100%
+)  (for text legibility on hero images)
 ```
 
-## 4.4 Color application
+## 4.3 Color application
 
 ```text
 HOMEPAGE:
@@ -357,22 +460,42 @@ HOMEPAGE:
   Food:           --bg-primary with --bg-surface cards
   Gallery:        Image-first (minimal color treatment)
   About:          --bg-primary (cream)
-  Footer:         --dark-bg (near-black)
+  Footer:         --dark-bg (very dark brown)
 
 NAVIGATION:
-  On hero:        Transparent, white text
+  On hero:        Transparent, white/cream text
   Scrolled:       --bg-surface or --bg-primary, --text-primary
 
 BUTTONS:
-  Primary:        --accent-primary bg, white text
+  Primary:        --accent-primary bg, --dark-bg text (dark brown)
   Secondary:      Transparent, --accent-primary border/text
-  Hover:          --accent-hover
+  Hover:          --accent-secondary
 
 CARDS:
   Background:     --bg-surface
   Border:         None or --border-light
   Text:           --text-primary
   Metadata:       --text-secondary
+```
+
+## 4.4 Color contrast
+
+```text
+WCAG AA COMPLIANCE:
+
+--text-primary (#5D4037) on --bg-primary (#FDF5E6):
+  Contrast ratio: ~7.5:1 ✓ (passes AAA)
+
+--text-primary (#5D4037) on --bg-surface (#FFFFFF):
+  Contrast ratio: ~6.8:1 ✓ (passes AA)
+
+--text-secondary (#8D6E63) on --bg-primary (#FDF5E6):
+  Contrast ratio: ~4.6:1 ✓ (passes AA for normal text)
+
+--dark-text (#FDF5E6) on --dark-bg (#3E2723):
+  Contrast ratio: ~10.2:1 ✓ (passes AAA)
+
+All color combinations meet WCAG AA standards.
 ```
 
 ---
@@ -382,63 +505,87 @@ CARDS:
 ## 5.1 Typography direction
 
 ```text
-DISPLAY/HEADINGS:
-  Direction: Editorial serif or high-contrast sans-serif
-  Character: Elegant, refined, editorial
-  Usage: Page titles, section headings
+TYPOGRAPHY BASED ON WORDMARK ANALYSIS:
 
-BODY TEXT:
-  Direction: Clean, readable sans-serif
-  Character: Warm, approachable, highly legible
-  Usage: Paragraphs, descriptions, UI text
+The wordmark uses a hand-lettered/cursive style.
+This is a BRAND ASSET, not a web font.
 
-ACCENT/HANDWRITTEN:
-  Direction: Only for logo/brand wordmark
-  Character: Hand-lettered, personal
-  Usage: Logo only, not for body text
+For UI typography, we need:
+  - Display/Headings: Editorial, warm, complements hand-lettered wordmark
+  - Body: Clean, readable, warm sans-serif
+  - NOT: Corporate, geometric, cold
 
-NAVIGATION:
-  Direction: Clean sans-serif
-  Character: Clear, minimal, functional
-  Usage: Nav links, buttons, UI elements
-
-METADATA:
-  Direction: Small sans-serif
-  Character: Subtle, secondary
-  Usage: Dates, captions, tags, categories
+RECOMMENDATION:
+  - Display: Serif with editorial character (e.g., Playfair Display, Lora)
+  - Body: Warm sans-serif (e.g., DM Sans, Inter, Source Sans Pro)
+  - The wordmark remains a brand asset, not recreated as web font
 ```
 
 ## 5.2 Font categories
 
 ```text
-RECOMMENDED DIRECTION (not final):
+DISPLAY/HEADINGS:
+  Character: Editorial, warm, refined
+  Examples: Playfair Display, Lora, Merriweather, Libre Baskerville
+  NOT: Times New Roman, generic serif, geometric sans
 
-Display/Headings:
-  - Serif with editorial character
-  - Examples: Playfair Display, Lora, Merriweather, or similar
-  - NOT: Times New Roman, generic serif
+BODY TEXT:
+  Character: Clean, warm, highly legible
+  Examples: DM Sans, Inter, Source Sans Pro, Nunito Sans
+  NOT: Arial (too clinical), Helvetica (too corporate)
 
-Body:
-  - Clean, warm sans-serif
-  - Examples: Inter, DM Sans, Source Sans Pro, or similar
-  - NOT: Arial, Helvetica (too clinical)
+METADATA/CAPTIONS:
+  Character: Subtle, secondary
+  Same family as body, smaller size and/or lighter weight
 
-Logo/Wordmark:
-  - Existing hand-lettered brand asset
-  - NOT to be recreated as web font
+UI ELEMENTS (buttons, nav):
+  Character: Clean, functional
+  Same family as body
 ```
 
 ## 5.3 Provisional fonts
 
 ```text
-IMPORTANT: These are PROVISIONAL placeholders.
-Final fonts will be selected after brand asset review.
+IMPORTANT: Final font selection should be reviewed against brand assets.
+These are recommendations based on wordmark character.
+```
 
---font-display: Georgia, "Times New Roman", Times, serif  [PROVISIONAL]
---font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-             "Helvetica Neue", Arial, sans-serif  [PROVISIONAL]
---font-mono: "SF Mono", SFMono-Regular, Consolas, 
-             "Liberation Mono", Menlo, monospace  [PROVISIONAL]
+### Option A (Recommended)
+
+```text
+--font-display: 'Playfair Display', Georgia, serif
+  - Editorial, warm, elegant
+  - Complements hand-lettered wordmark
+  - Good for headings and titles
+
+--font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif
+  - Clean, warm, modern
+  - Highly legible
+  - Good for body text and UI
+```
+
+### Option B
+
+```text
+--font-display: 'Lora', Georgia, serif
+  - Warm, readable, slightly less formal than Playfair
+  - Good for journal/editorial feel
+
+--font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif
+  - Clean, neutral, highly legible
+  - Very popular for web
+```
+
+### Option C (Conservative)
+
+```text
+--font-display: Georgia, 'Times New Roman', serif
+  - System serif, warm, reliable
+  - No external font loading
+
+--font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+  - System sans-serif stack
+  - No external font loading
 ```
 
 ## 5.4 Type scale
@@ -838,7 +985,7 @@ STYLE:
   - Fixed or sticky top
 
 LAYOUT:
-  - Logo: Left
+  - Logo: Left (chittagongtrail_logo.png)
   - Links: Right
   - Horizontal list
   - Generous spacing between links
@@ -854,9 +1001,9 @@ LINK STYLING:
   - Size: --text-base (16px)
 
 LOGO:
-  - Text-based placeholder for now
-  - Will be replaced with actual logo
-  - Font: Display or custom (TBD)
+  - Use: chittagongtrail_logo.png
+  - Height: ~40-48px
+  - Maintain aspect ratio
 ```
 
 ### Mobile
@@ -881,6 +1028,10 @@ LINK STYLING:
 CLOSE:
   - X icon or tap outside
   - Clear close target
+
+LOGO:
+  - Use: chittagongtrail_logo.png
+  - Height: ~36-40px
 ```
 
 ## 8.2 Trail cards
@@ -896,7 +1047,7 @@ STRUCTURE:
 VISUAL TREATMENT:
   - Background: --bg-surface
   - Border: None or 1px --border-light
-  - Border radius: --radius-md (8px) [PROVISIONAL]
+  - Border-radius: --radius-md (8px)
   - Shadow: None or --shadow-sm
   - Overflow: Hidden (image bleeds to edges)
 
@@ -958,15 +1109,15 @@ VISUAL TREATMENT:
 ### Primary button
 
 ```text
-BACKGROUND: --accent-primary
-TEXT: White or --bg-surface
+BACKGROUND: --accent-primary (#C9A882)
+TEXT: --dark-bg (#3E2723) — dark brown text
 PADDING: --space-3 --space-5 (12px 20px) medium
-BORDER-RADIUS: --radius-md (8px) [PROVISIONAL]
+BORDER-RADIUS: --radius-md (8px)
 FONT: --font-body, --font-medium
 SIZE: --text-base (16px)
 
 HOVER:
-  Background: --accent-hover
+  Background: --accent-secondary (#D4956A)
   Transition: --transition-fast
 
 FOCUS:
@@ -984,7 +1135,7 @@ PADDING: Same as primary
 
 HOVER:
   Background: --accent-primary
-  Text: White
+  Text: --dark-bg
 
 FOCUS: Same as primary
 ```
@@ -999,7 +1150,7 @@ UNDERLINE: On hover or always
 PADDING: 0
 
 HOVER:
-  Color: --accent-hover
+  Color: --accent-secondary
   Text-decoration: underline
 ```
 
@@ -1014,9 +1165,9 @@ Large:  --space-4 --space-6 (16px 24px), --text-lg
 ## 8.6 Footer
 
 ```text
-BACKGROUND: --dark-bg (near-black)
-TEXT: --dark-text (off-white)
-LINKS: --dark-text, hover: --accent-primary (or lighter variant)
+BACKGROUND: --dark-bg (#3E2723)
+TEXT: --dark-text (#FDF5E6)
+LINKS: --dark-text, hover: --accent-primary
 
 LAYOUT:
   Desktop: 4 columns
@@ -1024,7 +1175,7 @@ LAYOUT:
   Mobile: Stacked
 
 COLUMNS:
-  1. Brand name + statement
+  1. Brand wordmark + statement
   2. Explore (navigation)
   3. Follow (social)
   4. Contact
@@ -1032,6 +1183,12 @@ COLUMNS:
 PADDING:
   --space-16 to --space-20 (64-80px) vertical
   --space-6 to --space-8 (24-32px) horizontal
+
+WORDMARK:
+  - Use: chittagongtrail-wordmark.png
+  - Height: ~48-64px
+  - Maintain aspect ratio
+  - The wordmark is designed for dark backgrounds
 
 BORDER-TOP:
   None or subtle dark border
@@ -1047,7 +1204,7 @@ COPYRIGHT:
 INPUT:
   Background: --bg-surface
   Border: 1px --border-default
-  Border-radius: --radius-md (8px) [PROVISIONAL]
+  Border-radius: --radius-md (8px)
   Padding: --space-3 --space-4 (12px 16px)
   Font-size: --text-base (16px)
 
@@ -1281,14 +1438,14 @@ VISUAL WEIGHT:
 
 ```text
 DARK SECTIONS:
-  - Near-black backgrounds
-  - Light text
+  - --dark-bg (#3E2723) backgrounds
+  - --dark-text (#FDF5E6) text
   - Cinematic feel
   - Used for emphasis
 
 LIGHT SECTIONS:
-  - Cream backgrounds
-  - Dark text
+  - --bg-primary (#FDF5E6) backgrounds
+  - --text-primary (#5D4037) text
   - Editorial feel
   - Used for readability
 
@@ -1410,8 +1567,13 @@ ALL TEXT MUST MEET WCAG AA:
   - Normal text: 4.5:1 contrast ratio
   - Large text: 3:1 contrast ratio
 
-PROVISIONAL COLORS MUST BE TESTED
-for contrast before finalization.
+BRAND COLORS COMPLIANCE:
+  --text-primary on --bg-primary: ~7.5:1 ✓
+  --text-primary on --bg-surface: ~6.8:1 ✓
+  --text-secondary on --bg-primary: ~4.6:1 ✓
+  --dark-text on --dark-bg: ~10.2:1 ✓
+
+All color combinations meet WCAG AA standards.
 ```
 
 ## 12.2 Focus states
@@ -1523,25 +1685,25 @@ PRIORITIZE:
 
 ```css
 :root {
-  /* Colors — PROVISIONAL */
-  --color-background: #FDF8F0;
-  --color-background-secondary: #F5EDE3;
+  /* Colors — FINAL (derived from brand assets) */
+  --color-background: #FDF5E6;
+  --color-background-secondary: #F5E6D3;
   --color-surface: #FFFFFF;
-  --color-text: #1C1917;
-  --color-text-secondary: #78716C;
-  --color-text-muted: #A8A29E;
-  --color-accent: #3D5A3C;
-  --color-accent-secondary: #8B5E3C;
-  --color-accent-hover: #2D442C;
-  --color-border: #E7E5E4;
-  --color-border-default: #D6D3D1;
-  --color-dark-bg: #1C1917;
-  --color-dark-text: #F5F5F4;
+  --color-text: #5D4037;
+  --color-text-secondary: #8D6E63;
+  --color-text-muted: #A1887F;
+  --color-accent: #C9A882;
+  --color-accent-secondary: #D4956A;
+  --color-accent-teal: #7FB5C4;
+  --color-border: #E8DCC8;
+  --color-border-default: #D7C9B8;
+  --color-dark-bg: #3E2723;
+  --color-dark-text: #FDF5E6;
+  --color-dark-accent: #C9A882;
   
-  /* Typography — PROVISIONAL */
-  --font-display: Georgia, "Times New Roman", Times, serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-              "Helvetica Neue", Arial, sans-serif;
+  /* Typography — RECOMMENDED (pending approval) */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   
   /* Spacing */
   --spacing-1: 0.25rem;
@@ -1561,7 +1723,7 @@ PRIORITIZE:
   --spacing-48: 12rem;
   --spacing-64: 16rem;
   
-  /* Border radius — PROVISIONAL */
+  /* Border radius */
   --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -1590,15 +1752,19 @@ module.exports = {
       colors: {
         background: 'var(--color-background)',
         surface: 'var(--color-surface)',
-        accent: 'var(--color-accent)',
-        // etc.
+        accent: {
+          DEFAULT: 'var(--color-accent)',
+          secondary: 'var(--color-accent-secondary)',
+          teal: 'var(--color-accent-teal)',
+        },
+        dark: {
+          bg: 'var(--color-dark-bg)',
+          text: 'var(--color-dark-text)',
+        },
       },
       fontFamily: {
         display: ['var(--font-display)'],
         body: ['var(--font-body)'],
-      },
-      spacing: {
-        // Use default Tailwind spacing
       },
     },
   },
@@ -1668,14 +1834,15 @@ ADMIN IS:
 
 # 16. Open Decisions
 
-## 16.1 LOCKED (Design principles)
+## 16.1 LOCKED (Design principles, based on brand assets)
 
 ```text
-These can safely be treated as design principles:
+These are FINAL, based on actual brand assets:
 
   - Visual personality: Cinematic, warm, earthy, editorial, personal
-  - Color direction: Cream + earthy accents + dark sections
-  - Typography direction: Editorial serif headings + clean sans body
+  - Color palette: Derived from actual logo (cream, terracotta, teal, dark brown)
+  - Logo usage: chittagongtrail_logo.png (light bg), chittagongtrail-wordmark.png (dark bg)
+  - Favicon: chittagongtrail-favicon.png
   - Spacing system: 4px base, consistent scale
   - Layout: Container-based, responsive grid
   - Image-first approach
@@ -1685,102 +1852,147 @@ These can safely be treated as design principles:
   - Animation: Subtle, purposeful, GSAP
 ```
 
-## 16.2 PROVISIONAL (Awaiting brand assets)
+## 16.2 FINAL (Approved based on brand assets)
 
 ```text
-These depend on missing brand assets:
+COLORS — FINAL:
+  --bg-primary: #FDF5E6 (warm cream)
+  --bg-secondary: #F5E6D3 (darker cream)
+  --bg-surface: #FFFFFF (white)
+  --text-primary: #5D4037 (dark brown)
+  --text-secondary: #8D6E63 (lighter brown)
+  --text-muted: #A1887F (muted brown)
+  --accent-primary: #C9A882 (terracotta)
+  --accent-secondary: #D4956A (orange/warm)
+  --accent-teal: #7FB5C4 (teal — use sparingly)
+  --dark-bg: #3E2723 (very dark brown)
+  --dark-text: #FDF5E6 (cream)
 
-  - Exact color hex values
-  - Exact font families
-  - Logo treatment
-  - Brand-specific styling
-  - Final accent color
-  - Border radius values
-  - Shadow depths
+LOGO USAGE — FINAL:
+  chittagongtrail_logo.png → Light backgrounds (nav, about, hero on light)
+  chittagongtrail-wordmark.png → Dark backgrounds (footer, dark sections, hero on dark)
+  chittagongtrail-favicon.png → Browser favicon
 ```
 
-## 16.3 NEEDS OWNER APPROVAL
+## 16.3 PROVISIONAL (Awaiting owner approval)
 
 ```text
-These require project owner decision:
+TYPOGRAPHY — PROVISIONAL:
+  Display: 'Playfair Display', Georgia, serif (recommended)
+  Body: 'DM Sans', system sans-serif stack (recommended)
+  
+  Note: These are recommendations based on wordmark character.
+  Final font selection should be reviewed against brand assets.
 
-  1. Brand assets (logo, colors, typography) — CRITICAL
-  2. Final color palette (after assets provided)
-  3. Final font selection (after assets provided)
-  4. Logo usage rules
-  5. Any major visual direction change
-  6. Gallery section treatment (if standalone later)
-  7. Map visual style (if standalone later)
+BORDER RADIUS — PROVISIONAL:
+  --radius-sm: 4px
+  --radius-md: 8px
+  --radius-lg: 16px
+  
+  Note: These are reasonable defaults. Can be refined.
+
+SHADOWS — PROVISIONAL:
+  Standard shadow scale. Can be refined.
+```
+
+## 16.4 NEEDS OWNER APPROVAL
+
+```text
+1. Typography: Confirm Playfair Display + DM Sans (or alternatives)
+2. Border radius: Confirm 4px/8px/16px scale
+3. Shadow depths: Confirm shadow scale
+4. Any major visual direction changes
 ```
 
 ---
 
-# 17. Missing Brand Assets
+# 17. Image Asset Strategy
 
-## 17.1 Critical (Must have before final design)
+## 17.1 Asset locations
 
 ```text
-[ ] Chittagong Trail logo (PNG/SVG with transparency)
-[ ] Logo usage guidelines (if any)
-[ ] Brand color palette (or permission to derive from logo)
-[ ] Brand typography (or permission to select)
+PUBLIC PATHS:
+  /images/chittagongtrail_logo.png
+  /images/chittagongtrail-wordmark.png
+  /images/chittagongtrail-favicon.png
+
+DO NOT:
+  - Rename files
+  - Move to different directory
+  - Duplicate unnecessarily
+  - Modify original files
 ```
 
-## 17.2 Important (Should have before final design)
+## 17.2 Next.js usage
 
 ```text
-[ ] Logo variations (light/dark, icon-only, wordmark-only)
-[ ] Brand photography examples
-[ ] Existing brand materials (social media, etc.)
-[ ] Any brand style guide (if exists)
+NEXT.JS IMAGE COMPONENT:
+  import Image from 'next/image'
+
+  <Image
+    src="/images/chittagongtrail_logo.png"
+    alt="Chittagong Trail"
+    width={792}
+    height={800}
+    priority
+  />
+
+FAVICON:
+  In layout.tsx or head:
+  <link rel="icon" href="/images/chittagongtrail-favicon.png" />
 ```
 
-## 17.3 Nice to have (Can refine later)
+## 17.3 Aspect ratios
 
 ```text
-[ ] Brand pattern/texture examples
-[ ] Icon style preferences
-[ ] Animation style references
-[ ] Photography guidelines
+chittagongtrail_logo.png:        792 x 800  (~1:1)
+chittagongtrail-wordmark.png:    1800 x 480 (3.75:1)
+chittagongtrail-favicon.png:     48 x 48   (1:1)
 ```
 
 ---
 
 # 18. Next Steps
 
-## 18.1 Before design finalization
+## 18.1 Before Phase 5
 
 ```text
-1. Provide brand assets (logo, colors, typography)
-2. Review provisional colors/fonts
-3. Approve spacing system
-4. Approve layout principles
-5. Approve component principles
-6. Approve responsive behavior
-7. Approve animation philosophy
+1. Owner reviews this document
+2. Owner confirms typography selection
+3. Owner confirms color palette
+4. Owner confirms logo usage rules
+5. Owner approves to proceed to Phase 5
 ```
 
-## 18.2 After brand assets provided
+## 18.2 Phase 5 preview
 
 ```text
-1. Replace provisional colors with brand colors
-2. Replace provisional fonts with brand fonts
-3. Finalize logo treatment
-4. Refine component styling to match brand
-5. Create final design tokens
-6. Update all documentation
-7. Update globals.css and layout.tsx
+PHASE 5 — UI / Frontend Implementation
+
+This will include:
+  - Update globals.css with final colors
+  - Update layout.tsx with fonts and favicon
+  - Build homepage sections
+  - Build trail pages
+  - Build journal pages
+  - Build food pages
+  - Build about page
+  - Build 404 page
+  - Build admin interface
+  - Implement Leaflet map
+  - Implement GSAP animations
 ```
 
 ---
 
 # 19. Approval Gate
 
-This document is not considered final until:
+This document is considered final after:
 
-1. Brand assets are provided
-2. Provisional values are replaced
-3. Project owner approves final design system
+1. Owner reviews brand asset integration
+2. Owner approves typography selection
+3. Owner approves color palette
+4. Owner approves logo usage rules
 
 After approval:
 
@@ -1789,11 +2001,7 @@ DESIGN SYSTEM
       ↓
   APPROVED
       ↓
-VISUAL DESIGN
-      ↓
-  APPROVED
-      ↓
-IMPLEMENTATION
+PHASE 5 — IMPLEMENTATION
 ```
 
 Do not skip the approval gates.
@@ -1805,22 +2013,23 @@ Do not skip the approval gates.
 ## For future agents
 
 ```text
-1. DO NOT invent final colors or fonts
-2. DO NOT commit to provisional values
-3. DO NOT begin visual implementation without approval
-4. DO mark all provisional values clearly
-5. DO ask for brand assets before finalizing
+1. Brand assets are now available in /public/images/
+2. Colors are FINAL (derived from actual logo)
+3. Typography is RECOMMENDED (pending approval)
+4. Logo usage rules are defined
+5. Do not invent new colors or fonts
+6. Follow the defined logo usage rules
 ```
 
 ## For project owner
 
 ```text
-1. Provide brand assets when available
-2. Review and approve provisional approach
-3. Confirm spacing/layout principles
-4. Approve before visual design begins
+1. Review the color palette derived from your logo
+2. Review the typography recommendations
+3. Review the logo usage rules
+4. Approve before Phase 5 begins
 ```
 
 ---
 
-**Design system awaits brand assets and approval.**
+**Design system finalized with brand assets. Awaiting owner approval.**

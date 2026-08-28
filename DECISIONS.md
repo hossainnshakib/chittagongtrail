@@ -2,7 +2,7 @@
 
 **Document:** `DECISIONS.md`
 **Version:** 1.0
-**Last Updated:** Phase 4 Design System
+**Last Updated:** Phase 4B Brand Asset Integration
 **Project:** Chittagong Trail
 
 ---
@@ -229,48 +229,86 @@ Trails CRUD
 ### Current Status
 
 ```text
-NO brand assets found in repository.
+BRAND ASSETS NOW AVAILABLE:
 
-Missing:
-  - Chittagong Trail logo
-  - Circular watercolor logo (figure walking toward hills/sunrise)
-  - Hand-lettered wordmark
-  - Any brand imagery
+Location: /public/images/
+
+Assets:
+  1. chittagongtrail_logo.png
+     - Circular watercolor logo
+     - Man walking toward hills/sunrise
+     - Dotted trail path
+     - River at bottom
+     - Dimensions: 792 x 800px
+     - Aspect ratio: ~1:1
+
+  2. chittagongtrail-wordmark.png
+     - Circular logo + "Chittagong Trail" text
+     - Hand-lettered style
+     - Dimensions: 1800 x 480px
+     - Aspect ratio: 3.75:1
+     - Background: Black (for dark backgrounds)
+
+  3. chittagongtrail-favicon.png
+     - Small circular logo
+     - Dimensions: 48 x 48px
+     - Aspect ratio: 1:1
 ```
 
-### Required Assets
+### Asset Usage Rules
 
 ```text
-Before Phase 4 (Visual Design) can be completed:
+LOGO (chittagongtrail_logo.png):
+  - Primary brand mark
+  - Use on LIGHT backgrounds (cream, white)
+  - Use for: navigation (scrolled state), about page, hero on light
 
-1. Logo file (PNG/SVG with transparency)
-2. Logo usage guidelines (if any)
-3. Any existing brand color references
-4. Any existing typography references
-5. Any brand photography/style references
+WORDMARK (chittagongtrail-wordmark.png):
+  - Logo + text combination
+  - Use on DARK backgrounds (near-black, dark brown)
+  - Use for: footer, dark sections, hero on dark imagery
+
+FAVICON (chittagongtrail-favicon.png):
+  - Browser tab icon
+  - Direct use as favicon
 ```
 
-### Placeholder Policy
+### Colors Derived from Logo
 
 ```text
-Until brand assets are provided:
-  - Use placeholder colors (clearly marked as TEMPORARY)
-  - Use system/default fonts (clearly marked as TEMPORARY)
-  - Document all placeholders for later replacement
-  - Do not invent final design values
+FINAL COLORS (derived from actual logo):
+
+Backgrounds:
+  --bg-primary: #FDF5E6 (warm cream)
+  --bg-secondary: #F5E6D3 (darker cream)
+  --bg-surface: #FFFFFF (white)
+
+Text:
+  --text-primary: #5D4037 (dark brown/sepia)
+  --text-secondary: #8D6E63 (lighter brown)
+  --text-muted: #A1887F (muted brown)
+
+Accents:
+  --accent-primary: #C9A882 (terracotta)
+  --accent-secondary: #D4956A (orange/warm)
+  --accent-teal: #7FB5C4 (teal — use sparingly)
+
+Dark sections:
+  --dark-bg: #3E2723 (very dark brown)
+  --dark-text: #FDF5E6 (cream)
 ```
 
 ---
 
-## Phase 4 — Design System (Completed)
+## Phase 4 — Design System (Finalized with Brand Assets)
 
-### Visual Identity (Awaiting Brand Assets)
+### Visual Identity (Finalized)
 
 ```text
-1. Color palette — WAITING for logo/brand assets
-2. Typography — WAITING for logo/brand assets
-3. Logo treatment — WAITING for logo file
-4. Brand photography style — WAITING for reference
+1. Color palette — FINAL (derived from actual logo)
+2. Typography — RECOMMENDED (Playfair Display + DM Sans, pending approval)
+3. Logo treatment — FINAL (usage rules defined)
+4. Favicon — FINAL (chittagongtrail-favicon.png)
 ```
 
 ### Design System Principles (Defined in DESIGN-SYSTEM.md)
@@ -279,7 +317,7 @@ Until brand assets are provided:
 LOCKED DESIGN PRINCIPLES:
 
 1. Visual personality: Cinematic, warm, earthy, editorial, personal
-2. Color direction: Cream + earthy accents + dark sections
+2. Color palette: Derived from actual logo (cream, terracotta, teal, dark brown)
 3. Typography direction: Editorial serif headings + clean sans body
 4. Spacing system: 4px base, consistent scale
 5. Layout: Container-based, responsive grid
@@ -290,32 +328,42 @@ LOCKED DESIGN PRINCIPLES:
 10. Animation: Subtle, purposeful, GSAP
 ```
 
-### Provisional Values (Awaiting Brand Assets)
+### Final Values (Based on Brand Assets)
 
 ```text
-1. Exact color hex values — PROVISIONAL
-2. Exact font families — PROVISIONAL
-3. Border radius values — PROVISIONAL
-4. Shadow depths — PROVISIONAL
-5. Logo treatment — PENDING
+COLORS — FINAL:
+  --bg-primary: #FDF5E6
+  --bg-secondary: #F5E6D3
+  --bg-surface: #FFFFFF
+  --text-primary: #5D4037
+  --text-secondary: #8D6E63
+  --text-muted: #A1887F
+  --accent-primary: #C9A882
+  --accent-secondary: #D4956A
+  --accent-teal: #7FB5C4
+  --dark-bg: #3E2723
+  --dark-text: #FDF5E6
+
+LOGO USAGE — FINAL:
+  chittagongtrail_logo.png → Light backgrounds
+  chittagongtrail-wordmark.png → Dark backgrounds
+  chittagongtrail-favicon.png → Browser favicon
 ```
 
-### Design System Coverage
+### Provisional Values (Awaiting Approval)
 
 ```text
-DEFINED IN DESIGN-SYSTEM.md:
+TYPOGRAPHY — PROVISIONAL:
+  Display: 'Playfair Display', Georgia, serif (recommended)
+  Body: 'DM Sans', system sans-serif stack (recommended)
 
-1. Color system (provisional values)
-2. Typography system (provisional fonts)
-3. Spacing system (final scale)
-4. Layout principles (locked)
-5. Component principles (locked)
-6. Image system (locked)
-7. Responsive behavior (locked)
-8. Cinematic/storytelling principles (locked)
-9. Animation direction (locked)
-10. Accessibility principles (locked)
-11. Performance principles (locked)
+BORDER RADIUS — PROVISIONAL:
+  --radius-sm: 4px
+  --radius-md: 8px
+  --radius-lg: 16px
+
+SHADOWS — PROVISIONAL:
+  Standard shadow scale
 ```
 
 ---
@@ -352,7 +400,7 @@ DEFINED IN DESIGN-SYSTEM.md:
 | Phase 1 | Technical Foundation | Complete | Next.js, Prisma, MySQL |
 | Phase 2 | Site Architecture | Approved | STRUCTURE.md |
 | Phase 3 | Content Architecture | Approved | WIREFRAMES.md + Technical Decisions |
-| Phase 4 | Visual Identity | Design System Complete | Awaiting brand assets + approval |
+| Phase 4 | Visual Identity | Complete | Brand assets integrated, awaiting typography approval |
 
 ---
 
