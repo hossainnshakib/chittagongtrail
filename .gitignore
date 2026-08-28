@@ -31,7 +31,12 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!/.env.example
 
 # vercel
 .vercel
@@ -47,3 +52,16 @@ next-env.d.ts
 .claude/
 .windsurf/
 skills-lock.json
+
+# uploads (keep directory structure via .gitkeep)
+/public/uploads/*
+!/public/uploads/.gitkeep
+!/public/uploads/trails/
+!/public/uploads/journal/
+!/public/uploads/og/
+/public/uploads/trails/*
+!/public/uploads/trails/.gitkeep
+/public/uploads/journal/*
+!/public/uploads/journal/.gitkeep
+/public/uploads/og/*
+!/public/uploads/og/.gitkeep
