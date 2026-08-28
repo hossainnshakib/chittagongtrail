@@ -2,12 +2,12 @@
 
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import type { JournalPost, TrailLocation } from "@prisma/client";
+import type { JournalPost, TrailLocation, ContentStatus, JournalType } from "@prisma/client";
 import {
   createJournalPost,
   updateJournalPost,
   type JournalActionResult,
-} from "@/app/admin/(protected)/journal/actions";
+} from "@/app/admin/(protected)/trails/actions";
 import DeleteButton from "@/components/admin/DeleteButton";
 
 interface JournalFormProps {
@@ -110,45 +110,66 @@ export default function JournalForm({ post, trails, mode }: JournalFormProps) {
           </div>
           <div>
             <label
-              htmlFor="category"
+              htmlFor="type"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Category *
+              Type *
             </label>
             <select
-              id="category"
-              name="category"
-              defaultValue={post?.category ?? "story"}
+              id="type"
+              name="type"
+              defaultValue={post?.type ?? "STORY"}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             >
-              <option value="story">Journal</option>
-              <option value="food">Food</option>
+              <option value="STORY">Story / Journal</option>
+              <option value="FOOD">Food</option>
             </select>
-            {state.errors?.category && (
+            {state.errors?.type && (
               <p className="text-red-600 text-xs mt-1">
-                {state.errors.category}
+                {state.errors.type}
               </p>
             )}
           </div>
           <div>
             <label
-              htmlFor="publishedDate"
+              htmlFor="status"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Status *
+            </label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={post?.status ?? "DRAFT"}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            >
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+            {state.errors?.status && (
+              <p className="text-red-600 text-xs mt-1">
+                {state.errors.status}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="publishedAt"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
               Published Date
             </label>
             <input
               type="date"
-              id="publishedDate"
-              name="publishedDate"
-              defaultValue={formatDateForInput(
-                post?.publishedDate ?? new Date()
-              )}
+              id="publishedAt"
+              name="publishedAt"
+              defaultValue={formatDateForInput(post?.publishedAt ?? new Date())}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
-            {state.errors?.publishedDate && (
+            {state.errors?.publishedAt && (
               <p className="text-red-600 text-xs mt-1">
-                {state.errors.publishedDate}
+                {state.errors.publishedAt}
               </p>
             )}
           </div>
@@ -220,38 +241,64 @@ export default function JournalForm({ post, trails, mode }: JournalFormProps) {
 
       <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
         <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
-          Media
+          Media & Curation
         </h2>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
-              htmlFor="coverImage"
+              htmlFor="coverMediaId"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Cover Image URL
+              Cover Media ID
             </label>
             <input
-              type="text"
-              id="coverImage"
-              name="coverImage"
-              defaultValue={post?.coverImage ?? ""}
-              placeholder="/uploads/journal/cover.jpg"
+              type="number"
+              id="coverMediaId"
+              name="coverMediaId"
+              defaultValue={post?.coverMediaId ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>
           <div>
             <label
-              htmlFor="coverImageAlt"
+              htmlFor="ogMediaId"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Cover Image Alt Text
+              OG Media ID
             </label>
             <input
-              type="text"
-              id="coverImageAlt"
-              name="coverImageAlt"
-              defaultValue={post?.coverImageAlt ?? ""}
-              placeholder="Descriptive alt text for the cover image"
+              type="number"
+              id="ogMediaId"
+              name="ogMediaId"
+              defaultValue={post?.ogMediaId ?? ""}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="isFeatured"
+              name="isFeatured"
+              defaultChecked={post?.isFeatured ?? false}
+              value="true"
+              className="w-4 h-4 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
+            />
+            <label htmlFor="isFeatured" className="text-sm font-medium text-[#5D4037]">
+              Feature on Homepage / Section
+            </label>
+          </div>
+          <div>
+            <label
+              htmlFor="featuredOrder"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Featured Order
+            </label>
+            <input
+              type="number"
+              id="featuredOrder"
+              name="featuredOrder"
+              defaultValue={post?.featuredOrder ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>
@@ -290,21 +337,6 @@ export default function JournalForm({ post, trails, mode }: JournalFormProps) {
               name="metaDescription"
               defaultValue={post?.metaDescription ?? ""}
               rows={2}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="ogImage"
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              OG Image URL
-            </label>
-            <input
-              type="text"
-              id="ogImage"
-              name="ogImage"
-              defaultValue={post?.ogImage ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>

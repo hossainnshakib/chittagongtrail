@@ -260,14 +260,14 @@ export function buildArticleJsonLd(options: {
   datePublished: string;
   dateModified?: string;
   url: string;
-  category?: string;
+  type?: string;
 }): ArticleJsonLd {
   const imageUrl = getAbsoluteImageUrl(options.image);
-  const type = options.category === "food" ? "Article" : "BlogPosting";
+  const jsonLdType = options.type === "FOOD" ? "Article" : "BlogPosting";
 
   return {
     "@context": "https://schema.org",
-    "@type": type,
+    "@type": jsonLdType,
     headline: options.title,
     description: options.description,
     image: imageUrl,

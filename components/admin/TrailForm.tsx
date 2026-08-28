@@ -40,6 +40,12 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
     }
   }
 
+  const formatDateForInput = (date: Date | string | null) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  };
+
   return (
     <form action={formAction} className="space-y-8">
       {state.error && (
@@ -101,20 +107,165 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
               <p className="text-red-600 text-xs mt-1">{state.errors.slug}</p>
             )}
           </div>
+          <div>
+            <label
+              htmlFor="district"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              District *
+            </label>
+            <select
+              id="district"
+              name="district"
+              defaultValue={trail?.district ?? "CHITTAGONG"}
+              required
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            >
+              <option value="CHITTAGONG">Chittagong District</option>
+              <option value="COX_BAZAR">Cox&apos;s Bazar District</option>
+              <option value="RANGAMATI">Rangamati Hill District</option>
+              <option value="BANDARBAN">Bandarban Hill District</option>
+              <option value="KHAGRACHARI">Khagrachari Hill District</option>
+            </select>
+            {state.errors?.district && (
+              <p className="text-red-600 text-xs mt-1">{state.errors.district}</p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Status *
+            </label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={trail?.status ?? "DRAFT"}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            >
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="administrativeArea"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Administrative Area (Upazila/Thana)
+            </label>
+            <input
+              type="text"
+              id="administrativeArea"
+              name="administrativeArea"
+              defaultValue={trail?.administrativeArea ?? ""}
+              placeholder="e.g. Raozan, Sadar"
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="localArea"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Local Area / Neighborhood
+            </label>
+            <input
+              type="text"
+              id="localArea"
+              name="localArea"
+              defaultValue={trail?.localArea ?? ""}
+              placeholder="e.g. Patenga Beach"
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="terrainType"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Terrain Type
+            </label>
+            <select
+              id="terrainType"
+              name="terrainType"
+              defaultValue={trail?.terrainType ?? ""}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            >
+              <option value="">None / Unspecified</option>
+              <option value="COAST">Coast</option>
+              <option value="HILLS">Hills</option>
+              <option value="RIVER">River</option>
+              <option value="CITY">City</option>
+              <option value="RURAL">Rural</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="placeType"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Place Type *
+            </label>
+            <select
+              id="placeType"
+              name="placeType"
+              defaultValue={trail?.placeType ?? "PLACE"}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            >
+              <option value="PLACE">Place</option>
+              <option value="TOURIST_ATTRACTION">Tourist Attraction</option>
+              <option value="NATURAL_FEATURE">Natural Feature</option>
+              <option value="PARK">Park</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="publishedAt"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Published Date
+            </label>
+            <input
+              type="date"
+              id="publishedAt"
+              name="publishedAt"
+              defaultValue={formatDateForInput(trail?.publishedAt ?? new Date())}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="excerpt"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Excerpt
+            </label>
+            <input
+              type="text"
+              id="excerpt"
+              name="excerpt"
+              defaultValue={trail?.excerpt ?? ""}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
           <div className="md:col-span-2">
             <label
               htmlFor="description"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Description *
+              Description * (HTML supported)
             </label>
             <textarea
               id="description"
               name="description"
               defaultValue={trail?.description}
               required
-              rows={4}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+              rows={8}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+              placeholder="<p>Full narrative content...</p>"
             />
             {state.errors?.description && (
               <p className="text-red-600 text-xs mt-1">
@@ -127,7 +278,7 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
 
       <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
         <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
-          Location
+          Location Coordinates
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -181,38 +332,64 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
 
       <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
         <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
-          Media
+          Media & Curation
         </h2>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
-              htmlFor="photos"
+              htmlFor="coverMediaId"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Photo URLs (comma-separated)
+              Cover Media ID
             </label>
             <input
-              type="text"
-              id="photos"
-              name="photos"
-              defaultValue={trail?.photos ?? ""}
-              placeholder="/uploads/trails/photo1.jpg, /uploads/trails/photo2.jpg"
+              type="number"
+              id="coverMediaId"
+              name="coverMediaId"
+              defaultValue={trail?.coverMediaId ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>
           <div>
             <label
-              htmlFor="photoAlt"
+              htmlFor="ogMediaId"
               className="block text-sm font-medium text-[#5D4037] mb-1"
             >
-              Photo Alt Text
+              OG Media ID
             </label>
             <input
-              type="text"
-              id="photoAlt"
-              name="photoAlt"
-              defaultValue={trail?.photoAlt ?? ""}
-              placeholder="Descriptive alt text for the trail photos"
+              type="number"
+              id="ogMediaId"
+              name="ogMediaId"
+              defaultValue={trail?.ogMediaId ?? ""}
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="isFeatured"
+              name="isFeatured"
+              defaultChecked={trail?.isFeatured ?? false}
+              value="true"
+              className="w-4 h-4 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
+            />
+            <label htmlFor="isFeatured" className="text-sm font-medium text-[#5D4037]">
+              Feature on Homepage
+            </label>
+          </div>
+          <div>
+            <label
+              htmlFor="featuredOrder"
+              className="block text-sm font-medium text-[#5D4037] mb-1"
+            >
+              Featured Order
+            </label>
+            <input
+              type="number"
+              id="featuredOrder"
+              name="featuredOrder"
+              defaultValue={trail?.featuredOrder ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>
@@ -251,21 +428,6 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
               name="metaDescription"
               defaultValue={trail?.metaDescription ?? ""}
               rows={2}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="ogImage"
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              OG Image URL
-            </label>
-            <input
-              type="text"
-              id="ogImage"
-              name="ogImage"
-              defaultValue={trail?.ogImage ?? ""}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
             />
           </div>

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { JournalType } from "@prisma/client";
 
 export default async function AdminDashboard() {
   const [totalTrails, totalJournal, totalFood, recentTrails, recentJournal] =
     await Promise.all([
       prisma.trailLocation.count(),
       prisma.journalPost.count(),
-      prisma.journalPost.count({ where: { category: "food" } }),
+      prisma.journalPost.count({ where: { type: JournalType.FOOD } }),
       prisma.trailLocation.findMany({
       orderBy: { updatedAt: "desc" },
       take: 5,
@@ -24,7 +25,7 @@ export default async function AdminDashboard() {
         id: true,
         title: true,
         slug: true,
-        category: true,
+        type: true,
         updatedAt: true,
       },
     }),
@@ -152,7 +153,7 @@ export default async function AdminDashboard() {
                     <div>
                       <p className="font-medium text-[#5D4037]">{post.title}</p>
                       <p className="text-xs text-[#A1887F]">
-                        {post.category === "food" ? "Food" : "Journal"} · /
+                        {post.type === JournalType.FOOD ? "Food" : "Journal"} · /
                         {post.slug}
                       </p>
                     </div>

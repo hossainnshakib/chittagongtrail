@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { trailSchema, journalSchema } from "@/lib/validation";
+import { ContentStatus, JournalType, District, TerrainType, PlaceType } from "@prisma/client";
 
 export interface TrailActionResult {
   success: boolean;
@@ -11,70 +13,10 @@ export interface TrailActionResult {
   errors?: Record<string, string>;
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-}
-
-function validateTrailForm(formData: FormData): {
-  valid: boolean;
-  errors: Record<string, string>;
-  data: Record<string, string | number | null>;
-} {
-  const errors: Record<string, string> = {};
-
-  const name = String(formData.get("name") || "").trim();
-  const slug = String(formData.get("slug") || "").trim();
-  const description = String(formData.get("description") || "").trim();
-  const latitude = formData.get("latitude");
-  const longitude = formData.get("longitude");
-  const photoAlt = String(formData.get("photoAlt") || "").trim();
-  const metaTitle = String(formData.get("metaTitle") || "").trim();
-  const metaDescription = String(formData.get("metaDescription") || "").trim();
-  const ogImage = String(formData.get("ogImage") || "").trim();
-  const photos = String(formData.get("photos") || "").trim();
-
-  if (!name) errors.name = "Name is required";
-  if (!slug) errors.slug = "Slug is required";
-  if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    errors.slug = "Slug must be URL-safe (lowercase letters, numbers, hyphens)";
-  }
-  if (!description) errors.description = "Description is required";
-
-  const lat = latitude ? parseFloat(String(latitude)) : null;
-  const lng = longitude ? parseFloat(String(longitude)) : null;
-
-  if (latitude !== null && latitude !== "") {
-    if (isNaN(lat!) || lat! < -90 || lat! > 90) {
-      errors.latitude = "Latitude must be between -90 and 90";
-    }
-  }
-  if (longitude !== null && longitude !== "") {
-    if (isNaN(lng!) || lng! < -180 || lng! > 180) {
-      errors.longitude = "Longitude must be between -180 and 180";
-    }
-  }
-
-  return {
-    valid: Object.keys(errors).length === 0,
-    errors,
-    data: {
-      name,
-      slug,
-      description,
-      latitude: lat,
-      longitude: lng,
-      photos: photos || null,
-      photoAlt: photoAlt || null,
-      metaTitle: metaTitle || null,
-      metaDescription: metaDescription || null,
-      ogImage: ogImage || null,
-    },
-  };
+export interface JournalActionResult {
+  success: boolean;
+  error?: string;
+  errors?: Record<string, string>;
 }
 
 export async function createTrail(
@@ -83,14 +25,43 @@ export async function createTrail(
 ): Promise<TrailActionResult> {
   await requireAdmin();
 
-  const { valid, errors, data } = validateTrailForm(formData);
-  if (!valid) {
+  const raw = {
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    excerpt: formData.get("excerpt"),
+    description: formData.get("description"),
+    district: formData.get("district"),
+    administrativeArea: formData.get("administrativeArea"),
+    localArea: formData.get("localArea"),
+    terrainType: formData.get("terrainType") || null,
+    latitude: formData.get("latitude") !== "" ? formData.get("latitude") : null,
+    longitude: formData.get("longitude") !== "" ? formData.get("longitude") : null,
+    status: formData.get("status") || "DRAFT",
+    publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
+    isFeatured: formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on",
+    featuredOrder: formData.get("featuredOrder") !== "" ? formData.get("featuredOrder") : null,
+    coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
+    ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
+    metaTitle: formData.get("metaTitle"),
+    metaDescription: formData.get("metaDescription"),
+    placeType: formData.get("placeType") || "PLACE",
+  };
+
+  const parsed = trailSchema.safeParse(raw);
+  if (!parsed.success) {
+    const errors: Record<string, string> = {};
+    for (const err of parsed.error.issues) {
+      const field = err.path.join(".");
+      errors[field] = err.message;
+    }
     return { success: false, errors };
   }
 
+  const data = parsed.data;
+
   try {
     const existing = await prisma.trailLocation.findUnique({
-      where: { slug: data.slug as string },
+      where: { slug: data.slug },
     });
     if (existing) {
       return {
@@ -99,18 +70,32 @@ export async function createTrail(
       };
     }
 
+    let publishedAt = data.publishedAt;
+    if (data.status === ContentStatus.PUBLISHED && !publishedAt) {
+      publishedAt = new Date();
+    }
+
     await prisma.trailLocation.create({
       data: {
-        name: data.name as string,
-        slug: data.slug as string,
-        description: data.description as string,
-        latitude: data.latitude as number | null,
-        longitude: data.longitude as number | null,
-        photos: data.photos as string | null,
-        photoAlt: data.photoAlt as string | null,
-        metaTitle: data.metaTitle as string | null,
-        metaDescription: data.metaDescription as string | null,
-        ogImage: data.ogImage as string | null,
+        name: data.name,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        description: data.description,
+        district: data.district as District,
+        administrativeArea: data.administrativeArea,
+        localArea: data.localArea,
+        terrainType: data.terrainType ? (data.terrainType as TerrainType) : null,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+        status: data.status as ContentStatus,
+        publishedAt,
+        isFeatured: data.isFeatured,
+        featuredOrder: data.featuredOrder ?? null,
+        coverMediaId: data.coverMediaId ?? null,
+        ogMediaId: data.ogMediaId ?? null,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        placeType: data.placeType as PlaceType,
       },
     });
 
@@ -131,10 +116,39 @@ export async function updateTrail(
 ): Promise<TrailActionResult> {
   await requireAdmin();
 
-  const { valid, errors, data } = validateTrailForm(formData);
-  if (!valid) {
+  const raw = {
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    excerpt: formData.get("excerpt"),
+    description: formData.get("description"),
+    district: formData.get("district"),
+    administrativeArea: formData.get("administrativeArea"),
+    localArea: formData.get("localArea"),
+    terrainType: formData.get("terrainType") || null,
+    latitude: formData.get("latitude") !== "" ? formData.get("latitude") : null,
+    longitude: formData.get("longitude") !== "" ? formData.get("longitude") : null,
+    status: formData.get("status") || "DRAFT",
+    publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
+    isFeatured: formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on",
+    featuredOrder: formData.get("featuredOrder") !== "" ? formData.get("featuredOrder") : null,
+    coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
+    ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
+    metaTitle: formData.get("metaTitle"),
+    metaDescription: formData.get("metaDescription"),
+    placeType: formData.get("placeType") || "PLACE",
+  };
+
+  const parsed = trailSchema.safeParse(raw);
+  if (!parsed.success) {
+    const errors: Record<string, string> = {};
+    for (const err of parsed.error.issues) {
+      const field = err.path.join(".");
+      errors[field] = err.message;
+    }
     return { success: false, errors };
   }
+
+  const data = parsed.data;
 
   try {
     const existing = await prisma.trailLocation.findUnique({
@@ -146,7 +160,7 @@ export async function updateTrail(
 
     if (existing.slug !== data.slug) {
       const slugTaken = await prisma.trailLocation.findUnique({
-        where: { slug: data.slug as string },
+        where: { slug: data.slug },
       });
       if (slugTaken) {
         return {
@@ -156,19 +170,33 @@ export async function updateTrail(
       }
     }
 
+    let publishedAt = data.publishedAt;
+    if (data.status === ContentStatus.PUBLISHED && !publishedAt) {
+      publishedAt = existing.publishedAt || new Date();
+    }
+
     await prisma.trailLocation.update({
       where: { id },
       data: {
-        name: data.name as string,
-        slug: data.slug as string,
-        description: data.description as string,
-        latitude: data.latitude as number | null,
-        longitude: data.longitude as number | null,
-        photos: data.photos as string | null,
-        photoAlt: data.photoAlt as string | null,
-        metaTitle: data.metaTitle as string | null,
-        metaDescription: data.metaDescription as string | null,
-        ogImage: data.ogImage as string | null,
+        name: data.name,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        description: data.description,
+        district: data.district as District,
+        administrativeArea: data.administrativeArea,
+        localArea: data.localArea,
+        terrainType: data.terrainType ? (data.terrainType as TerrainType) : null,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+        status: data.status as ContentStatus,
+        publishedAt,
+        isFeatured: data.isFeatured,
+        featuredOrder: data.featuredOrder ?? null,
+        coverMediaId: data.coverMediaId ?? null,
+        ogMediaId: data.ogMediaId ?? null,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        placeType: data.placeType as PlaceType,
       },
     });
 
@@ -219,6 +247,213 @@ export async function deleteTrail(id: number): Promise<TrailActionResult> {
   return { success: true };
 }
 
+export async function createJournalPost(
+  _prevState: JournalActionResult,
+  formData: FormData
+): Promise<JournalActionResult> {
+  await requireAdmin();
+
+  const raw = {
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    excerpt: formData.get("excerpt"),
+    content: formData.get("content"),
+    type: formData.get("type") || "STORY",
+    status: formData.get("status") || "DRAFT",
+    publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
+    isFeatured: formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on",
+    featuredOrder: formData.get("featuredOrder") !== "" ? formData.get("featuredOrder") : null,
+    coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
+    ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
+    metaTitle: formData.get("metaTitle"),
+    metaDescription: formData.get("metaDescription"),
+    trailId: formData.get("trailId") !== "" ? formData.get("trailId") : null,
+  };
+
+  const parsed = journalSchema.safeParse(raw);
+  if (!parsed.success) {
+    const errors: Record<string, string> = {};
+    for (const err of parsed.error.issues) {
+      const field = err.path.join(".");
+      errors[field] = err.message;
+    }
+    return { success: false, errors };
+  }
+
+  const data = parsed.data;
+
+  try {
+    const existing = await prisma.journalPost.findUnique({
+      where: { slug: data.slug },
+    });
+    if (existing) {
+      return {
+        success: false,
+        errors: { slug: "A post with this slug already exists" },
+      };
+    }
+
+    let publishedAt = data.publishedAt;
+    if (data.status === ContentStatus.PUBLISHED && !publishedAt) {
+      publishedAt = new Date();
+    }
+
+    await prisma.journalPost.create({
+      data: {
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        type: data.type as JournalType,
+        status: data.status as ContentStatus,
+        publishedAt,
+        isFeatured: data.isFeatured,
+        featuredOrder: data.featuredOrder ?? null,
+        coverMediaId: data.coverMediaId ?? null,
+        ogMediaId: data.ogMediaId ?? null,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        trailId: data.trailId ?? null,
+      },
+    });
+
+    revalidatePath("/admin/journal");
+    revalidatePath("/journal");
+    revalidatePath("/food");
+  } catch (error) {
+    console.error("[admin:journal:create]", error);
+    return { success: false, error: "Failed to create journal post" };
+  }
+
+  redirect("/admin/journal");
+}
+
+export async function updateJournalPost(
+  id: number,
+  _prevState: JournalActionResult,
+  formData: FormData
+): Promise<JournalActionResult> {
+  await requireAdmin();
+
+  const raw = {
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    excerpt: formData.get("excerpt"),
+    content: formData.get("content"),
+    type: formData.get("type") || "STORY",
+    status: formData.get("status") || "DRAFT",
+    publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
+    isFeatured: formData.get("isFeatured") === "true" || formData.get("isFeatured") === "on",
+    featuredOrder: formData.get("featuredOrder") !== "" ? formData.get("featuredOrder") : null,
+    coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
+    ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
+    metaTitle: formData.get("metaTitle"),
+    metaDescription: formData.get("metaDescription"),
+    trailId: formData.get("trailId") !== "" ? formData.get("trailId") : null,
+  };
+
+  const parsed = journalSchema.safeParse(raw);
+  if (!parsed.success) {
+    const errors: Record<string, string> = {};
+    for (const err of parsed.error.issues) {
+      const field = err.path.join(".");
+      errors[field] = err.message;
+    }
+    return { success: false, errors };
+  }
+
+  const data = parsed.data;
+
+  try {
+    const existing = await prisma.journalPost.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      return { success: false, error: "Journal post not found" };
+    }
+
+    if (existing.slug !== data.slug) {
+      const slugTaken = await prisma.journalPost.findUnique({
+        where: { slug: data.slug },
+      });
+      if (slugTaken) {
+        return {
+          success: false,
+          errors: { slug: "A post with this slug already exists" },
+        };
+      }
+    }
+
+    let publishedAt = data.publishedAt;
+    if (data.status === ContentStatus.PUBLISHED && !publishedAt) {
+      publishedAt = existing.publishedAt || new Date();
+    }
+
+    await prisma.journalPost.update({
+      where: { id },
+      data: {
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        type: data.type as JournalType,
+        status: data.status as ContentStatus,
+        publishedAt,
+        isFeatured: data.isFeatured,
+        featuredOrder: data.featuredOrder ?? null,
+        coverMediaId: data.coverMediaId ?? null,
+        ogMediaId: data.ogMediaId ?? null,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        trailId: data.trailId ?? null,
+      },
+    });
+
+    revalidatePath("/admin/journal");
+    revalidatePath(`/admin/journal/${id}/edit`);
+    revalidatePath("/journal");
+    revalidatePath(`/journal/${data.slug}`);
+    revalidatePath("/food");
+    revalidatePath(`/food/${data.slug}`);
+    if (existing.slug !== data.slug) {
+      revalidatePath(`/journal/${existing.slug}`);
+      revalidatePath(`/food/${existing.slug}`);
+    }
+  } catch (error) {
+    console.error("[admin:journal:update]", error);
+    return { success: false, error: "Failed to update journal post" };
+  }
+
+  redirect("/admin/journal");
+}
+
+export async function deleteJournalPost(id: number): Promise<JournalActionResult> {
+  await requireAdmin();
+
+  try {
+    const post = await prisma.journalPost.findUnique({ where: { id } });
+    if (!post) {
+      return { success: false, error: "Journal post not found" };
+    }
+
+    await prisma.journalPost.delete({ where: { id } });
+
+    revalidatePath("/admin/journal");
+    revalidatePath("/journal");
+    revalidatePath("/food");
+  } catch (error) {
+    console.error("[admin:journal:delete]", error);
+    return { success: false, error: "Failed to delete journal post" };
+  }
+
+  return { success: true };
+}
+
 export async function generateSlug(name: string): Promise<string> {
-  return slugify(name);
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
 }

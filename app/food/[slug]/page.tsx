@@ -30,13 +30,16 @@ export async function generateMetadata({
     story.metaDescription ||
     (story.excerpt || story.content.replace(/<[^>]*>/g, "").substring(0, 160));
 
+  const coverUrl = story.coverMedia?.secureUrl || null;
+  const ogUrl = story.ogMedia?.secureUrl || coverUrl;
+
   return buildMetadata({
     title,
     description,
     path: `/food/${story.slug}`,
-    image: story.ogImage || story.coverImage,
+    image: ogUrl,
     type: "article",
-    publishedTime: story.publishedDate.toISOString(),
+    publishedTime: story.publishedAt?.toISOString(),
     modifiedTime: story.updatedAt.toISOString(),
   });
 }
@@ -56,17 +59,20 @@ export default async function FoodDetailPage({ params }: FoodPageProps) {
     notFound();
   }
 
+  const coverUrl = story.coverMedia?.secureUrl || null;
+  const coverAlt = story.coverMedia?.altText || story.title;
+
   const articleJsonLd = buildArticleJsonLd({
     title: story.title,
     description:
       story.metaDescription ||
       story.excerpt ||
       story.content.replace(/<[^>]*>/g, "").substring(0, 200),
-    image: story.ogImage || story.coverImage,
-    datePublished: story.publishedDate.toISOString(),
+    image: coverUrl,
+    datePublished: story.publishedAt?.toISOString() || story.createdAt.toISOString(),
     dateModified: story.updatedAt.toISOString(),
     url: getSiteUrl(`/food/${story.slug}`),
-    category: "food",
+    type: story.type,
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
@@ -87,27 +93,29 @@ export default async function FoodDetailPage({ params }: FoodPageProps) {
       />
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] flex items-end">
-        {story.coverImage ? (
+        {coverUrl ? (
           <Image
-            src={story.coverImage}
-            alt={story.coverImageAlt || story.title}
+            src={coverUrl}
+            alt={coverAlt}
             fill
             className="object-cover"
             priority
           />
         ) : (
-          <div className="absolute inset-0 bg-background-secondary" />
+          <div className="absolute inset-0 bg-[#F5E6D3]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/80 to-transparent" />
         <Container className="relative z-10 pb-8">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-dark-text/70 text-sm">
-              {new Date(story.publishedDate).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
+            {story.publishedAt && (
+              <span className="text-dark-text/70 text-sm">
+                {new Date(story.publishedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            )}
           </div>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-dark-text">
             {story.title}
@@ -130,7 +138,7 @@ export default async function FoodDetailPage({ params }: FoodPageProps) {
       {/* Navigation */}
       <section className="section bg-background-secondary">
         <Container>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center max-w-3xl mx-auto">
             <Button href="/food" variant="secondary">
               ← All Food Stories
             </Button>

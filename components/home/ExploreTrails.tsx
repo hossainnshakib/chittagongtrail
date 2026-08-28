@@ -6,10 +6,6 @@ import { getTrails } from "@/lib/data";
 export async function ExploreTrails() {
   const trails = await getTrails();
 
-  function getCoverImage(trail: { photos?: string | null }) {
-    return trail.photos?.split(",")[0]?.trim() || null;
-  }
-
   return (
     <section className="section bg-background-secondary">
       <Container>
@@ -21,7 +17,8 @@ export async function ExploreTrails() {
         {trails.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {trails.slice(0, 6).map((trail) => {
-              const cover = getCoverImage(trail);
+              const coverUrl = trail.coverMedia?.secureUrl || null;
+              const coverAlt = trail.coverMedia?.altText || trail.name;
               return (
                 <Link
                   key={trail.id}
@@ -29,16 +26,16 @@ export async function ExploreTrails() {
                   className="group card"
                 >
                   <div className="relative aspect-video overflow-hidden bg-background-secondary">
-                    {cover ? (
+                    {coverUrl ? (
                       <Image
-                        src={cover}
-                        alt={trail.photoAlt || trail.name}
+                        src={coverUrl}
+                        alt={coverAlt}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-text-muted text-sm">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]">
+                        <span className="text-[#5D4037] text-sm font-medium">
                           {trail.name}
                         </span>
                       </div>
@@ -49,7 +46,7 @@ export async function ExploreTrails() {
                       {trail.name}
                     </h3>
                     <p className="text-text-secondary text-sm line-clamp-2">
-                      {trail.description.substring(0, 120)}...
+                      {trail.excerpt || trail.description.replace(/<[^>]*>?/gm, "").substring(0, 120)}...
                     </p>
                     {trail._count.journalPosts > 0 && (
                       <span className="text-xs text-text-muted mt-2 block">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { JournalType } from "@prisma/client";
 
 export default async function AdminJournalPage() {
   const posts = await prisma.journalPost.findMany({
@@ -49,7 +50,10 @@ export default async function AdminJournalPage() {
                     Title
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[#5D4037]">
-                    Category
+                    Type
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[#5D4037]">
+                    Status
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[#5D4037]">
                     Trail
@@ -79,19 +83,24 @@ export default async function AdminJournalPage() {
                     <td className="px-4 py-3">
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${
-                          post.category === "food"
+                          post.type === JournalType.FOOD
                             ? "bg-[#D4956A] text-white"
                             : "bg-[#7FB5C4] text-white"
                         }`}
                       >
-                        {post.category === "food" ? "Food" : "Journal"}
+                        {post.type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs px-2 py-1 bg-[#E8DCC8] text-[#5D4037] rounded-full">
+                        {post.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-[#8D6E63]">
                       {post.trail?.name || "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#8D6E63]">
-                      {post.publishedDate.toLocaleDateString()}
+                      {post.publishedAt ? post.publishedAt.toLocaleDateString() : "Unpublished"}
                     </td>
                     <td className="px-4 py-3 text-sm text-[#8D6E63]">
                       {post.updatedAt.toLocaleDateString()}
@@ -122,8 +131,8 @@ export default async function AdminJournalPage() {
                   <div className="flex-1">
                     <p className="font-medium text-[#5D4037]">{post.title}</p>
                     <p className="text-xs text-[#A1887F]">
-                      {post.category === "food" ? "Food" : "Journal"} ·{" "}
-                      {post.publishedDate.toLocaleDateString()}
+                      {post.type} · {post.status} ·{" "}
+                      {post.publishedAt ? post.publishedAt.toLocaleDateString() : "Draft"}
                     </p>
                     {post.trail && (
                       <p className="text-xs text-[#A1887F]">
@@ -133,12 +142,12 @@ export default async function AdminJournalPage() {
                   </div>
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
-                      post.category === "food"
+                      post.type === JournalType.FOOD
                         ? "bg-[#D4956A] text-white"
                         : "bg-[#7FB5C4] text-white"
                     }`}
                   >
-                    {post.category === "food" ? "Food" : "Journal"}
+                    {post.type}
                   </span>
                 </div>
               </Link>

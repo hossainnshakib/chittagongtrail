@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { ContentStatus, JournalType } from "@prisma/client";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
 
@@ -43,6 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const trails = await prisma.trailLocation.findMany({
+      where: { status: ContentStatus.PUBLISHED },
       select: {
         slug: true,
         updatedAt: true,
@@ -64,12 +66,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const journalPosts = await prisma.journalPost.findMany({
-      where: { category: { not: "food" } },
+      where: {
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.STORY,
+      },
       select: {
         slug: true,
         updatedAt: true,
       },
-      orderBy: { publishedDate: "desc" },
+      orderBy: { publishedAt: "desc" },
     });
 
     const journalPages: MetadataRoute.Sitemap = journalPosts.map((post) => ({
@@ -86,12 +91,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const foodPosts = await prisma.journalPost.findMany({
-      where: { category: "food" },
+      where: {
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.FOOD,
+      },
       select: {
         slug: true,
         updatedAt: true,
       },
-      orderBy: { publishedDate: "desc" },
+      orderBy: { publishedAt: "desc" },
     });
 
     const foodPages: MetadataRoute.Sitemap = foodPosts.map((post) => ({

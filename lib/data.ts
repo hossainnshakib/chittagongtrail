@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ContentStatus, JournalType } from "@prisma/client";
 
 const LOG_PREFIX = "[chittagongtrail:data]";
 
@@ -10,8 +11,10 @@ function logQueryError(operation: string, error: unknown) {
 export async function getTrails() {
   try {
     const trails = await prisma.trailLocation.findMany({
-      orderBy: { createdAt: "desc" },
+      where: { status: ContentStatus.PUBLISHED },
+      orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       include: {
+        coverMedia: true,
         _count: {
           select: { journalPosts: true },
         },
@@ -29,12 +32,23 @@ export async function getTrailBySlug(slug: string) {
     const trail = await prisma.trailLocation.findUnique({
       where: { slug },
       include: {
+        coverMedia: true,
+        ogMedia: true,
+        gallery: {
+          include: { mediaAsset: true },
+          orderBy: { sortOrder: "asc" },
+        },
         journalPosts: {
-          orderBy: { publishedDate: "desc" },
+          where: { status: ContentStatus.PUBLISHED },
+          orderBy: { publishedAt: "desc" },
+          include: { coverMedia: true },
           take: 5,
         },
       },
     });
+    if (!trail || trail.status !== ContentStatus.PUBLISHED) {
+      return null;
+    }
     return trail;
   } catch (error) {
     logQueryError(`getTrailBySlug(${slug})`, error);
@@ -45,8 +59,10 @@ export async function getTrailBySlug(slug: string) {
 export async function getJournalPosts() {
   try {
     const posts = await prisma.journalPost.findMany({
-      orderBy: { publishedDate: "desc" },
+      where: { status: ContentStatus.PUBLISHED },
+      orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       include: {
+        coverMedia: true,
         trail: {
           select: { name: true, slug: true },
         },
@@ -64,9 +80,14 @@ export async function getJournalPostBySlug(slug: string) {
     const post = await prisma.journalPost.findUnique({
       where: { slug },
       include: {
+        coverMedia: true,
+        ogMedia: true,
         trail: true,
       },
     });
+    if (!post || post.status !== ContentStatus.PUBLISHED) {
+      return null;
+    }
     return post;
   } catch (error) {
     logQueryError(`getJournalPostBySlug(${slug})`, error);
@@ -77,9 +98,13 @@ export async function getJournalPostBySlug(slug: string) {
 export async function getFoodPosts() {
   try {
     const posts = await prisma.journalPost.findMany({
-      where: { category: "food" },
-      orderBy: { publishedDate: "desc" },
+      where: {
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.FOOD,
+      },
+      orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       include: {
+        coverMedia: true,
         trail: {
           select: { name: true, slug: true },
         },
@@ -97,9 +122,12 @@ export async function getFoodPostBySlug(slug: string) {
     const post = await prisma.journalPost.findFirst({
       where: {
         slug,
-        category: "food",
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.FOOD,
       },
       include: {
+        coverMedia: true,
+        ogMedia: true,
         trail: true,
       },
     });
@@ -114,6 +142,7 @@ export async function getTrailsWithCoordinates() {
   try {
     const trails = await prisma.trailLocation.findMany({
       where: {
+        status: ContentStatus.PUBLISHED,
         latitude: { not: null },
         longitude: { not: null },
       },
@@ -135,9 +164,14 @@ export async function getTrailsWithCoordinates() {
 export async function getLatestJournalPosts(limit: number = 3) {
   try {
     const posts = await prisma.journalPost.findMany({
-      orderBy: { publishedDate: "desc" },
+      where: {
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.STORY,
+      },
+      orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       take: limit,
       include: {
+        coverMedia: true,
         trail: {
           select: { name: true, slug: true },
         },
@@ -153,10 +187,14 @@ export async function getLatestJournalPosts(limit: number = 3) {
 export async function getLatestFoodPosts(limit: number = 3) {
   try {
     const posts = await prisma.journalPost.findMany({
-      where: { category: "food" },
-      orderBy: { publishedDate: "desc" },
+      where: {
+        status: ContentStatus.PUBLISHED,
+        type: JournalType.FOOD,
+      },
+      orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       take: limit,
       include: {
+        coverMedia: true,
         trail: {
           select: { name: true, slug: true },
         },
