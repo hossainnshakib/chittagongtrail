@@ -2,7 +2,7 @@
 CREATE TABLE `media_assets` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `publicId` VARCHAR(191) NOT NULL,
-    `secureUrl` VARCHAR(191) NOT NULL,
+    `secureUrl` TEXT NOT NULL,
     `width` INTEGER NULL,
     `height` INTEGER NULL,
     `format` VARCHAR(191) NULL,
@@ -29,13 +29,14 @@ CREATE TABLE `homepage_galleries` (
     `mediaAssetId` INTEGER NOT NULL,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
 
+    UNIQUE INDEX `homepage_galleries_mediaAssetId_key`(`mediaAssetId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Drop columns from trail_locations and add new architectural fields
+-- Step 1: Add new architectural columns to trail_locations (nullable/default-compatible during transition)
 ALTER TABLE `trail_locations` ADD COLUMN `administrativeArea` VARCHAR(191) NULL,
     ADD COLUMN `coverMediaId` INTEGER NULL,
-    ADD COLUMN `district` ENUM('CHITTAGONG', 'COX_BAZAR', 'RANGAMATI', 'BANDARBAN', 'KHAGRACHARI') NOT NULL,
+    ADD COLUMN `district` ENUM('CHITTAGONG', 'COX_BAZAR', 'RANGAMATI', 'BANDARBAN', 'KHAGRACHARI') NULL,
     ADD COLUMN `excerpt` TEXT NULL,
     ADD COLUMN `featuredOrder` INTEGER NULL,
     ADD COLUMN `isFeatured` BOOLEAN NOT NULL DEFAULT false,
@@ -44,20 +45,39 @@ ALTER TABLE `trail_locations` ADD COLUMN `administrativeArea` VARCHAR(191) NULL,
     ADD COLUMN `placeType` ENUM('TOURIST_ATTRACTION', 'PLACE', 'NATURAL_FEATURE', 'PARK') NOT NULL DEFAULT 'PLACE',
     ADD COLUMN `publishedAt` DATETIME(3) NULL,
     ADD COLUMN `status` ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT',
-    ADD COLUMN `terrainType` ENUM('COAST', 'HILLS', 'RIVER', 'CITY', 'RURAL') NULL,
-    DROP COLUMN `photoAlt`,
+    ADD COLUMN `terrainType` ENUM('COAST', 'HILLS', 'RIVER', 'CITY', 'RURAL') NULL;
+
+-- Step 2: Map existing TrailLocation records (if any existed, setting status to PUBLISHED and publishedAt to createdAt)
+UPDATE `trail_locations` SET `status` = 'PUBLISHED', `publishedAt` = `createdAt` WHERE `publishedAt` IS NULL;
+
+-- Note: Precondition check requires trail_locations.district to be explicitly provided for non-empty tables.
+-- For an empty table (0 records), district can be safely made NOT NULL. If non-empty records exist without district, manual updates are required.
+ALTER TABLE `trail_locations` MODIFY COLUMN `district` ENUM('CHITTAGONG', 'COX_BAZAR', 'RANGAMATI', 'BANDARBAN', 'KHAGRACHARI') NOT NULL;
+
+-- Drop legacy media columns from trail_locations
+ALTER TABLE `trail_locations` DROP COLUMN `photoAlt`,
     DROP COLUMN `photos`,
     DROP COLUMN `ogImage`;
 
--- Drop columns from journal_posts and add new architectural fields
+-- Step 1: Add new architectural columns to journal_posts (nullable/default-compatible during transition)
 ALTER TABLE `journal_posts` ADD COLUMN `coverMediaId` INTEGER NULL,
     ADD COLUMN `featuredOrder` INTEGER NULL,
     ADD COLUMN `isFeatured` BOOLEAN NOT NULL DEFAULT false,
     ADD COLUMN `ogMediaId` INTEGER NULL,
     ADD COLUMN `publishedAt` DATETIME(3) NULL,
     ADD COLUMN `status` ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT',
-    ADD COLUMN `type` ENUM('STORY', 'FOOD') NOT NULL DEFAULT 'STORY',
-    DROP COLUMN `category`,
+    ADD COLUMN `type` ENUM('STORY', 'FOOD') NOT NULL DEFAULT 'STORY';
+
+-- Step 2: Data-preserving transition for journal_posts
+-- Map case-insensitive "food" category to FOOD, all others to STORY
+UPDATE `journal_posts` SET `type` = 'FOOD' WHERE LOWER(`category`) = 'food';
+UPDATE `journal_posts` SET `type` = 'STORY' WHERE LOWER(`category`) != 'food' OR `category` IS NULL;
+
+-- Copy publishedDate to publishedAt and set status to PUBLISHED for existing records
+UPDATE `journal_posts` SET `status` = 'PUBLISHED', `publishedAt` = `publishedDate` WHERE `publishedAt` IS NULL;
+
+-- Drop legacy columns from journal_posts
+ALTER TABLE `journal_posts` DROP COLUMN `category`,
     DROP COLUMN `coverImageAlt`,
     DROP COLUMN `coverImage`,
     DROP COLUMN `ogImage`,
@@ -71,13 +91,13 @@ CREATE TABLE `site_settings` (
     `heroSubtitle` VARCHAR(191) NOT NULL DEFAULT '',
     `heroMediaId` INTEGER NULL,
     `introductionHeading` VARCHAR(191) NOT NULL DEFAULT '',
-    `introductionContent` LONGTEXT NOT NULL DEFAULT '',
+    `introductionContent` LONGTEXT NULL,
     `seasonalEyebrow` VARCHAR(191) NOT NULL DEFAULT '',
     `seasonalTitle` VARCHAR(191) NOT NULL DEFAULT '',
-    `seasonalContent` LONGTEXT NOT NULL DEFAULT '',
+    `seasonalContent` LONGTEXT NULL,
     `seasonalMediaId` INTEGER NULL,
     `aboutHeading` VARCHAR(191) NOT NULL DEFAULT '',
-    `aboutContent` LONGTEXT NOT NULL DEFAULT '',
+    `aboutContent` LONGTEXT NULL,
     `contactEmail` VARCHAR(191) NOT NULL DEFAULT '',
     `socialFacebook` VARCHAR(191) NULL,
     `socialInstagram` VARCHAR(191) NULL,
@@ -99,6 +119,11 @@ CREATE INDEX `journal_posts_type_idx` ON `journal_posts`(`type`);
 CREATE INDEX `journal_posts_status_idx` ON `journal_posts`(`status`);
 CREATE INDEX `journal_posts_isFeatured_featuredOrder_idx` ON `journal_posts`(`isFeatured`, `featuredOrder`);
 CREATE INDEX `journal_posts_trailId_idx` ON `journal_posts`(`trailId`);
+
+-- Handle redundant trailId index on journal_posts:
+-- The baseline created `journal_posts_trailId_fkey` index implicitly or explicitly. 
+-- We ensure the target index `journal_posts_trailId_idx` exists and drop the redundant one if needed, or rely on Prisma's generated index.
+-- (Prisma generates `journal_posts_trailId_idx` from `@@index([trailId])`). If `journal_posts_trailId_fkey` index already covers it in MariaDB, we add `journal_posts_trailId_idx`.
 
 -- AddForeignKey
 ALTER TABLE `trail_galleries` ADD CONSTRAINT `trail_galleries_trailId_fkey` FOREIGN KEY (`trailId`) REFERENCES `trail_locations`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

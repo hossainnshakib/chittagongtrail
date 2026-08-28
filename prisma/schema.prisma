@@ -43,8 +43,8 @@ enum PlaceType {
 
 model MediaAsset {
   id           Int      @id @default(autoincrement())
-  publicId     String   @unique
-  secureUrl    String
+  publicId     String   @unique @db.VarChar(191)
+  secureUrl    String   @db.Text
   width        Int?
   height       Int?
   format       String?
@@ -77,7 +77,7 @@ model TrailGallery {
 
 model HomepageGallery {
   id           Int        @id @default(autoincrement())
-  mediaAssetId Int
+  mediaAssetId Int        @unique
   sortOrder    Int        @default(0)
   mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
@@ -157,14 +157,14 @@ model SiteSettings {
   heroMediaId         Int?
   heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
   introductionHeading String      @default("")
-  introductionContent String      @default("") @db.Text
+  introductionContent String?     @db.Text
   seasonalEyebrow     String      @default("")
   seasonalTitle       String      @default("")
-  seasonalContent     String      @default("") @db.Text
+  seasonalContent     String?     @db.Text
   seasonalMediaId     Int?
   seasonalMedia       MediaAsset? @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
   aboutHeading        String      @default("")
-  aboutContent        String      @default("") @db.Text
+  aboutContent        String?     @db.Text
   contactEmail        String      @default("")
   socialFacebook      String?
   socialInstagram     String?

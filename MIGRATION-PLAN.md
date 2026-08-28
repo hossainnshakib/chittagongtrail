@@ -1,7 +1,7 @@
 # Chittagong Trail — Migration and Rollback Plan
 
 **Document:** `MIGRATION-PLAN.md`  
-**Phase:** Major Phase A2 — Schema and Migration Preparation  
+**Phase:** Major Phase A2.1 — Migration SQL Safety Correction  
 **Project:** Chittagong Trail (`chittagongtrail.com`)  
 
 ---
@@ -13,13 +13,15 @@
   - `trail_locations`: 0 records
   - `journal_posts`: 0 records
 - **Migration History Table:** `_prisma_migrations` does not exist (created previously via `prisma db push`).
-- **Backup Location Policy:** Backups are stored in `backups/` (excluded from git tracking). The local backup file created during Phase A2 is `backups/db_backup_2026-08-28T14-53-16-429Z.json`.
+- **Backup Strategy & Authoritative Backup:**
+  - JSON diagnostics (`backups/db_backup_*.json`) record structural table info and record counts but are classified strictly as diagnostics.
+  - Authoritative rollback backup is the verified SQL dump (`backups/db_backup_*.sql`), created via `mysqldump` containing full `CREATE TABLE` statements, indexes, foreign keys, collation information, and data.
+  - Backup files are stored in the git-ignored `backups/` directory and are uncommitted.
 
 ---
 
 ## 2. Migration History Strategy
-To establish a robust and reproducible migration history for both local development and future production environments without disrupting the existing unmanaged local database state, a two-stage migration history strategy is implemented:
-
+A two-stage migration history strategy is implemented:
 1. **Migration 1 (`20260301000000_baseline_current_schema`)**:
    - Represents the pre-A2 database schema from empty.
    - Purpose: Enables clean initialization on fresh production databases and establishes the baseline required by Prisma migration tooling.
@@ -29,8 +31,16 @@ To establish a robust and reproducible migration history for both local developm
 
 ---
 
-## 3. SQL Safety Review Summary
-- **Destructive Operations:** None on active data (record counts are 0). Column replacements (`photos`, `coverImage`, `ogImage` replaced by relational media assets) are executed cleanly.
+## 3. Preflight Checks & Preconditions
+Before applying migrations to any non-empty or production environment:
+1. **Record Count & District Verification:** Verify `trail_locations` and `journal_posts` record counts. If `trail_locations` has records, every record must have an explicitly assigned `District` (no automatic assignment to `CHITTAGONG` is permitted).
+2. **Legacy Media Precondition:** Verify that legacy media fields (`trail_locations.photos`, `trail_locations.ogImage`, `journal_posts.coverImage`, `journal_posts.ogImage`) are null or empty. If legacy media values exist, a separate Cloudinary reconciliation/import plan must be executed prior to running migration 2.
+
+---
+
+## 4. SQL Safety Review & Destructive Operations Disclosure
+- **Destructive Operations Disclosure:** Migration 2 intentionally drops superseded legacy columns (`photos`, `photoAlt`, `ogImage` on `trail_locations`; `category`, `coverImage`, `coverImageAlt`, `ogImage`, `publishedDate` on `journal_posts`).
+- **Data-Loss Risk:** Current content tables contain 0 records, so current data-loss risk is minimal. Data-copy logic is explicitly included for category-to-type and publishedDate-to-publishedAt transitions.
 - **Foreign Keys & onDelete Actions:**
   - `JournalPost.trail` uses `onDelete: SetNull`.
   - `TrailGallery` uses `onDelete: Cascade` for trails and `onDelete: Restrict` for media assets.
@@ -39,11 +49,18 @@ To establish a robust and reproducible migration history for both local developm
 
 ---
 
-## 4. Application Deployment & Execution Steps
+## 5. SiteSettings Initialization Policy
+- The `site_settings` table is created without inserting invented public values.
+- In a later application phase, the `SiteSettings` service performs an `id = 1` upsert supplying safe blank or owner-approved initial values.
+- No generic create/delete endpoints exist for `SiteSettings`.
+
+---
+
+## 6. Application Deployment & Execution Steps
 
 ### Existing Local Database
-1. Verify backup file existence and integrity.
-2. Basline migration history using `prisma migrate resolve --applied 20260301000000_baseline_current_schema` (when authorized).
+1. Verify authoritative SQL backup existence and integrity.
+2. Baseline migration history using `prisma migrate resolve --applied 20260301000000_baseline_current_schema` (when authorized).
 3. Apply backend CMS migration via `prisma migrate deploy` (when authorized).
 4. Generate Prisma Client and run verification checks.
 
@@ -55,10 +72,13 @@ To establish a robust and reproducible migration history for both local developm
 
 ---
 
-## 5. Rollback Plan & Triggers
+## 7. Rollback Plan & SQL Restore Procedure
 - **Rollback Triggers:** Schema compilation failure, unexpected data migration anomalies during production rollout, or breaking runtime errors in application services.
-- **Restore Procedure:** 
-  - For empty state or pre-production rollbacks, restore from the verified database backup and revert code checkpoint.
+- **SQL Restore Procedure:** 
+  - To restore the database from the authoritative SQL backup:
+    ```bash
+    mysql -u [user] -p [database_name] < backups/db_backup_[timestamp].sql
+    ```
   - For non-empty environments with active content, perform targeted corrective migrations rather than destructive drops.
-- **Cloudinary Warning:** Database migration rollbacks do not affect remote Cloudinary assets. Cloudinary media assets must be reconciled independently.
+- **Cloudinary Reconciliation Warning:** Database migration rollbacks do not affect remote Cloudinary assets. Cloudinary media assets must be reconciled independently.
 - **Owner Approval Gate:** No automatic destructive rollback or migration execution is permitted without explicit owner approval.
