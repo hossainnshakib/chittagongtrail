@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
+const LOG_PREFIX = "[chittagongtrail:data]";
+
+function logQueryError(operation: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`${LOG_PREFIX} ${operation} failed: ${message}`);
+}
+
 export async function getTrails() {
   try {
     const trails = await prisma.trailLocation.findMany({
@@ -12,7 +19,7 @@ export async function getTrails() {
     });
     return trails;
   } catch (error) {
-    console.error("Failed to fetch trails:", error);
+    logQueryError("getTrails", error);
     return [];
   }
 }
@@ -30,7 +37,7 @@ export async function getTrailBySlug(slug: string) {
     });
     return trail;
   } catch (error) {
-    console.error("Failed to fetch trail:", error);
+    logQueryError(`getTrailBySlug(${slug})`, error);
     return null;
   }
 }
@@ -47,7 +54,7 @@ export async function getJournalPosts() {
     });
     return posts;
   } catch (error) {
-    console.error("Failed to fetch journal posts:", error);
+    logQueryError("getJournalPosts", error);
     return [];
   }
 }
@@ -62,7 +69,7 @@ export async function getJournalPostBySlug(slug: string) {
     });
     return post;
   } catch (error) {
-    console.error("Failed to fetch journal post:", error);
+    logQueryError(`getJournalPostBySlug(${slug})`, error);
     return null;
   }
 }
@@ -80,7 +87,7 @@ export async function getFoodPosts() {
     });
     return posts;
   } catch (error) {
-    console.error("Failed to fetch food posts:", error);
+    logQueryError("getFoodPosts", error);
     return [];
   }
 }
@@ -98,7 +105,7 @@ export async function getFoodPostBySlug(slug: string) {
     });
     return post;
   } catch (error) {
-    console.error("Failed to fetch food post:", error);
+    logQueryError(`getFoodPostBySlug(${slug})`, error);
     return null;
   }
 }
@@ -120,7 +127,7 @@ export async function getTrailsWithCoordinates() {
     });
     return trails;
   } catch (error) {
-    console.error("Failed to fetch trails with coordinates:", error);
+    logQueryError("getTrailsWithCoordinates", error);
     return [];
   }
 }
@@ -138,7 +145,7 @@ export async function getLatestJournalPosts(limit: number = 3) {
     });
     return posts;
   } catch (error) {
-    console.error("Failed to fetch latest journal posts:", error);
+    logQueryError("getLatestJournalPosts", error);
     return [];
   }
 }
@@ -157,7 +164,7 @@ export async function getLatestFoodPosts(limit: number = 3) {
     });
     return posts;
   } catch (error) {
-    console.error("Failed to fetch latest food posts:", error);
+    logQueryError("getLatestFoodPosts", error);
     return [];
   }
 }
