@@ -156,6 +156,191 @@ img { max-width: 100%; height: auto; display: block; }
 .ct-dark a:hover { color: var(--color-accent); }
 
 /* ============================================
+   NAV — transparent, fixed, bangladeshtrail.com style
+   ============================================ */
+.ct-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(1.5rem, 4vw, 3rem);
+  height: 64px;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease;
+}
+.ct-nav[data-scrolled] {
+  background: color-mix(in srgb, var(--color-dark-bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.ct-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+}
+.ct-nav-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.ct-nav-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.ct-nav-brand-text b {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-dark-text);
+  letter-spacing: 0.01em;
+}
+.ct-nav-brand-text small {
+  font-family: var(--font-body);
+  font-size: 0.625rem;
+  color: color-mix(in srgb, var(--color-dark-text) 50%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ct-nav-links {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .ct-nav-links { display: flex; }
+}
+.ct-nav-link {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-dark-text) 70%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.ct-nav-link:hover {
+  color: var(--color-dark-text);
+}
+
+.ct-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ct-nav-cta {
+  display: none;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-dark-text);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-dark-text) 30%, transparent);
+  border-radius: 2px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.ct-nav-cta:hover {
+  border-color: var(--color-dark-text);
+  background: color-mix(in srgb, var(--color-dark-text) 10%, transparent);
+}
+@media (min-width: 768px) {
+  .ct-nav-cta { display: block; }
+}
+
+.ct-nav-burger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.ct-nav-burger span {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--color-dark-text);
+  transition: transform 0.2s ease;
+}
+.ct-nav-burger:hover span {
+  background: var(--color-accent);
+}
+
+/* ============================================
+   MOBILE MENU — full screen overlay
+   ============================================ */
+.ct-mobile-menu {
+  position: absolute;
+  inset: 0;
+  background: var(--color-dark-bg);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+.ct-mobile-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-dark-text) 10%, transparent);
+}
+.ct-mobile-menu-close {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-dark-text) 60%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+.ct-mobile-menu-close:hover {
+  color: var(--color-dark-text);
+}
+.ct-mobile-menu-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+.ct-mobile-menu-link {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 600;
+  color: var(--color-dark-text);
+  text-decoration: none;
+  line-height: 1.15;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+.ct-mobile-menu-link:hover {
+  color: var(--color-accent);
+}
+.ct-mobile-menu-foot {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--color-dark-text) 30%, transparent);
+  padding-top: 2rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-dark-text) 10%, transparent);
+}
+
+/* ============================================
    HERO — full viewport, editorial left-aligned
    ============================================ */
 .ct-hero {
