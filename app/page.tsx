@@ -21,14 +21,22 @@ export default async function Home() {
         title={settings.heroTitle}
         subtitle={settings.heroSubtitle}
         media={settings.heroMedia}
+        videoEnabled={settings.heroVideoEnabled}
+        videoProvider={settings.heroVideoProvider as "NONE" | "YOUTUBE" | "VIMEO" | "DIRECT"}
         videoUrl={settings.heroVideoUrl}
+        videoOverlay={settings.heroVideoOverlay}
       />
-      <DestinationsGrid />
       <ChittagongStatement
         heading={settings.introductionHeading}
         content={settings.introductionContent}
       />
-      <EditorialQuote />
+      <DestinationsGrid />
+      <EditorialQuote
+        eyebrow={settings.seasonalEyebrow}
+        title={settings.seasonalTitle}
+        content={settings.seasonalContent}
+        media={settings.seasonalMedia}
+      />
       <ExperiencesGrid />
       <FoodGallery />
       <Journeys />

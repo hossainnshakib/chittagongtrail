@@ -7,3 +7,4 @@ export { FoodGallery } from "./FoodGallery";
 export { Journeys } from "./Journeys";
 export { UneditedGallery } from "./UneditedGallery";
 export { ClosingInvitation } from "./ClosingInvitation";
+export { ChittagongMap } from "./ChittagongMap";

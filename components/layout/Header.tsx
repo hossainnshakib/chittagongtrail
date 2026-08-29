@@ -52,7 +52,7 @@ export function Header() {
 
         <div className="ct-nav-right">
           <Link href="/trails" className="ct-nav-cta">
-            Explore trails
+            Explore Chittagong
           </Link>
           <button
             type="button"

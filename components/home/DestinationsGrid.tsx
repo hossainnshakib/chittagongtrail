@@ -3,62 +3,109 @@ import Image from "next/image";
 import { SectionReveal } from "@/components/ui";
 import { getTrails } from "@/lib/data";
 
-const demoTrails = [
-  { name: "Batali Hill", slug: "batali-hill", excerpt: "The green heart of Chittagong — dawn walks above the city.", img: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=80" },
-  { name: "Karnaphuli River", slug: "karnaphuli-river", excerpt: "The river that built Chittagong. Boats, bridges, ghats.", img: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=600&q=80" },
-  { name: "Patenga Beach", slug: "patenga-beach", excerpt: "Where the Bay of Bengal meets the river mouth.", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80" },
-  { name: "Chittagong Hill Tracts", slug: "hill-tracts", excerpt: "Rolling green hills, indigenous villages, untouched trails.", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80" },
-  { name: "Colonial Architecture", slug: "colonial-architecture", excerpt: "British-era buildings in the old quarters of the city.", img: "https://images.unsplash.com/photo-1555952494-efd681c7e3f9?w=600&q=80" },
-  { name: "Shutki Market", slug: "shutki-market", excerpt: "Chittagong's fiercest flavours — dried fish, fermented and bold.", img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80" },
-  { name: "Foy's Lake", slug: "foys-lake", excerpt: "A lake in the hills — boating, hiking, quiet afternoons.", img: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=600&q=80" },
-  { name: "Chittagong Port", slug: "chittagong-port", excerpt: "The busiest port in Bangladesh — where the city's trade flows.", img: "https://images.unsplash.com/photo-1494564605686-2e931f77a8e2?w=600&q=80" },
-  { name: "Hazari Lane", slug: "hazari-lane", excerpt: "The Hindu quarter — temples, colours, old Chittagong life.", img: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=600&q=80" },
-];
-
 export async function DestinationsGrid() {
   const trails = await getTrails();
-  const displayTrails = trails.length > 0
-    ? trails.slice(0, 12).map((t) => ({
-        name: t.name,
-        slug: t.slug,
-        excerpt: t.excerpt || t.description.replace(/<[^>]*>?/gm, "").substring(0, 80),
-        coverUrl: t.coverMedia?.secureUrl || null,
-        altText: t.coverMedia?.altText || t.name,
-      }))
-    : demoTrails.map((t) => ({
-        name: t.name,
-        slug: t.slug,
-        excerpt: t.excerpt,
-        coverUrl: t.img,
-        altText: t.name,
-      }));
+  const displayTrails = trails.slice(0, 4);
 
   return (
     <section className="ct-section ct-cream">
-      <div className="ct-container mb-8 md:mb-10">
+      <div className="ct-container mb-8 md:mb-12">
         <SectionReveal>
+          <p className="text-text-muted text-xs uppercase tracking-[0.2em] font-medium mb-3">
+            Explore Trails
+          </p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
             Pick one.
           </h2>
         </SectionReveal>
       </div>
 
-      <SectionReveal>
-        <div className="ct-destinations">
-          {displayTrails.map((trail) => (
-            <Link key={trail.slug} href={`/trails/${trail.slug}`} className="ct-dest-card">
-              {trail.coverUrl ? (
-                <Image src={trail.coverUrl} alt={trail.altText} fill className="object-cover" sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-[#C9A882]/30 to-[#7FB5C4]/20" />
-              )}
-              <div className="ct-dest-card-overlay">
-                <h3 className="ct-dest-card-name">{trail.name}</h3>
-              </div>
-            </Link>
-          ))}
+      {displayTrails.length === 0 ? (
+        <div className="ct-container">
+          <SectionReveal>
+            <p className="text-text-secondary text-base py-12 text-center">
+              Featured trails will appear here once configured in Admin.
+            </p>
+          </SectionReveal>
         </div>
-      </SectionReveal>
+      ) : (
+        <SectionReveal>
+          <div className="ct-container">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              {displayTrails[0] && (
+                <Link
+                  href={`/trails/${displayTrails[0].slug}`}
+                  className="group relative overflow-hidden rounded-lg lg:col-span-7 aspect-[4/3] lg:aspect-auto lg:min-h-[480px]"
+                >
+                  {displayTrails[0].coverMedia?.secureUrl ? (
+                    <Image
+                      src={displayTrails[0].coverMedia.secureUrl}
+                      alt={displayTrails[0].coverMedia.altText || displayTrails[0].name}
+                      fill
+                      className="object-cover transition-all duration-700 grayscale group-hover:grayscale-0 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      priority
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent/30 to-accent-teal/20" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/70 via-dark-bg/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10">
+                    <span className="text-dark-text/50 text-xs uppercase tracking-wider block mb-2">
+                      Featured
+                    </span>
+                    <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-dark-text mb-2">
+                      {displayTrails[0].name}
+                    </h3>
+                    {displayTrails[0].excerpt && (
+                      <p className="text-dark-text/60 text-sm md:text-base max-w-md leading-relaxed">
+                        {displayTrails[0].excerpt}
+                      </p>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 text-accent text-xs uppercase tracking-[0.15em] font-medium mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      Explore trail →
+                    </span>
+                  </div>
+                </Link>
+              )}
+
+              <div className="lg:col-span-5 grid grid-cols-2 gap-3">
+                {displayTrails.slice(1).map((trail, i) => (
+                  <Link
+                    key={trail.slug}
+                    href={`/trails/${trail.slug}`}
+                    className="group relative overflow-hidden rounded-lg aspect-square"
+                  >
+                    {trail.coverMedia?.secureUrl ? (
+                      <Image
+                        src={trail.coverMedia.secureUrl}
+                        alt={trail.coverMedia.altText || trail.name}
+                        fill
+                        className="object-cover transition-all duration-700 grayscale group-hover:grayscale-0 group-hover:scale-105"
+                        sizes="(max-width: 1024px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-accent-teal/10" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/70 via-dark-bg/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <span className="ct-number text-lg text-accent block mb-1">
+                        {String(i + 2).padStart(2, "0")}
+                      </span>
+                      <h3 className="font-display text-sm md:text-base font-semibold text-dark-text leading-tight">
+                        {trail.name}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 text-accent text-[11px] uppercase tracking-[0.15em] font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        Explore →
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </SectionReveal>
+      )}
     </section>
   );
 }
