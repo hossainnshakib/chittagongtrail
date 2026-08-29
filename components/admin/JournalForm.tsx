@@ -2,12 +2,12 @@
 
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import type { JournalPost, TrailLocation, ContentStatus, JournalType } from "@prisma/client";
+import type { JournalPost, TrailLocation } from "@prisma/client";
 import {
   createJournalPost,
   updateJournalPost,
   type JournalActionResult,
-} from "@/app/admin/(protected)/trails/actions";
+} from "@/app/admin/(protected)/journal/actions";
 import DeleteButton from "@/components/admin/DeleteButton";
 
 interface JournalFormProps {
