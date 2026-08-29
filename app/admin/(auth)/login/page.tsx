@@ -14,10 +14,12 @@ export default function AdminLoginPage() {
     setError("");
     setIsPending(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
     try {
-      const result = await login({ success: false }, formData);
+      const result = await login({ success: false }, { email, password });
       if (result.success) {
         router.push("/admin");
       } else if (result.error) {

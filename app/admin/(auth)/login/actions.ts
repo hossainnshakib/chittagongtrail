@@ -16,10 +16,14 @@ export interface LoginResult {
 
 export async function login(
   _prevState: LoginResult,
-  formData: FormData
+  data: FormData | { email: string; password: string }
 ): Promise<LoginResult> {
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const email = data instanceof FormData
+    ? (data.get("email") as string)
+    : data.email;
+  const password = data instanceof FormData
+    ? (data.get("password") as string)
+    : data.password;
 
   if (
     typeof email !== "string" ||
