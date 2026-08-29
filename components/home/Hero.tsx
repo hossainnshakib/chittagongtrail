@@ -46,7 +46,7 @@ export function Hero({ title, subtitle, media, videoUrl }: HeroProps) {
         ) : media?.secureUrl ? (
           <Image src={media.secureUrl} alt={media.altText || "Chittagong"} fill className="object-cover ken-burns" priority sizes="100vw" />
         ) : (
-          <Image src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" alt="Chittagong hills at dawn" fill className="object-cover ken-burns" priority sizes="100vw" />
+          <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80" alt="Chittagong hills at dawn" fill className="object-cover ken-burns" priority sizes="100vw" />
         )}
         <div className="ct-hero-overlay" />
       </div>

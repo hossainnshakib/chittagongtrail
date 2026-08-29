@@ -92,7 +92,7 @@ export function useHeroReveal() {
 
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) {
-      ref.current.querySelectorAll(".hero-title, .hero-subtitle, .hero-cta, .hero-brand").forEach((el) => {
+      ref.current.querySelectorAll(".hero-title, .hero-subtitle, .hero-cta").forEach((el) => {
         (el as HTMLElement).style.opacity = "1";
         (el as HTMLElement).style.transform = "none";
       });
@@ -102,16 +102,10 @@ export function useHeroReveal() {
     const tl = gsap.timeline({ delay: 0.3 });
 
     tl.fromTo(
-      ref.current.querySelector(".hero-brand"),
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+      ref.current.querySelector(".hero-title"),
+      { y: 60, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
     )
-      .fromTo(
-        ref.current.querySelector(".hero-title"),
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-        "-=0.4"
-      )
       .fromTo(
         ref.current.querySelector(".hero-subtitle"),
         { y: 40, opacity: 0 },

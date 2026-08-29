@@ -7,7 +7,7 @@ const demoImages = [
   { src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80", alt: "Forest trail" },
   { src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80", alt: "Lake sunset" },
   { src: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80", alt: "Green fields" },
-  { src: "https://images.unsplash.com/photo-1518173946687-a4276951d1e1?w=800&q=80", alt: "Mountain road" },
+  { src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80", alt: "Mountain road" },
   { src: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80", alt: "Pine forest" },
   { src: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80", alt: "River bend" },
 ];
