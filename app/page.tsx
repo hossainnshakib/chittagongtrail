@@ -2,46 +2,19 @@ import { PublicLayout } from "@/components/layout";
 import {
   Hero,
   ChittagongStatement,
-  TrailDiscovery,
-  FeaturedTrailMoment,
+  DestinationsGrid,
+  EditorialQuote,
+  ExperiencesGrid,
   ChittagongMap,
-  StoriesFromChittagong,
-  TasteOfChittagong,
-  VisualInterlude,
+  FoodGallery,
+  Journeys,
+  UneditedGallery,
   ClosingInvitation,
 } from "@/components/home";
 import { getPublicSiteSettings } from "@/lib/settings-service";
-import { prisma } from "@/lib/prisma";
-import { ContentStatus } from "@prisma/client";
-
-async function getFeaturedTrail() {
-  try {
-    const trail = await prisma.trailLocation.findFirst({
-      where: {
-        status: ContentStatus.PUBLISHED,
-        isFeatured: true,
-      },
-      orderBy: { featuredOrder: "asc" },
-      include: { coverMedia: true },
-    });
-    if (trail) return trail;
-
-    // Fallback: most recently published
-    return await prisma.trailLocation.findFirst({
-      where: { status: ContentStatus.PUBLISHED },
-      orderBy: { publishedAt: "desc" },
-      include: { coverMedia: true },
-    });
-  } catch {
-    return null;
-  }
-}
 
 export default async function Home() {
-  const [settings, featuredTrail] = await Promise.all([
-    getPublicSiteSettings(),
-    getFeaturedTrail(),
-  ]);
+  const settings = await getPublicSiteSettings();
 
   return (
     <PublicLayout>
@@ -51,16 +24,17 @@ export default async function Home() {
         media={settings.heroMedia}
         siteName={settings.siteName}
       />
+      <DestinationsGrid />
       <ChittagongStatement
         heading={settings.introductionHeading}
         content={settings.introductionContent}
       />
-      <TrailDiscovery />
-      <FeaturedTrailMoment trail={featuredTrail} />
+      <EditorialQuote />
+      <ExperiencesGrid />
       <ChittagongMap />
-      <StoriesFromChittagong />
-      <TasteOfChittagong />
-      <VisualInterlude />
+      <FoodGallery />
+      <Journeys />
+      <UneditedGallery />
       <ClosingInvitation
         heading={settings.aboutHeading}
         content={settings.aboutContent}

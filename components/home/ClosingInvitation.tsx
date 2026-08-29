@@ -9,23 +9,22 @@ export function ClosingInvitation({ heading, content }: ClosingInvitationProps) 
   const displayHeading =
     heading && heading.trim() !== ""
       ? heading
-      : null;
+      : "Come while it is still yours to find";
 
   const displayContent =
     content && content.trim() !== "" ? content : null;
-
-  if (!displayHeading && !displayContent) return null;
 
   return (
     <section className="section-dark py-20 md:py-28 lg:py-36">
       <Container>
         <SectionReveal>
           <div className="max-w-3xl mx-auto text-center">
-            {displayHeading && (
-              <blockquote className="font-display text-xl sm:text-2xl md:text-3xl lg:text-[2rem] text-dark-text leading-relaxed mb-6 md:mb-8">
-                &ldquo;{displayHeading}&rdquo;
-              </blockquote>
-            )}
+            <h2
+              className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-dark-text leading-snug mb-6 md:mb-8"
+              dangerouslySetInnerHTML={{
+                __html: displayHeading.replace(/\*(.*?)\*/g, '<em class="italic text-accent">$1</em>'),
+              }}
+            />
             {displayContent && (
               <div
                 className="text-dark-text/60 text-base md:text-lg leading-relaxed mb-8 md:mb-10 max-w-xl mx-auto"
@@ -34,10 +33,10 @@ export function ClosingInvitation({ heading, content }: ClosingInvitationProps) 
             )}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button href="/trails" variant="secondary">
-                Explore All Trails
+                Explore all trails
               </Button>
-              <Button href="/about" variant="tertiary">
-                About Chittagong Trail
+              <Button href="/journal" variant="tertiary">
+                Read the stories
               </Button>
             </div>
           </div>

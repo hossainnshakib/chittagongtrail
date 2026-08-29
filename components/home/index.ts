@@ -1,9 +1,10 @@
 export { Hero } from "./Hero";
 export { ChittagongStatement } from "./ChittagongStatement";
-export { TrailDiscovery } from "./TrailDiscovery";
-export { FeaturedTrailMoment } from "./FeaturedTrailMoment";
+export { DestinationsGrid } from "./DestinationsGrid";
+export { EditorialQuote } from "./EditorialQuote";
+export { ExperiencesGrid } from "./ExperiencesGrid";
 export { ChittagongMap } from "./ChittagongMap";
-export { StoriesFromChittagong } from "./StoriesFromChittagong";
-export { TasteOfChittagong } from "./TasteOfChittagong";
-export { VisualInterlude } from "./VisualInterlude";
+export { FoodGallery } from "./FoodGallery";
+export { Journeys } from "./Journeys";
+export { UneditedGallery } from "./UneditedGallery";
 export { ClosingInvitation } from "./ClosingInvitation";
