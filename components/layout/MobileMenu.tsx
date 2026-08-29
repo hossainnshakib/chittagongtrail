@@ -52,7 +52,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
           ))}
         </nav>
         <div className="ct-mobile-menu-foot">
-          Chittagong Trail — places I visit, stories I find, and everything in between.
+          Chittagong Trail — places, stories, food, and landscapes across five districts.
         </div>
       </div>
     </div>

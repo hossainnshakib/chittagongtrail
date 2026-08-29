@@ -21,7 +21,7 @@ export async function Footer() {
   const displayFooterText =
     settings.footerText && settings.footerText.trim() !== ""
       ? settings.footerText
-      : "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.";
+      : "An independent exploration and storytelling platform documenting Chittagong's places, people, food, and landscapes.";
 
   return (
     <footer className="bg-dark-bg text-dark-text">
