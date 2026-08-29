@@ -18,10 +18,10 @@ export function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 80);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -29,31 +29,42 @@ export function Header() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-background/95 backdrop-blur-sm border-b border-border"
+          ? "bg-dark-bg/95 backdrop-blur-sm"
           : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-14 md:h-16">
+          {/* Logo — show wordmark when not scrolled, logo when scrolled */}
           <Link href="/" className="flex items-center">
-            <Image
-              src="/images/chittagongtrail_logo.png"
-              alt="Chittagong Trail"
-              width={48}
-              height={48}
-              className="h-10 w-auto md:h-12"
-              priority
-            />
+            {isScrolled ? (
+              <Image
+                src="/images/chittagongtrail_logo.png"
+                alt="Chittagong Trail"
+                width={40}
+                height={40}
+                className="h-8 w-auto md:h-9"
+                priority
+              />
+            ) : (
+              <Image
+                src="/images/chittagongtrail-wordmark.png"
+                alt="Chittagong Trail"
+                width={200}
+                height={53}
+                className="h-7 w-auto md:h-8"
+                priority
+              />
+            )}
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8" aria-label="Main navigation">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-text hover:text-accent transition-colors duration-200 font-medium"
+                className="text-dark-text/80 hover:text-dark-text text-sm font-medium tracking-wide transition-colors duration-200"
               >
                 {item.name}
               </Link>
@@ -63,7 +74,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             type="button"
-            className="md:hidden p-2 rounded-md text-text hover:text-accent transition-colors"
+            className="md:hidden p-2 -mr-2 rounded-md text-dark-text/80 hover:text-dark-text transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open menu"
           >

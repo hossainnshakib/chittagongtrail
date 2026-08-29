@@ -1,20 +1,47 @@
 import { PublicLayout } from "@/components/layout";
 import {
   Hero,
-  Introduction,
-  ExploreTrails,
-  SeasonalMood,
-  InteractiveMap,
-  Journal,
-  Food,
-  UneditedGallery,
-  AboutSignoff,
+  ChittagongStatement,
+  TrailDiscovery,
+  FeaturedTrailMoment,
+  ChittagongMap,
+  StoriesFromChittagong,
+  TasteOfChittagong,
+  VisualInterlude,
+  ClosingInvitation,
 } from "@/components/home";
-import { SectionWrapper } from "@/components/home/SectionWrapper";
 import { getPublicSiteSettings } from "@/lib/settings-service";
+import { prisma } from "@/lib/prisma";
+import { ContentStatus } from "@prisma/client";
+
+async function getFeaturedTrail() {
+  try {
+    const trail = await prisma.trailLocation.findFirst({
+      where: {
+        status: ContentStatus.PUBLISHED,
+        isFeatured: true,
+      },
+      orderBy: { featuredOrder: "asc" },
+      include: { coverMedia: true },
+    });
+    if (trail) return trail;
+
+    // Fallback: most recently published
+    return await prisma.trailLocation.findFirst({
+      where: { status: ContentStatus.PUBLISHED },
+      orderBy: { publishedAt: "desc" },
+      include: { coverMedia: true },
+    });
+  } catch {
+    return null;
+  }
+}
 
 export default async function Home() {
-  const settings = await getPublicSiteSettings();
+  const [settings, featuredTrail] = await Promise.all([
+    getPublicSiteSettings(),
+    getFeaturedTrail(),
+  ]);
 
   return (
     <PublicLayout>
@@ -24,41 +51,20 @@ export default async function Home() {
         media={settings.heroMedia}
         siteName={settings.siteName}
       />
-      <SectionWrapper>
-        <Introduction
-          heading={settings.introductionHeading}
-          content={settings.introductionContent}
-        />
-      </SectionWrapper>
-      <SectionWrapper>
-        <ExploreTrails />
-      </SectionWrapper>
-      <SectionWrapper>
-        <SeasonalMood
-          eyebrow={settings.seasonalEyebrow}
-          title={settings.seasonalTitle}
-          content={settings.seasonalContent}
-          media={settings.seasonalMedia}
-        />
-      </SectionWrapper>
-      <SectionWrapper>
-        <InteractiveMap />
-      </SectionWrapper>
-      <SectionWrapper>
-        <Journal />
-      </SectionWrapper>
-      <SectionWrapper>
-        <Food />
-      </SectionWrapper>
-      <SectionWrapper>
-        <UneditedGallery />
-      </SectionWrapper>
-      <SectionWrapper>
-        <AboutSignoff
-          heading={settings.aboutHeading}
-          content={settings.aboutContent}
-        />
-      </SectionWrapper>
+      <ChittagongStatement
+        heading={settings.introductionHeading}
+        content={settings.introductionContent}
+      />
+      <TrailDiscovery />
+      <FeaturedTrailMoment trail={featuredTrail} />
+      <ChittagongMap />
+      <StoriesFromChittagong />
+      <TasteOfChittagong />
+      <VisualInterlude />
+      <ClosingInvitation
+        heading={settings.aboutHeading}
+        content={settings.aboutContent}
+      />
     </PublicLayout>
   );
 }

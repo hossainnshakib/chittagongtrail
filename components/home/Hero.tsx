@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { Container } from "@/components/ui";
 import { useHeroReveal } from "@/hooks/useGsap";
 
 interface HeroProps {
@@ -21,86 +20,87 @@ export function Hero({ title, subtitle, media, siteName = "Chittagong Trail" }: 
 
   useEffect(() => {
     const scrollIndicator = scrollRef.current;
-    if (scrollIndicator) {
-      const animation = scrollIndicator.animate(
-        [{ transform: "translateY(0)" }, { transform: "translateY(10px)" }],
-        {
-          duration: 1500,
-          iterations: Infinity,
-          direction: "alternate",
-          easing: "ease-in-out",
-        }
-      );
+    if (!scrollIndicator) return;
 
-      return () => animation.cancel();
-    }
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const animation = scrollIndicator.animate(
+      [{ transform: "translateY(0)" }, { transform: "translateY(8px)" }],
+      {
+        duration: 2000,
+        iterations: Infinity,
+        direction: "alternate",
+        easing: "ease-in-out",
+      }
+    );
+
+    return () => animation.cancel();
   }, []);
 
-  const displayTitle = title && title.trim() !== "" ? title : siteName;
+  const displayTitle = title && title.trim() !== "" ? title : "Chittagong Trail";
   const displaySubtitle =
     subtitle && subtitle.trim() !== ""
       ? subtitle
-      : "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.";
-  const bgImageUrl = media?.secureUrl || "/images/chittagongtrail_logo.png";
-  const bgImageAlt = media?.altText || siteName;
+      : "A curated exploration of Chittagong — places, stories, food, and landscapes.";
+  const bgImageUrl = media?.secureUrl || null;
+  const bgImageAlt = media?.altText || "Chittagong landscape";
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="hero-section" aria-label="Hero">
       {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={bgImageUrl}
-          alt={bgImageAlt}
-          fill
-          className="object-cover opacity-30"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/70 via-dark-bg/50 to-dark-bg/80" />
+      <div className="hero-bg">
+        {bgImageUrl ? (
+          <Image
+            src={bgImageUrl}
+            alt={bgImageAlt}
+            fill
+            className="object-cover ken-burns"
+            priority
+            sizes="100vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3E2723] via-[#5D4037] to-[#4A3728]" />
+        )}
+        <div className="hero-overlay" />
       </div>
 
       {/* Content */}
-      <Container className="relative z-10 text-center">
-        <div ref={heroRef} className="max-w-4xl mx-auto">
-          {/* Logo */}
-          <div className="hero-title mb-8">
-            <Image
-              src="/images/chittagongtrail_logo.png"
-              alt={siteName}
-              width={200}
-              height={200}
-              className="mx-auto h-32 md:h-40 w-auto"
-              priority
-            />
-          </div>
-
-          {/* Title */}
-          <h1 className="hero-title font-display text-5xl md:text-6xl lg:text-7xl font-bold text-dark-text mb-6">
-            {displayTitle}
-          </h1>
-
-          {/* Tagline */}
-          <p className="hero-subtitle text-xl md:text-2xl text-dark-text/80 max-w-2xl mx-auto mb-8">
-            {displaySubtitle}
-          </p>
-
-          {/* Scroll Indicator */}
-          <div ref={scrollRef} className="hero-cta mt-12">
-            <svg
-              className="w-6 h-6 mx-auto text-dark-text/60"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+      <div className="hero-content">
+        <div ref={heroRef} className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            {/* Brand wordmark */}
+            <div className="hero-brand mb-6 md:mb-8 opacity-0">
+              <Image
+                src="/images/chittagongtrail-wordmark.png"
+                alt={siteName}
+                width={280}
+                height={75}
+                className="h-10 md:h-12 w-auto"
+                priority
               />
-            </svg>
+            </div>
+
+            {/* Title */}
+            <h1 className="hero-title font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-dark-text leading-[1.1] mb-4 md:mb-6 opacity-0">
+              {displayTitle}
+            </h1>
+
+            {/* Subtitle */}
+            <p className="hero-subtitle text-lg md:text-xl lg:text-2xl text-dark-text/70 max-w-xl leading-relaxed mb-8 md:mb-12 opacity-0">
+              {displaySubtitle}
+            </p>
+
+            {/* Scroll Indicator */}
+            <div ref={scrollRef} className="hero-cta opacity-0">
+              <div className="flex items-center gap-3 text-dark-text/50">
+                <div className="w-px h-12 bg-dark-text/30" />
+                <span className="text-xs uppercase tracking-[0.2em] font-body">Scroll to explore</span>
+              </div>
+            </div>
           </div>
         </div>
-      </Container>
+      </div>
     </section>
   );
 }

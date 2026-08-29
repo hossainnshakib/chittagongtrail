@@ -1,1 +1,1 @@
-export { useScrollReveal, useParallax, useHeroReveal } from "./useGsap";
+export { useScrollReveal, useParallax, useHeroReveal, useStaggerReveal, useImageReveal } from "./useGsap";

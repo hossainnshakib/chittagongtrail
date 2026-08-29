@@ -92,7 +92,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 body {
@@ -129,7 +129,6 @@ h4 {
 }
 
 p {
-  margin-bottom: 1rem;
   line-height: 1.625;
 }
 
@@ -314,4 +313,175 @@ img {
 .custom-marker {
   background: none !important;
   border: none !important;
+}
+
+/* Cinematic hero */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background-color: var(--color-dark-bg);
+}
+
+.hero-section .hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-section .hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-section .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(62, 39, 35, 0.95) 0%,
+    rgba(62, 39, 35, 0.6) 35%,
+    rgba(62, 39, 35, 0.3) 65%,
+    rgba(62, 39, 35, 0.15) 100%
+  );
+  z-index: 1;
+}
+
+.hero-section .hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .hero-section .hero-content {
+    padding-bottom: 5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section .hero-content {
+    padding-bottom: 6rem;
+  }
+}
+
+/* Ken Burns animation */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+.ken-burns {
+  animation: kenBurns 20s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns {
+    animation: none;
+    transform: scale(1);
+  }
+}
+
+/* Horizontal scroll container */
+.horizontal-scroll {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 1rem;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* Editorial trail tile */
+.trail-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.trail-tile img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.trail-tile:hover img {
+  transform: scale(1.05);
+}
+
+.trail-tile .trail-tile-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(62, 39, 35, 0.7) 0%,
+    rgba(62, 39, 35, 0) 50%
+  );
+  transition: opacity 0.4s ease;
+}
+
+.trail-tile:hover .trail-tile-overlay {
+  opacity: 0.85;
+}
+
+/* Full-bleed section */
+.full-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* Section dark/light rhythm */
+.section-cream {
+  background-color: var(--color-background);
+}
+
+.section-warm {
+  background-color: var(--color-background-secondary);
+}
+
+.section-dark {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+}
+
+/* Scroll indicator bounce */
+@keyframes scrollBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+.scroll-indicator {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-indicator {
+    animation: none;
+  }
 }
