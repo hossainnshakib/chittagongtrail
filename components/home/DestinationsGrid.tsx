@@ -37,7 +37,6 @@ export async function DestinationsGrid() {
     <section className="ct-section ct-cream">
       <div className="ct-container mb-8 md:mb-10">
         <SectionReveal>
-          <p className="text-text-muted text-sm mb-2">{trails.length > 0 ? `${trails.length} places, one city` : `${displayTrails.length} places, one city`}</p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
             Pick one.
           </h2>
@@ -55,7 +54,6 @@ export async function DestinationsGrid() {
               )}
               <div className="ct-dest-card-overlay">
                 <h3 className="ct-dest-card-name">{trail.name}</h3>
-                <p className="ct-dest-card-desc">{trail.excerpt}</p>
               </div>
             </Link>
           ))}
