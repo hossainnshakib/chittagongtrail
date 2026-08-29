@@ -44,6 +44,12 @@ export default async function AdminProtectedLayout({
                 >
                   Media Library
                 </Link>
+                <Link
+                  href="/admin/settings"
+                  className="text-sm hover:text-[#C9A882] transition-colors"
+                >
+                  Settings
+                </Link>
               </div>
           </div>
           <div className="flex items-center gap-4">

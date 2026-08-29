@@ -5,7 +5,17 @@ import Image from "next/image";
 import { Container } from "@/components/ui";
 import { useHeroReveal } from "@/hooks/useGsap";
 
-export function Hero() {
+interface HeroProps {
+  title?: string;
+  subtitle?: string;
+  media?: {
+    secureUrl: string;
+    altText: string | null;
+  } | null;
+  siteName?: string;
+}
+
+export function Hero({ title, subtitle, media, siteName = "Chittagong Trail" }: HeroProps) {
   const heroRef = useHeroReveal();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -26,13 +36,21 @@ export function Hero() {
     }
   }, []);
 
+  const displayTitle = title && title.trim() !== "" ? title : siteName;
+  const displaySubtitle =
+    subtitle && subtitle.trim() !== ""
+      ? subtitle
+      : "A personal journal of touring Chittagong — places I visit, stories I find, and everything in between.";
+  const bgImageUrl = media?.secureUrl || "/images/chittagongtrail_logo.png";
+  const bgImageAlt = media?.altText || siteName;
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/chittagongtrail_logo.png"
-          alt="Chittagong Trail"
+          src={bgImageUrl}
+          alt={bgImageAlt}
           fill
           className="object-cover opacity-30"
           priority
@@ -47,7 +65,7 @@ export function Hero() {
           <div className="hero-title mb-8">
             <Image
               src="/images/chittagongtrail_logo.png"
-              alt="Chittagong Trail"
+              alt={siteName}
               width={200}
               height={200}
               className="mx-auto h-32 md:h-40 w-auto"
@@ -57,13 +75,12 @@ export function Hero() {
 
           {/* Title */}
           <h1 className="hero-title font-display text-5xl md:text-6xl lg:text-7xl font-bold text-dark-text mb-6">
-            Chittagong Trail
+            {displayTitle}
           </h1>
 
           {/* Tagline */}
           <p className="hero-subtitle text-xl md:text-2xl text-dark-text/80 max-w-2xl mx-auto mb-8">
-            A personal journal of touring Chittagong — places I visit, stories
-            I find, and everything in between.
+            {displaySubtitle}
           </p>
 
           {/* Scroll Indicator */}
