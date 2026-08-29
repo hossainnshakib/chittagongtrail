@@ -1,21 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
-import { login, type LoginResult } from "./actions";
-
-const initialState: LoginResult = { success: false };
+import { login } from "./actions";
 
 export default function AdminLoginPage() {
-  const [state, formAction, isPending] = useActionState(login, initialState);
+  const [error, setError] = useState<string>("");
+  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (state.success) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const result = await login({ success: false }, formData);
+      if (result.success) {
+        router.push("/admin");
+      } else if (result.error) {
+        setError(result.error);
+      }
+    } catch {
       router.push("/admin");
+    } finally {
+      setIsPending(false);
     }
-  }, [state.success, router]);
+  }
 
   return (
     <div className="min-h-screen bg-[#3E2723] flex items-center justify-center px-4">
@@ -28,16 +41,16 @@ export default function AdminLoginPage() {
         </div>
 
         <form
-          action={formAction}
+          onSubmit={handleSubmit}
           className="bg-[#FDF5E6] rounded-lg p-8 shadow-lg"
         >
           <h2 className="font-[family-name:var(--font-playfair)] text-xl text-[#5D4037] mb-6">
             Sign In
           </h2>
 
-          {state.error && (
+          {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-              {state.error}
+              {error}
             </div>
           )}
 
