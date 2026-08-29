@@ -26,8 +26,8 @@ export function Hero({ title, subtitle, media, videoUrl }: HeroProps) {
     return () => anim.cancel();
   }, []);
 
-  const displayTitle = title?.trim() || "Hills, River, Coast. *One* City.";
-  const displaySubtitle = subtitle?.trim() || "Most cities have one landscape. Chittagong has all of them.";
+  const displayTitle = title?.trim() || "Hills.\nRiver.\nCoast.\n*One City.*";
+  const displaySubtitle = subtitle?.trim() || "Most cities have one landscape. Chittagong has three — hills that rise from the plain, a river that carved the city, and a coast that stretches to the horizon.";
 
   return (
     <section className="ct-hero" aria-label="Hero">

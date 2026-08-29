@@ -186,10 +186,10 @@ img { max-width: 100%; height: auto; display: block; }
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(62, 39, 35, 0.85) 0%,
-    rgba(62, 39, 35, 0.4) 40%,
-    rgba(62, 39, 35, 0.15) 70%,
-    rgba(62, 39, 35, 0.05) 100%
+    var(--color-dark-bg) 0%,
+    color-mix(in srgb, var(--color-dark-bg) 60%, transparent) 35%,
+    color-mix(in srgb, var(--color-dark-bg) 20%, transparent) 65%,
+    color-mix(in srgb, var(--color-dark-bg) 5%, transparent) 100%
   );
   z-index: 1;
 }
@@ -216,9 +216,11 @@ img { max-width: 100%; height: auto; display: block; }
   letter-spacing: -0.02em;
   max-width: 900px;
   margin-bottom: 1.5rem;
+  text-shadow: 0 2px 20px color-mix(in srgb, var(--color-dark-bg) 40%, transparent);
 }
 .hero-title em {
   font-style: italic;
+  color: var(--color-accent);
 }
 @media (min-width: 768px) {
   .hero-title { margin-bottom: 2rem; }
@@ -227,7 +229,7 @@ img { max-width: 100%; height: auto; display: block; }
 .hero-subtitle {
   font-family: var(--font-body);
   font-size: clamp(0.9375rem, 1.5vw, 1.125rem);
-  color: rgba(253, 245, 230, 0.65);
+  color: color-mix(in srgb, var(--color-dark-text) 70%, transparent);
   line-height: 1.6;
   max-width: 480px;
   margin-bottom: 3rem;
@@ -463,10 +465,17 @@ img { max-width: 100%; height: auto; display: block; }
    SCROLL INDICATOR
    ============================================ */
 @keyframes scrollPulse {
-  0%, 100% { opacity: 0.5; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(6px); }
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50% { opacity: 0.8; transform: translateY(6px); }
 }
-.ct-scroll-indicator { animation: scrollPulse 2.5s ease-in-out infinite; }
+.ct-scroll-indicator {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-dark-text) 50%, transparent);
+  animation: scrollPulse 2.5s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .ct-scroll-indicator { animation: none; }
 }
