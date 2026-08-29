@@ -5,7 +5,6 @@ import {
   DestinationsGrid,
   EditorialQuote,
   ExperiencesGrid,
-  ChittagongMap,
   FoodGallery,
   Journeys,
   UneditedGallery,
@@ -31,7 +30,6 @@ export default async function Home() {
       />
       <EditorialQuote />
       <ExperiencesGrid />
-      <ChittagongMap />
       <FoodGallery />
       <Journeys />
       <UneditedGallery />
