@@ -1,4 +1,5 @@
-import { Container, Button, SectionReveal } from "@/components/ui";
+import Link from "next/link";
+import { SectionReveal } from "@/components/ui";
 
 interface ClosingInvitationProps {
   heading?: string;
@@ -6,42 +7,28 @@ interface ClosingInvitationProps {
 }
 
 export function ClosingInvitation({ heading, content }: ClosingInvitationProps) {
-  const displayHeading =
-    heading && heading.trim() !== ""
-      ? heading
-      : "Come while it is still yours to find";
-
-  const displayContent =
-    content && content.trim() !== "" ? content : null;
+  const displayHeading = heading?.trim() || "Come while it is still *yours to find*";
+  const displayContent = content?.trim() || null;
 
   return (
-    <section className="section-dark py-20 md:py-28 lg:py-36">
-      <Container>
+    <section className="ct-section ct-dark" style={{ paddingTop: '6rem', paddingBottom: '6rem' }}>
+      <div className="ct-container">
         <SectionReveal>
           <div className="max-w-3xl mx-auto text-center">
             <h2
-              className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-dark-text leading-snug mb-6 md:mb-8"
-              dangerouslySetInnerHTML={{
-                __html: displayHeading.replace(/\*(.*?)\*/g, '<em class="italic text-accent">$1</em>'),
-              }}
+              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-dark-text leading-[1.1] mb-6 md:mb-8"
+              dangerouslySetInnerHTML={{ __html: displayHeading.replace(/\*(.*?)\*/g, '<em class="italic text-accent">$1</em>') }}
             />
             {displayContent && (
-              <div
-                className="text-dark-text/60 text-base md:text-lg leading-relaxed mb-8 md:mb-10 max-w-xl mx-auto"
-                dangerouslySetInnerHTML={{ __html: displayContent }}
-              />
+              <div className="text-dark-text/50 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto" dangerouslySetInnerHTML={{ __html: displayContent }} />
             )}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button href="/trails" variant="secondary">
-                Explore all trails
-              </Button>
-              <Button href="/journal" variant="tertiary">
-                Read the stories
-              </Button>
+              <Link href="/trails" className="ct-btn ct-btn-outline">Explore all trails</Link>
+              <Link href="/journal" className="ct-btn ct-btn-ghost text-sm">Read the stories →</Link>
             </div>
           </div>
         </SectionReveal>
-      </Container>
+      </div>
     </section>
   );
 }

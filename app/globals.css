@@ -22,26 +22,7 @@
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Spacing */
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.25rem;
-  --spacing-6: 1.5rem;
-  --spacing-8: 2rem;
-  --spacing-10: 2.5rem;
-  --spacing-12: 3rem;
-  --spacing-16: 4rem;
-  --spacing-20: 5rem;
-  --spacing-24: 6rem;
-  --spacing-32: 8rem;
-  --spacing-40: 10rem;
-  --spacing-48: 12rem;
-  --spacing-64: 16rem;
-  
   /* Border radius */
-  --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -60,7 +41,6 @@
 
 /* Tailwind v4 theme configuration */
 @theme inline {
-  /* Colors */
   --color-background: var(--color-background);
   --color-background-secondary: var(--color-background-secondary);
   --color-surface: var(--color-surface);
@@ -75,25 +55,16 @@
   --color-dark-bg: var(--color-dark-bg);
   --color-dark-text: var(--color-dark-text);
   --color-dark-accent: var(--color-dark-accent);
-  
-  /* Typography */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
-  
-  /* Shadows */
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
 }
 
-/* Base styles */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: auto;
-}
+/* Base */
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; }
 
 body {
   background-color: var(--color-background);
@@ -104,163 +75,37 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.15;
   color: var(--color-text);
 }
 
-h1 {
-  font-size: 3rem;
-}
+p { line-height: 1.625; }
 
-h2 {
-  font-size: 2.25rem;
-}
-
-h3 {
-  font-size: 1.5rem;
-}
-
-h4 {
-  font-size: 1.25rem;
-}
-
-p {
-  line-height: 1.625;
-}
-
-/* Links */
 a {
   color: var(--color-accent);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
+a:hover { color: var(--color-accent-secondary); }
 
-a:hover {
-  color: var(--color-accent-secondary);
-}
-
-/* Focus states */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-/* Selection */
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-dark-bg);
 }
 
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.25rem;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  border: none;
-}
-
-.btn-primary {
-  background-color: var(--color-accent);
-  color: var(--color-dark-bg);
-}
-
-.btn-primary:hover {
-  background-color: var(--color-accent-secondary);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-accent);
-  color: var(--color-dark-bg);
-}
-
-/* Containers */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 768px) {
-  .container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
-/* Section spacing */
-.section {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
-}
-
-@media (min-width: 768px) {
-  .section {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .section {
-    padding-top: 5rem;
-    padding-bottom: 5rem;
-  }
-}
-
-/* Card styles */
-.card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-/* Image styles */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
+img { max-width: 100%; height: auto; display: block; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -268,131 +113,282 @@ img {
   }
 }
 
-/* Dark sections */
-.dark-section {
-  background-color: var(--color-dark-bg);
-  color: var(--color-dark-text);
+/* ============================================
+   FULL-BLEED SECTIONS (bangladeshtrail.com style)
+   Sections go edge-to-edge, no container padding
+   ============================================ */
+
+/* Container — only used where explicitly needed */
+.ct-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .ct-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
-.dark-section h1,
-.dark-section h2,
-.dark-section h3,
-.dark-section h4,
-.dark-section h5,
-.dark-section h6 {
-  color: var(--color-dark-text);
+/* Full-bleed section wrapper */
+.ct-section {
+  width: 100%;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+@media (min-width: 768px) {
+  .ct-section { padding-top: 4rem; padding-bottom: 4rem; }
+}
+@media (min-width: 1024px) {
+  .ct-section { padding-top: 5rem; padding-bottom: 5rem; }
 }
 
-.dark-section a {
-  color: var(--color-dark-accent);
-}
+/* Section backgrounds */
+.ct-cream { background-color: var(--color-background); }
+.ct-warm { background-color: var(--color-background-secondary); }
+.ct-dark { background-color: var(--color-dark-bg); color: var(--color-dark-text); }
+.ct-dark h1, .ct-dark h2, .ct-dark h3, .ct-dark h4 { color: var(--color-dark-text); }
+.ct-dark a { color: var(--color-dark-accent); }
+.ct-dark a:hover { color: var(--color-accent); }
 
-.dark-section a:hover {
-  color: var(--color-accent);
-}
-
-/* Leaflet overrides */
-.leaflet-container {
-  background: var(--color-dark-bg) !important;
-  font-family: var(--font-body) !important;
-}
-
-.leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-lg) !important;
-}
-
-.leaflet-popup-content {
-  margin: 12px 16px !important;
-}
-
-.custom-popup .leaflet-popup-content-wrapper {
-  border: 1px solid var(--color-border) !important;
-}
-
-.custom-marker {
-  background: none !important;
-  border: none !important;
-}
-
-/* Cinematic hero */
-.hero-section {
+/* ============================================
+   HERO — full viewport, centered text
+   ============================================ */
+.ct-hero {
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   background-color: var(--color-dark-bg);
 }
 
-.hero-section .hero-bg {
+.ct-hero-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-.hero-section .hero-bg img {
+.ct-hero-bg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.hero-section .hero-overlay {
+.ct-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(62, 39, 35, 0.95) 0%,
-    rgba(62, 39, 35, 0.6) 35%,
-    rgba(62, 39, 35, 0.3) 65%,
-    rgba(62, 39, 35, 0.15) 100%
-  );
+  background: rgba(62, 39, 35, 0.55);
   z-index: 1;
 }
 
-.hero-section .hero-content {
+.ct-hero-content {
   position: relative;
   z-index: 2;
   width: 100%;
-  padding-bottom: 4rem;
+  text-align: center;
+  padding: 2rem;
 }
 
+/* ============================================
+   DESTINATIONS GRID — full-bleed edge-to-edge
+   ============================================ */
+.ct-destinations {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
 @media (min-width: 768px) {
-  .hero-section .hero-content {
-    padding-bottom: 5rem;
-  }
+  .ct-destinations { grid-template-columns: repeat(3, 1fr); }
 }
-
 @media (min-width: 1024px) {
-  .hero-section .hero-content {
-    padding-bottom: 6rem;
+  .ct-destinations { grid-template-columns: repeat(4, 1fr); }
+}
+
+.ct-dest-card {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  cursor: pointer;
+  display: block;
+}
+
+.ct-dest-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.6s ease, transform 0.6s ease;
+  filter: grayscale(0.7) brightness(0.85);
+}
+
+.ct-dest-card:hover img {
+  filter: grayscale(0) brightness(1);
+  transform: scale(1.04);
+}
+
+.ct-dest-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(62,39,35,0.75) 0%, rgba(62,39,35,0) 50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+@media (min-width: 768px) {
+  .ct-dest-card-overlay { padding: 1.25rem; }
+}
+
+.ct-dest-card-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-dark-text);
+  line-height: 1.2;
+}
+@media (min-width: 768px) {
+  .ct-dest-card-name { font-size: 1.125rem; }
+}
+
+.ct-dest-card-desc {
+  font-size: 0.75rem;
+  color: rgba(253,245,230,0.6);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* ============================================
+   FOOD GALLERY — horizontal scroll, large cards
+   ============================================ */
+.ct-food-scroll {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 1.5rem 1rem;
+}
+@media (min-width: 1024px) {
+  .ct-food-scroll {
+    padding: 0 calc((100vw - 1200px) / 2 + 2rem) 1rem;
+  }
+}
+.ct-food-scroll::-webkit-scrollbar { display: none; }
+.ct-food-scroll > * { scroll-snap-align: start; }
+
+.ct-food-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+}
+@media (min-width: 640px) {
+  .ct-food-card { flex: 0 0 320px; }
+}
+@media (min-width: 1024px) {
+  .ct-food-card { flex: 0 0 360px; }
+}
+
+/* ============================================
+   GALLERY — mixed grid, edge-to-edge
+   ============================================ */
+.ct-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  grid-auto-rows: 200px;
+}
+@media (min-width: 768px) {
+  .ct-gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 250px;
+  }
+}
+@media (min-width: 1024px) {
+  .ct-gallery-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 280px;
   }
 }
 
-/* Ken Burns animation */
-@keyframes kenBurns {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(1.08);
-  }
+.ct-gallery-item {
+  position: relative;
+  overflow: hidden;
 }
 
-.ken-burns {
-  animation: kenBurns 20s ease-out forwards;
+.ct-gallery-item-wide {
+  grid-column: span 2;
+  grid-row: span 2;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ken-burns {
-    animation: none;
-    transform: scale(1);
-  }
+/* ============================================
+   NUMBERED CARDS (Experiences, Journeys)
+   ============================================ */
+.ct-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-accent);
+  opacity: 0.4;
+  line-height: 1;
 }
 
-/* Horizontal scroll container */
-.horizontal-scroll {
+/* ============================================
+   BUTTONS
+   ============================================ */
+.ct-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+
+.ct-btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-dark-bg);
+}
+.ct-btn-primary:hover {
+  background-color: var(--color-accent-secondary);
+  color: var(--color-dark-bg);
+}
+
+.ct-btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+}
+.ct-btn-outline:hover {
+  background-color: var(--color-accent);
+  color: var(--color-dark-bg);
+}
+
+.ct-btn-ghost {
+  background: transparent;
+  color: var(--color-accent);
+  padding: 0;
+}
+.ct-btn-ghost:hover {
+  color: var(--color-accent-secondary);
+}
+
+/* ============================================
+   HORIZONTAL SCROLL
+   ============================================ */
+.ct-hscroll {
   display: flex;
   gap: 1.5rem;
   overflow-x: auto;
@@ -401,87 +397,36 @@ img {
   scrollbar-width: none;
   padding-bottom: 1rem;
 }
+.ct-hscroll::-webkit-scrollbar { display: none; }
+.ct-hscroll > * { flex: 0 0 auto; scroll-snap-align: start; }
 
-.horizontal-scroll::-webkit-scrollbar {
-  display: none;
+/* ============================================
+   KEN BURNS
+   ============================================ */
+@keyframes kenBurns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
 }
-
-.horizontal-scroll > * {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-}
-
-/* Editorial trail tile */
-.trail-tile {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.trail-tile img {
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.trail-tile:hover img {
-  transform: scale(1.05);
-}
-
-.trail-tile .trail-tile-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(62, 39, 35, 0.7) 0%,
-    rgba(62, 39, 35, 0) 50%
-  );
-  transition: opacity 0.4s ease;
-}
-
-.trail-tile:hover .trail-tile-overlay {
-  opacity: 0.85;
-}
-
-/* Full-bleed section */
-.full-bleed {
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-}
-
-/* Section dark/light rhythm */
-.section-cream {
-  background-color: var(--color-background);
-}
-
-.section-warm {
-  background-color: var(--color-background-secondary);
-}
-
-.section-dark {
-  background-color: var(--color-dark-bg);
-  color: var(--color-dark-text);
-}
-
-/* Scroll indicator bounce */
-@keyframes scrollBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(8px);
-  }
-}
-
-.scroll-indicator {
-  animation: scrollBounce 2s ease-in-out infinite;
-}
-
+.ken-burns { animation: kenBurns 25s ease-out forwards; }
 @media (prefers-reduced-motion: reduce) {
-  .scroll-indicator {
-    animation: none;
-  }
+  .ken-burns { animation: none; transform: scale(1); }
 }
+
+/* ============================================
+   SCROLL INDICATOR
+   ============================================ */
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.5; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(6px); }
+}
+.ct-scroll-indicator { animation: scrollPulse 2.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ct-scroll-indicator { animation: none; }
+}
+
+/* Leaflet overrides */
+.leaflet-container { background: var(--color-dark-bg) !important; font-family: var(--font-body) !important; }
+.leaflet-popup-content-wrapper { border-radius: var(--radius-md) !important; box-shadow: var(--shadow-lg) !important; }
+.leaflet-popup-content { margin: 12px 16px !important; }
+.custom-popup .leaflet-popup-content-wrapper { border: 1px solid var(--color-border) !important; }
+.custom-marker { background: none !important; border: none !important; }
