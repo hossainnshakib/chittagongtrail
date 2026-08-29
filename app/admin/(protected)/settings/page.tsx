@@ -15,7 +15,10 @@ interface SiteSettingsFormState {
   heroTitle: string;
   heroSubtitle: string;
   heroMediaId: number | null;
+  heroVideoEnabled: boolean;
+  heroVideoProvider: "NONE" | "YOUTUBE" | "VIMEO" | "DIRECT";
   heroVideoUrl: string;
+  heroVideoOverlay: number;
   introductionHeading: string;
   introductionContent: string;
   seasonalEyebrow: string;
@@ -37,7 +40,10 @@ export default function AdminSettingsPage() {
     heroTitle: "",
     heroSubtitle: "",
     heroMediaId: null,
+    heroVideoEnabled: false,
+    heroVideoProvider: "NONE",
     heroVideoUrl: "",
+    heroVideoOverlay: 45,
     introductionHeading: "",
     introductionContent: "",
     seasonalEyebrow: "",
@@ -61,7 +67,6 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Media selector modal state
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaPickerTarget, setMediaPickerTarget] = useState<"hero" | "seasonal" | null>(null);
   const [availableMedia, setAvailableMedia] = useState<MediaAsset[]>([]);
@@ -79,7 +84,10 @@ export default function AdminSettingsPage() {
           heroTitle: data.heroTitle || "",
           heroSubtitle: data.heroSubtitle || "",
           heroMediaId: data.heroMediaId || null,
+          heroVideoEnabled: data.heroVideoEnabled ?? false,
+          heroVideoProvider: data.heroVideoProvider || "NONE",
           heroVideoUrl: data.heroVideoUrl || "",
+          heroVideoOverlay: data.heroVideoOverlay ?? 45,
           introductionHeading: data.introductionHeading || "",
           introductionContent: data.introductionContent || "",
           seasonalEyebrow: data.seasonalEyebrow || "",
@@ -105,9 +113,19 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: parseInt(value, 10) }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -194,7 +212,7 @@ export default function AdminSettingsPage() {
             Site Settings Management
           </h1>
           <p className="text-sm text-[#5D4037]/70 mt-1">
-            Configure singleton brand identity, hero section, editorial content, and footer settings.
+            Configure brand identity, hero section with video, editorial content, and footer settings.
           </p>
         </div>
       </div>
@@ -233,15 +251,16 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 2. Hero */}
+        {/* 2. Hero Section */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
             2. Hero Section
           </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="heroTitle" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Hero Title
+                Hero Title (use *text* for italic)
               </label>
               <input
                 type="text"
@@ -249,25 +268,28 @@ export default function AdminSettingsPage() {
                 name="heroTitle"
                 value={formData.heroTitle}
                 onChange={handleChange}
+                placeholder="Five Districts. Hills to the Sea. *One Chittagong.*"
                 className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
               />
             </div>
             <div>
               <label htmlFor="heroSubtitle" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Hero Subtitle / Tagline
+                Hero Supporting Paragraph
               </label>
-              <input
-                type="text"
+              <textarea
                 id="heroSubtitle"
                 name="heroSubtitle"
+                rows={3}
                 value={formData.heroSubtitle}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+                placeholder="From the city and the Karnaphuli to the coast..."
+                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] text-sm"
               />
             </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-[#5D4037] mb-2">Hero Background Media Asset</label>
+            <label className="block text-sm font-medium text-[#5D4037] mb-2">Hero Poster / Cover Image</label>
             <div className="flex items-center gap-4">
               {heroMedia ? (
                 <div className="relative w-32 h-20 rounded-md overflow-hidden border border-[#D7C9B8]">
@@ -282,7 +304,7 @@ export default function AdminSettingsPage() {
                 <button
                   type="button"
                   onClick={() => openMediaPicker("hero")}
-                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors"
+                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
                 >
                   {heroMedia ? "Change Media" : "Select Media"}
                 </button>
@@ -290,39 +312,120 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => unlinkMedia("hero")}
-                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
                   >
                     Unlink
                   </button>
                 )}
               </div>
             </div>
-          </div>
-          <div>
-            <label htmlFor="heroVideoUrl" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Hero Video URL (MP4)
-            </label>
-            <input
-              type="url"
-              id="heroVideoUrl"
-              name="heroVideoUrl"
-              value={formData.heroVideoUrl}
-              onChange={handleChange}
-              placeholder="https://example.com/video.mp4"
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-            />
-            <p className="text-xs text-[#5D4037]/60 mt-1">Video takes priority over the image. The poster image is shown while video loads.</p>
+            <p className="text-xs text-[#5D4037]/60 mt-1">The poster image displays while the video loads or when video is disabled.</p>
           </div>
         </section>
 
-        {/* 3. Introduction */}
+        {/* 3. Hero Video */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            3. Introduction Section
+            3. Hero Background Video
+          </h2>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="heroVideoEnabled"
+              name="heroVideoEnabled"
+              checked={formData.heroVideoEnabled}
+              onChange={handleCheckboxChange}
+              className="w-4 h-4 rounded border-[#D7C9B8] text-[#C9A882] focus:ring-[#C9A882]"
+            />
+            <label htmlFor="heroVideoEnabled" className="text-sm font-medium text-[#5D4037]">
+              Enable background video
+            </label>
+          </div>
+
+          {formData.heroVideoEnabled && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="heroVideoProvider" className="block text-sm font-medium text-[#5D4037] mb-1">
+                    Video Provider
+                  </label>
+                  <select
+                    id="heroVideoProvider"
+                    name="heroVideoProvider"
+                    value={formData.heroVideoProvider}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+                  >
+                    <option value="NONE">No video</option>
+                    <option value="YOUTUBE">YouTube</option>
+                    <option value="VIMEO">Vimeo</option>
+                    <option value="DIRECT">Direct URL (MP4/WebM/Cloudinary)</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="heroVideoOverlay" className="block text-sm font-medium text-[#5D4037] mb-1">
+                    Overlay darkness: {formData.heroVideoOverlay}%
+                  </label>
+                  <input
+                    type="range"
+                    id="heroVideoOverlay"
+                    name="heroVideoOverlay"
+                    min="0"
+                    max="100"
+                    value={formData.heroVideoOverlay}
+                    onChange={handleRangeChange}
+                    className="w-full mt-2 accent-[#C9A882]"
+                  />
+                  <p className="text-xs text-[#5D4037]/60 mt-1">Higher = darker overlay for better text readability.</p>
+                </div>
+              </div>
+
+              {formData.heroVideoProvider !== "NONE" && (
+                <div>
+                  <label htmlFor="heroVideoUrl" className="block text-sm font-medium text-[#5D4037] mb-1">
+                    Video URL
+                  </label>
+                  <input
+                    type="url"
+                    id="heroVideoUrl"
+                    name="heroVideoUrl"
+                    value={formData.heroVideoUrl}
+                    onChange={handleChange}
+                    placeholder={
+                      formData.heroVideoProvider === "YOUTUBE"
+                        ? "https://www.youtube.com/watch?v=XXXXXXXXXXX"
+                        : formData.heroVideoProvider === "VIMEO"
+                        ? "https://vimeo.com/123456789"
+                        : "https://example.com/video.mp4"
+                    }
+                    className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+                  />
+                  <p className="text-xs text-[#5D4037]/60 mt-1">
+                    {formData.heroVideoProvider === "YOUTUBE" && "Accepts youtube.com/watch?v=, youtu.be/, or youtube.com/embed/ URLs."}
+                    {formData.heroVideoProvider === "VIMEO" && "Accepts vimeo.com or player.vimeo.com/video/ URLs."}
+                    {formData.heroVideoProvider === "DIRECT" && "Accepts HTTPS MP4, WebM, or Cloudinary video URLs. Must be HTTPS."}
+                  </p>
+                </div>
+              )}
+
+              {formData.heroVideoProvider !== "NONE" && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-700">
+                  <strong>Mobile fallback:</strong> On reduced-motion settings or unsupported browsers, the poster image is displayed instead of video. The video is always muted and autoplaying.
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* 4. Introduction */}
+        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
+          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
+            4. Introduction Section
           </h2>
           <div>
             <label htmlFor="introductionHeading" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Introduction Heading
+              Introduction Heading (use *text* for italic)
             </label>
             <input
               type="text"
@@ -335,7 +438,7 @@ export default function AdminSettingsPage() {
           </div>
           <div>
             <label htmlFor="introductionContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Introduction Content (HTML allowed & sanitized)
+              Introduction Content (HTML allowed &amp; sanitized)
             </label>
             <textarea
               id="introductionContent"
@@ -348,10 +451,10 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 4. Seasonal / Mood */}
+        {/* 5. Seasonal / Mood */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            4. Seasonal / Mood Section
+            5. Seasonal / Mood Section
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -383,7 +486,7 @@ export default function AdminSettingsPage() {
           </div>
           <div>
             <label htmlFor="seasonalContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Seasonal Content (HTML allowed & sanitized)
+              Seasonal Content (HTML allowed &amp; sanitized)
             </label>
             <textarea
               id="seasonalContent"
@@ -410,7 +513,7 @@ export default function AdminSettingsPage() {
                 <button
                   type="button"
                   onClick={() => openMediaPicker("seasonal")}
-                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors"
+                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
                 >
                   {seasonalMedia ? "Change Media" : "Select Media"}
                 </button>
@@ -418,7 +521,7 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => unlinkMedia("seasonal")}
-                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
                   >
                     Unlink
                   </button>
@@ -428,14 +531,14 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 5. About / Sign-off */}
+        {/* 6. About / Sign-off */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            5. About / Sign-off Section
+            6. About / Sign-off Section
           </h2>
           <div>
             <label htmlFor="aboutHeading" className="block text-sm font-medium text-[#5D4037] mb-1">
-              About Quote / Heading
+              About Quote / Heading (use *text* for italic)
             </label>
             <input
               type="text"
@@ -448,7 +551,7 @@ export default function AdminSettingsPage() {
           </div>
           <div>
             <label htmlFor="aboutContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              About Sign-off Content (HTML allowed & sanitized)
+              About Sign-off Content (HTML allowed &amp; sanitized)
             </label>
             <textarea
               id="aboutContent"
@@ -461,10 +564,10 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 6. Contact and Social */}
+        {/* 7. Contact and Social */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            6. Contact and Social Links
+            7. Contact and Social Links
           </h2>
           <div>
             <label htmlFor="contactEmail" className="block text-sm font-medium text-[#5D4037] mb-1">
@@ -525,10 +628,10 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 7. Footer */}
+        {/* 8. Footer */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            7. Footer Section
+            8. Footer Section
           </h2>
           <div>
             <label htmlFor="footerText" className="block text-sm font-medium text-[#5D4037] mb-1">
@@ -566,7 +669,7 @@ export default function AdminSettingsPage() {
               </h3>
               <button
                 onClick={() => setMediaPickerOpen(false)}
-                className="text-[#5D4037] hover:text-black font-bold text-lg"
+                className="text-[#5D4037] hover:text-black font-bold text-lg cursor-pointer"
               >
                 &times;
               </button>
@@ -610,7 +713,7 @@ export default function AdminSettingsPage() {
               <button
                 type="button"
                 onClick={() => setMediaPickerOpen(false)}
-                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer"
               >
                 Cancel
               </button>

@@ -41,6 +41,13 @@ enum PlaceType {
   PARK
 }
 
+enum HeroVideoProvider {
+  NONE
+  YOUTUBE
+  VIMEO
+  DIRECT
+}
+
 model MediaAsset {
   id           Int      @id @default(autoincrement())
   publicId     String   @unique @db.VarChar(191)
@@ -150,28 +157,31 @@ model JournalPost {
 }
 
 model SiteSettings {
-  id                  Int         @id @default(1)
-  siteName            String      @default("Chittagong Trail")
-  heroTitle           String      @default("")
-  heroSubtitle        String      @default("")
+  id                  Int               @id @default(1)
+  siteName            String            @default("Chittagong Trail")
+  heroTitle           String            @default("")
+  heroSubtitle        String            @default("")
   heroMediaId         Int?
-  heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
-  heroVideoUrl        String?
-  introductionHeading String      @default("")
-  introductionContent String?     @db.Text
-  seasonalEyebrow     String      @default("")
-  seasonalTitle       String      @default("")
-  seasonalContent     String?     @db.Text
+  heroMedia           MediaAsset?       @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  heroVideoEnabled    Boolean           @default(false)
+  heroVideoProvider   HeroVideoProvider @default(NONE)
+  heroVideoUrl        String?           @db.Text
+  heroVideoOverlay    Int               @default(45)
+  introductionHeading String            @default("")
+  introductionContent String?           @db.Text
+  seasonalEyebrow     String            @default("")
+  seasonalTitle       String            @default("")
+  seasonalContent     String?           @db.Text
   seasonalMediaId     Int?
-  seasonalMedia       MediaAsset? @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
-  aboutHeading        String      @default("")
-  aboutContent        String?     @db.Text
-  contactEmail        String      @default("")
+  seasonalMedia       MediaAsset?       @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
+  aboutHeading        String            @default("")
+  aboutContent        String?           @db.Text
+  contactEmail        String            @default("")
   socialFacebook      String?
   socialInstagram     String?
   socialYouTube       String?
-  footerText          String      @default("")
-  updatedAt           DateTime    @updatedAt
+  footerText          String            @default("")
+  updatedAt           DateTime          @updatedAt
 
   @@map("site_settings")
 }

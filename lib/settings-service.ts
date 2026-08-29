@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "./prisma";
-import { SiteSettings, MediaAsset } from "@prisma/client";
+import { SiteSettings, MediaAsset, HeroVideoProvider } from "@prisma/client";
 import { z } from "zod";
 import { sanitizeContent } from "./validation";
 import { revalidatePath } from "next/cache";
@@ -12,12 +12,40 @@ function logServiceError(operation: string, error: unknown) {
   console.error(`${LOG_PREFIX} ${operation} failed: ${message}`);
 }
 
+function parseYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function parseVimeoId(url: string): string | null {
+  const m = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+  return m ? m[1] : null;
+}
+
+function isValidDirectVideoUrl(url: string): boolean {
+  if (!url.startsWith("https://")) return false;
+  const lower = url.toLowerCase();
+  if (lower.includes("javascript:") || lower.includes("data:")) return false;
+  return true;
+}
+
+export const heroVideoProviderValues = Object.values(HeroVideoProvider);
+
 export const siteSettingsSchema = z.object({
   siteName: z.string().min(1, "Site name is required").max(100).transform((v) => v.trim()),
   heroTitle: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroSubtitle: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroMediaId: z.coerce.number().int().optional().nullable(),
+  heroVideoEnabled: z.coerce.boolean().default(false),
+  heroVideoProvider: z.enum(["NONE", "YOUTUBE", "VIMEO", "DIRECT"]).default("NONE"),
   heroVideoUrl: z.string().max(500).optional().nullable().transform((v) => (v && v.trim() !== "" ? v.trim() : null)),
+  heroVideoOverlay: z.coerce.number().int().min(0).max(100).default(45),
   introductionHeading: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
   introductionContent: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? sanitizeContent(v) : null)),
   seasonalEyebrow: z.string().max(100).optional().nullable().transform((v) => (v ? v.trim() : "")),
@@ -71,7 +99,33 @@ export const siteSettingsSchema = z.object({
     )
     .transform((v) => (v === "" ? null : v)),
   footerText: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
-});
+}).refine(
+  (data) => {
+    if (data.heroVideoEnabled && data.heroVideoProvider !== "NONE") {
+      return !!data.heroVideoUrl;
+    }
+    return true;
+  },
+  { message: "Video URL is required when video is enabled", path: ["heroVideoUrl"] }
+).refine(
+  (data) => {
+    if (data.heroVideoEnabled && data.heroVideoUrl) {
+      const url = data.heroVideoUrl;
+      switch (data.heroVideoProvider) {
+        case "YOUTUBE":
+          return parseYouTubeId(url) !== null;
+        case "VIMEO":
+          return parseVimeoId(url) !== null;
+        case "DIRECT":
+          return isValidDirectVideoUrl(url);
+        default:
+          return true;
+      }
+    }
+    return true;
+  },
+  { message: "Invalid video URL for selected provider", path: ["heroVideoUrl"] }
+);
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;
 
@@ -101,14 +155,16 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
     return settings;
   } catch (error) {
     logServiceError("initializeSiteSettingsIfMissing", error);
-    // Return safe default fallback object in memory if DB error occurs
     return {
       id: 1,
       siteName: "Chittagong Trail",
       heroTitle: "",
       heroSubtitle: "",
       heroMediaId: null,
+      heroVideoEnabled: false,
+      heroVideoProvider: HeroVideoProvider.NONE,
       heroVideoUrl: null,
+      heroVideoOverlay: 45,
       introductionHeading: "",
       introductionContent: null,
       seasonalEyebrow: "",
@@ -164,7 +220,10 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
       heroTitle: parsed.heroTitle,
       heroSubtitle: parsed.heroSubtitle,
       heroMediaId: parsed.heroMediaId || null,
+      heroVideoEnabled: parsed.heroVideoEnabled,
+      heroVideoProvider: parsed.heroVideoProvider as HeroVideoProvider,
       heroVideoUrl: parsed.heroVideoUrl || null,
+      heroVideoOverlay: parsed.heroVideoOverlay,
       introductionHeading: parsed.introductionHeading,
       introductionContent: parsed.introductionContent || null,
       seasonalEyebrow: parsed.seasonalEyebrow,
@@ -182,7 +241,6 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
     include: { heroMedia: true, seasonalMedia: true },
   });
 
-  // Revalidate public routes affected by site settings
   revalidatePath("/");
   revalidatePath("/about");
   revalidatePath("/trails");
@@ -200,7 +258,10 @@ export async function getPublicSiteSettings() {
     heroTitle: settings.heroTitle || "",
     heroSubtitle: settings.heroSubtitle || "",
     heroMedia: settings.heroMedia || null,
+    heroVideoEnabled: settings.heroVideoEnabled,
+    heroVideoProvider: settings.heroVideoProvider,
     heroVideoUrl: settings.heroVideoUrl || null,
+    heroVideoOverlay: settings.heroVideoOverlay,
     introductionHeading: settings.introductionHeading || "",
     introductionContent: settings.introductionContent,
     seasonalEyebrow: settings.seasonalEyebrow || "",
