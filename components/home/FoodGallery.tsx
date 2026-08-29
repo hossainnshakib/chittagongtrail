@@ -4,12 +4,12 @@ import { SectionReveal } from "@/components/ui";
 import { getLatestFoodPosts } from "@/lib/data";
 
 const fallbackFoods = [
-  { name: "Kala Bhuna", location: "Chittagong", desc: "Beef cooked down for hours until the gravy turns almost black. Chittagong's signature, and not remotely subtle." },
-  { name: "Mezbani", location: "Chittagong", desc: "Slow-cooked spice-rich beef served on banana leaves. The feast that defines Chittagong's food culture." },
-  { name: "Shutki", location: "Coastal Chittagong", desc: "Dried fish, fermented and fierce. Chittagong's most honest flavour." },
-  { name: "Bhorta Thali", location: "Every home", desc: "Mashes around a plate of rice — aubergine, dried fish, potato, coriander, chilli." },
-  { name: "Fuchka", location: "Every street corner", desc: "Crisp hollow shells filled with spiced potato, dunked in tamarind water." },
-  { name: "Bhapa Pitha", location: "Winter, at dusk", desc: "Steamed rice cakes with date palm molasses, made only in the cold months." },
+  { name: "Kala Bhuna", location: "Chittagong", desc: "Beef cooked down for hours until the gravy turns almost black. Chittagong's signature, and not remotely subtle.", img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80" },
+  { name: "Mezbani", location: "Chittagong", desc: "Slow-cooked spice-rich beef served on banana leaves. The feast that defines Chittagong's food culture.", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600&q=80" },
+  { name: "Shutki", location: "Coastal Chittagong", desc: "Dried fish, fermented and fierce. Chittagong's most honest flavour.", img: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&q=80" },
+  { name: "Bhorta Thali", location: "Every home", desc: "Mashes around a plate of rice — aubergine, dried fish, potato, coriander, chilli.", img: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80" },
+  { name: "Fuchka", location: "Every street corner", desc: "Crisp hollow shells filled with spiced potato, dunked in tamarind water.", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=80" },
+  { name: "Bhapa Pitha", location: "Winter, at dusk", desc: "Steamed rice cakes with date palm molasses, made only in the cold months.", img: "https://images.unsplash.com/photo-1567337710282-00832b415979?w=600&q=80" },
 ];
 
 export async function FoodGallery() {
@@ -54,8 +54,9 @@ export async function FoodGallery() {
               ))
             : fallbackFoods.map((food, i) => (
                 <div key={i} className="ct-food-card">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-3 bg-gradient-to-br from-[#D4956A]/15 to-[#C9A882]/10">
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#3E2723]/30 to-transparent" />
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-3">
+                    <Image src={food.img} alt={food.name} fill className="object-cover" sizes="360px" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#3E2723]/50 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <span className="text-dark-text/50 text-xs uppercase tracking-wider">{food.location}</span>
                     </div>
