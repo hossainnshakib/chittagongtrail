@@ -21,7 +21,7 @@ export default async function Home() {
         title={settings.heroTitle}
         subtitle={settings.heroSubtitle}
         media={settings.heroMedia}
-        siteName={settings.siteName}
+        videoUrl={settings.heroVideoUrl}
       />
       <DestinationsGrid />
       <ChittagongStatement

@@ -15,6 +15,7 @@ interface SiteSettingsFormState {
   heroTitle: string;
   heroSubtitle: string;
   heroMediaId: number | null;
+  heroVideoUrl: string;
   introductionHeading: string;
   introductionContent: string;
   seasonalEyebrow: string;
@@ -36,6 +37,7 @@ export default function AdminSettingsPage() {
     heroTitle: "",
     heroSubtitle: "",
     heroMediaId: null,
+    heroVideoUrl: "",
     introductionHeading: "",
     introductionContent: "",
     seasonalEyebrow: "",
@@ -77,6 +79,7 @@ export default function AdminSettingsPage() {
           heroTitle: data.heroTitle || "",
           heroSubtitle: data.heroSubtitle || "",
           heroMediaId: data.heroMediaId || null,
+          heroVideoUrl: data.heroVideoUrl || "",
           introductionHeading: data.introductionHeading || "",
           introductionContent: data.introductionContent || "",
           seasonalEyebrow: data.seasonalEyebrow || "",
@@ -294,6 +297,21 @@ export default function AdminSettingsPage() {
                 )}
               </div>
             </div>
+          </div>
+          <div>
+            <label htmlFor="heroVideoUrl" className="block text-sm font-medium text-[#5D4037] mb-1">
+              Hero Video URL (MP4)
+            </label>
+            <input
+              type="url"
+              id="heroVideoUrl"
+              name="heroVideoUrl"
+              value={formData.heroVideoUrl}
+              onChange={handleChange}
+              placeholder="https://example.com/video.mp4"
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+            />
+            <p className="text-xs text-[#5D4037]/60 mt-1">Video takes priority over the image. The poster image is shown while video loads.</p>
           </div>
         </section>
 

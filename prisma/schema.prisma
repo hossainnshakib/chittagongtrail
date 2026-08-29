@@ -156,6 +156,7 @@ model SiteSettings {
   heroSubtitle        String      @default("")
   heroMediaId         Int?
   heroMedia           MediaAsset? @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  heroVideoUrl        String?
   introductionHeading String      @default("")
   introductionContent String?     @db.Text
   seasonalEyebrow     String      @default("")
