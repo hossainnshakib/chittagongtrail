@@ -25,20 +25,26 @@ export default async function AdminProtectedLayout({
             >
               CT Admin
             </Link>
-            <div className="hidden md:flex items-center gap-4">
-              <Link
-                href="/admin/trails"
-                className="text-sm hover:text-[#C9A882] transition-colors"
-              >
-                Trails
-              </Link>
-              <Link
-                href="/admin/journal"
-                className="text-sm hover:text-[#C9A882] transition-colors"
-              >
-                Journal
-              </Link>
-            </div>
+              <div className="hidden md:flex items-center gap-4">
+                <Link
+                  href="/admin/trails"
+                  className="text-sm hover:text-[#C9A882] transition-colors"
+                >
+                  Trails
+                </Link>
+                <Link
+                  href="/admin/journal"
+                  className="text-sm hover:text-[#C9A882] transition-colors"
+                >
+                  Journal
+                </Link>
+                <Link
+                  href="/admin/media"
+                  className="text-sm hover:text-[#C9A882] transition-colors"
+                >
+                  Media Library
+                </Link>
+              </div>
           </div>
           <div className="flex items-center gap-4">
             <Link
