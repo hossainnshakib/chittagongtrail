@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import {
   getAdminCredentials,
   verifyPassword,
@@ -43,11 +44,11 @@ export async function login(
 
     const token = await createSession(email);
     await setSessionCookie(token);
-
-    return { success: true };
   } catch {
     return { success: false, error: "Login failed. Please try again." };
   }
+
+  redirect("/admin");
 }
 
 export async function logout(): Promise<void> {
