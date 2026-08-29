@@ -3,7 +3,6 @@ export { ChittagongStatement } from "./ChittagongStatement";
 export { DestinationsGrid } from "./DestinationsGrid";
 export { EditorialQuote } from "./EditorialQuote";
 export { ExperiencesGrid } from "./ExperiencesGrid";
-export { ChittagongMap } from "./ChittagongMap";
 export { FoodGallery } from "./FoodGallery";
 export { Journeys } from "./Journeys";
 export { UneditedGallery } from "./UneditedGallery";

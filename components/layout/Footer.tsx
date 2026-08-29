@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Container } from "@/components/ui";
 import { getPublicSiteSettings } from "@/lib/settings-service";
 
 export async function Footer() {
@@ -26,7 +25,7 @@ export async function Footer() {
 
   return (
     <footer className="bg-dark-bg text-dark-text">
-      <Container className="py-16 md:py-20">
+      <div className="ct-container py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
@@ -110,7 +109,7 @@ export async function Footer() {
             © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
           </p>
         </div>
-      </Container>
+      </div>
     </footer>
   );
 }
