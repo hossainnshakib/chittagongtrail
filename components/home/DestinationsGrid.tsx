@@ -4,7 +4,7 @@ import { SectionReveal } from "@/components/ui";
 import { getTrails } from "@/lib/data";
 
 const demoTrails = [
-  { name: "Batali Hill", slug: "batali-hill", excerpt: "The green heart of Chittagong — dawn walks above the city.", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" },
+  { name: "Batali Hill", slug: "batali-hill", excerpt: "The green heart of Chittagong — dawn walks above the city.", img: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=80" },
   { name: "Karnaphuli River", slug: "karnaphuli-river", excerpt: "The river that built Chittagong. Boats, bridges, ghats.", img: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=600&q=80" },
   { name: "Patenga Beach", slug: "patenga-beach", excerpt: "Where the Bay of Bengal meets the river mouth.", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80" },
   { name: "Chittagong Hill Tracts", slug: "hill-tracts", excerpt: "Rolling green hills, indigenous villages, untouched trails.", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80" },
