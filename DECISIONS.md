@@ -1,8 +1,8 @@
 # Chittagong Trail — Project Decisions Log
 
 **Document:** `DECISIONS.md`
-**Version:** 1.0
-**Last Updated:** Phase 4B Brand Asset Integration
+**Version:** 2.0
+**Last Updated:** Phase A8 Homepage Rebuild Specification
 **Project:** Chittagong Trail
 
 ---
@@ -368,17 +368,150 @@ SHADOWS — PROVISIONAL:
 
 ---
 
+## Phase A8 — Homepage Rebuild Specification (Approved)
+
+### 11. Homepage Architecture
+
+**Decision:** Complete homepage rebuild with 10-section editorial structure.
+
+```text
+New Section Order:
+  01. Cinematic Hero
+  02. Chittagong Statement
+  03. Trail Discovery
+  04. Featured Trail Moment
+  05. Chittagong Geography (Map)
+  06. Stories from Chittagong
+  07. Taste of Chittagong (Food)
+  08. Visual Interlude (Gallery)
+  09. Closing / Invitation
+  10. Footer
+
+Removed:
+  - Seasonal/Mood (standalone section removed)
+  - Introduction (reframed as Chittagong Statement)
+```
+
+---
+
+### 12. Seasonal/Mood Section
+
+**Decision:** Remove as standalone homepage section.
+
+```text
+Rationale:
+  - Requires ongoing owner copy updates
+  - Risk of stale content
+  - Seasonal mood woven into hero imagery and editorial moments
+  - SiteSettings seasonal fields remain in DB (unused on homepage)
+```
+
+---
+
+### 13. Founder Voice
+
+**Decision:** Founder as curator, not subject.
+
+```text
+Rules:
+  - Chittagong is the main subject
+  - Founder provides perspective and curation
+  - Language uses place-based framing, not "I visited"
+  - First-person appears max 2-3 times on homepage
+  - Closing section may use personal sign-off
+```
+
+---
+
+### 14. Trails Presentation
+
+**Decision:** Editorial mosaic, not card grid.
+
+```text
+Layout:
+  - 1 featured trail (large, full-width)
+  - 3-4 supporting trails (asymmetric mosaic)
+  - Featured selection via TrailLocation.isFeatured + featuredOrder
+  - Each trail: full-bleed image + name overlay
+```
+
+---
+
+### 15. Food Presentation
+
+**Decision:** Horizontal scroll or editorial layout, not card grid.
+
+```text
+Layout:
+  - Horizontal scroll of 3-4 food items
+  - Each item: image + name + place context
+  - Emphasizes Chittagong food culture
+  - Source: JournalPost.type = FOOD
+```
+
+---
+
+### 16. People / Culture / History
+
+**Decision:** No dedicated section.
+
+```text
+Rationale:
+  - Woven into Journal stories, Trails, Food
+  - Avoids unnecessary section count
+  - Culture appears through editorial voice and content
+```
+
+---
+
+### 17. Gallery / Visual Interlude
+
+**Decision:** Use HomepageGallery model, atmospheric composition.
+
+```text
+Layout:
+  - 3-4 images in mixed aspect ratio composition
+  - Location labels, no heavy captions
+  - Uses existing HomepageGallery model
+  - Editorial, not decorative
+  - REQUIRES OWNER DECISION: media availability
+```
+
+---
+
+### 18. Site Settings — Seasonal Fields
+
+**Decision:** Leave in database, mark as reserved.
+
+```text
+Fields: seasonalEyebrow, seasonalTitle, seasonalContent, seasonalMediaId
+Status: Present in DB and admin UI, unused on homepage
+Action: Mark as "Reserved for future use" in admin UI
+```
+
+---
+
 ## Decisions NOT Yet Made
 
 ### Content
 
 ```text
 - Exact hero copy
-- Introduction paragraph copy
-- Seasonal/mood section copy
+- Chittagong Statement paragraph copy
+- Closing section copy
 - Footer copy
 - 404 page copy
 - About page content
+```
+
+### Owner Decisions (from A8 Specification)
+
+```text
+- Hero media type (image vs video)
+- Number of featured trails (1 vs 2)
+- Founder attribution in closing
+- Visual interlude media availability
+- Seasonal fields disposition
 ```
 
 ### Technical (Future Phases)
@@ -389,6 +522,7 @@ SHADOWS — PROVISIONAL:
 - Map interaction specifics
 - Animation implementation details
 - Admin authentication method
+- HomepageGallery admin management
 ```
 
 ---
@@ -401,6 +535,7 @@ SHADOWS — PROVISIONAL:
 | Phase 2 | Site Architecture | Approved | STRUCTURE.md |
 | Phase 3 | Content Architecture | Approved | WIREFRAMES.md + Technical Decisions |
 | Phase 4 | Visual Identity | Complete | Brand assets integrated, awaiting typography approval |
+| Phase A8 | Homepage Rebuild Specification | Complete | A8-HOMEPAGE-REBUILD.md |
 
 ---
 
