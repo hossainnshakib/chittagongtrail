@@ -18,8 +18,8 @@ export default function AdminIconButton({
   size = "md",
 }: AdminIconButtonProps) {
   const sizeStyles: Record<string, string> = {
-    sm: "w-7 h-7",
-    md: "w-9 h-9",
+    sm: "w-11 h-11",
+    md: "w-11 h-11",
   };
 
   const variantStyles: Record<string, React.CSSProperties> = {

@@ -21,7 +21,7 @@ export default function AdminTabs({ tabs, activeTab, onTabChange }: AdminTabsPro
             role="tab"
             aria-selected={isActive}
             aria-controls={`tabpanel-${tab.id}`}
-            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors admin-focus-ring ${
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors admin-focus-ring min-h-[44px] ${
               isActive ? "border-b-2" : ""
             }`}
             style={{

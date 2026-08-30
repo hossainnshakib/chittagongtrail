@@ -734,8 +734,8 @@ img { max-width: 100%; height: auto; display: block; }
   --admin-sidebar-active-bg: rgba(201, 168, 130, 0.12);
   --admin-sidebar-active-text: #F8F6F3;
   --admin-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
-  --admin-control-height: 40px;
-  --admin-control-height-sm: 32px;
+  --admin-control-height: 44px;
+  --admin-control-height-sm: 44px;
   --admin-radius: 8px;
   --admin-radius-sm: 4px;
   --admin-radius-lg: 12px;
@@ -863,7 +863,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .admin-nav-group-label {
-  padding: 8px 20px 4px;
+  padding: 10px 20px 4px;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -894,7 +894,7 @@ img { max-width: 100%; height: auto; display: block; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 20px;
+  padding: 12px 20px;
   font-size: 0.8125rem;
   font-weight: 450;
   color: var(--admin-sidebar-text);
@@ -944,7 +944,7 @@ img { max-width: 100%; height: auto; display: block; }
 @media (min-width: 1024px) and (max-width: 1439px) {
   .admin-nav-item {
     justify-content: center;
-    padding: 7px 0;
+    padding: 12px 0;
     position: relative;
   }
 }
@@ -1100,7 +1100,8 @@ img { max-width: 100%; height: auto; display: block; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 0.5rem 0.625rem;
+  min-height: 44px;
   font-size: 0.75rem;
   font-weight: 500;
   border-radius: var(--admin-radius-sm);
@@ -1136,8 +1137,8 @@ img { max-width: 100%; height: auto; display: block; }
   display: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   background: none;
   cursor: pointer;
@@ -1255,7 +1256,7 @@ img { max-width: 100%; height: auto; display: block; }
   pointer-events: none;
 }
 
-/* Primary button — dark brown bg, white text for WCAG AA (16:1) */
+/* Primary button — dark brown bg, white text, WCAG AA (~13.82:1) */
 .admin-btn-primary {
   background-color: #3E2723;
   color: #FFFFFF;
@@ -1266,7 +1267,7 @@ img { max-width: 100%; height: auto; display: block; }
   color: #FFFFFF;
 }
 
-/* Secondary button — beige bg, dark brown text for WCAG AA (7.3:1) */
+/* Secondary button — beige bg, dark brown text, WCAG AA (~6.19:1, not AAA) */
 .admin-btn-secondary {
   background-color: var(--admin-brand-accent);
   color: #3E2723;
@@ -1277,7 +1278,7 @@ img { max-width: 100%; height: auto; display: block; }
   color: #3E2723;
 }
 
-/* Ghost button — transparent bg, dark readable text (4.6:1) */
+/* Ghost button — transparent bg, dark readable text, WCAG AA (~16.66:1) */
 .admin-btn-ghost {
   background-color: transparent;
   color: var(--admin-text-primary);
@@ -1303,19 +1304,19 @@ img { max-width: 100%; height: auto; display: block; }
 .admin-btn-sm {
   padding: 0.375rem 0.75rem;
   font-size: 0.75rem;
-  min-height: 32px;
+  min-height: 44px;
 }
 
 .admin-btn-md {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .admin-btn-lg {
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  min-height: 44px;
+  min-height: 48px;
 }
 
 /* Loading state */
