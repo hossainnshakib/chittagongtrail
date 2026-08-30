@@ -205,7 +205,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-16">
+    <div className="max-w-4xl mx-auto space-y-8 pb-16" style={{ '--admin-content-max-width': '900px' } as React.CSSProperties}>
       <div className="flex items-center justify-between border-b border-[#E8DCC8] pb-4">
         <div>
           <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold text-[#5D4037]">

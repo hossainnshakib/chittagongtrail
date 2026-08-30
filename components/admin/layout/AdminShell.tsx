@@ -47,7 +47,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell" data-admin-root>
       <a
         href="#admin-main-content"
         className="admin-sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-[var(--admin-sidebar-bg)] focus:text-[var(--admin-sidebar-active-text)] focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none"

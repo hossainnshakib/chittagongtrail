@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
   ];
 
   return (
-    <div>
+    <div style={{ '--admin-content-max-width': '1400px' } as React.CSSProperties}>
       <AdminPageHeader
         title="Dashboard"
         description="Welcome back. Here's your content overview."

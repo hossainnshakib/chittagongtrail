@@ -30,19 +30,7 @@ export default function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="admin-focus-ring inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
-          style={{
-            color: "var(--admin-text-secondary)",
-            border: "1px solid var(--admin-border)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--admin-brand-accent)";
-            e.currentTarget.style.color = "var(--admin-text-primary)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--admin-border)";
-            e.currentTarget.style.color = "var(--admin-text-secondary)";
-          }}
+          className="admin-focus-ring admin-topbar-view-site"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />

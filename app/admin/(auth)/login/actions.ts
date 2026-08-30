@@ -43,12 +43,15 @@ export async function login(
 
     const valid = await verifyPassword(password, credentials.passwordHash);
     if (!valid) {
+      console.error("[login] password verification failed");
       return { success: false, error: "Invalid email or password" };
     }
 
     const token = await createSession(email);
     await setSessionCookie(token);
-  } catch {
+    console.error("[login] session created, cookie set");
+  } catch (err) {
+    console.error("[login] catch block:", err);
     return { success: false, error: "Login failed. Please try again." };
   }
 

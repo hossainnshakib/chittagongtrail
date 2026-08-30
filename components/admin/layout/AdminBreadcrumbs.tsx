@@ -63,15 +63,15 @@ export default function AdminBreadcrumbs() {
 
   if (breadcrumbs.length <= 1) {
     return (
-      <nav aria-label="Breadcrumb" className="text-sm" style={{ color: "var(--admin-text-muted)" }}>
-        <span>{breadcrumbs[0]?.label}</span>
+      <nav aria-label="Breadcrumb" className="text-sm">
+        <span className="admin-breadcrumb-current">{breadcrumbs[0]?.label}</span>
       </nav>
     );
   }
 
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex items-center gap-1 text-sm list-none m-0 p-0" style={{ color: "var(--admin-text-muted)" }}>
+      <ol className="flex items-center gap-1 text-sm list-none m-0 p-0">
         {breadcrumbs.map((crumb, index) => {
           const isLast = index === breadcrumbs.length - 1;
           return (
@@ -82,16 +82,13 @@ export default function AdminBreadcrumbs() {
                 </svg>
               )}
               {isLast ? (
-                <span style={{ color: "var(--admin-text-primary)", fontWeight: 500 }}>
+                <span className="admin-breadcrumb-current">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="admin-focus-ring"
-                  style={{ color: "var(--admin-text-muted)", textDecoration: "none" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--admin-text-primary)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--admin-text-muted)"; }}
+                  className="admin-focus-ring admin-breadcrumb-link"
                 >
                   {crumb.label}
                 </Link>

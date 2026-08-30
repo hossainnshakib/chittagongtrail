@@ -152,6 +152,7 @@ export default function AdminNavItem({ label, href, icon, disabled, tooltip, onC
           </span>
         )}
         <span className="admin-nav-item-label">{label}</span>
+        <span className="admin-nav-planned" aria-label="Planned feature">Planned</span>
       </span>
     );
   }

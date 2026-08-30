@@ -329,4 +329,162 @@ describe("Admin Shell Tests", () => {
       assert.ok(!content.includes("AdminShell"), "Login page does not use AdminShell");
     });
   });
+
+  describe("A7R.2.1 — Button Visible-Text Contract", () => {
+    it("AdminButton primary variant uses white text on brand background", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-btn-primary"), "Has admin-btn-primary class");
+      assert.ok(css.includes("color: #FFFFFF"), "Primary button has white text");
+    });
+
+    it("AdminButton has base reset preventing public a-color inheritance", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-btn"), "Has admin-btn base class");
+      assert.ok(css.includes(".admin-btn-secondary"), "Has secondary variant");
+      assert.ok(css.includes(".admin-btn-ghost"), "Has ghost variant");
+      assert.ok(css.includes(".admin-btn-danger"), "Has danger variant");
+    });
+
+    it("AdminButton component file uses CSS classes for styling", () => {
+      const content = fs.readFileSync("components/admin/ui/AdminButton.tsx", "utf-8");
+      assert.ok(content.includes("admin-btn-"), "Uses admin-btn CSS classes");
+      assert.ok(content.includes("variantClass"), "Maps variant to CSS class");
+    });
+
+    it("admin-shell a color reset exists in base layer", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-shell a"), "Has .admin-shell a reset");
+      assert.ok(css.includes("color: inherit"), "Reset uses color: inherit");
+    });
+
+    it("public a color rule is in base layer to allow Tailwind override", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      const baseLayerStart = css.indexOf("@layer base");
+      assert.ok(baseLayerStart > -1, "Has @layer base block");
+      const aRuleIndex = css.indexOf("  a {\n    color: var(--color-accent);", baseLayerStart);
+      assert.ok(aRuleIndex > baseLayerStart, "Public a rule is in @layer base");
+    });
+  });
+
+  describe("A7R.2.1 — Content Width Variants", () => {
+    it("admin-content uses CSS custom property for max-width", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes("--admin-content-max-width"), "Has content max-width custom property");
+      assert.ok(css.includes("admin-content-width-wide"), "Has wide variant");
+      assert.ok(css.includes("admin-content-width-full"), "Has full variant");
+      assert.ok(css.includes("admin-content-width-narrow"), "Has narrow variant");
+    });
+
+    it("dashboard page sets wide content width", () => {
+      const content = fs.readFileSync("app/admin/(protected)/page.tsx", "utf-8");
+      assert.ok(content.includes("--admin-content-max-width"), "Dashboard sets content width");
+    });
+
+    it("trails page sets wide content width", () => {
+      const content = fs.readFileSync("app/admin/(protected)/trails/page.tsx", "utf-8");
+      assert.ok(content.includes("--admin-content-max-width"), "Trails sets content width");
+    });
+
+    it("settings page sets constrained content width", () => {
+      const content = fs.readFileSync("app/admin/(protected)/settings/page.tsx", "utf-8");
+      assert.ok(content.includes("--admin-content-max-width"), "Settings sets content width");
+    });
+  });
+
+  describe("A7R.2.1 — Disabled Navigation Semantics", () => {
+    it("disabled nav items show Planned badge", () => {
+      const content = fs.readFileSync("components/admin/layout/AdminNavItem.tsx", "utf-8");
+      assert.ok(content.includes("admin-nav-planned"), "Has Planned badge class");
+      assert.ok(content.includes('aria-label="Planned feature"'), "Planned badge has aria-label");
+    });
+
+    it("CSS has admin-nav-planned styling", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-nav-planned"), "Has admin-nav-planned CSS");
+    });
+
+    it("disabled items have aria-disabled attribute", () => {
+      const content = fs.readFileSync("components/admin/layout/AdminNavItem.tsx", "utf-8");
+      assert.ok(content.includes('aria-disabled="true"'), "Disabled items have aria-disabled");
+    });
+
+    it("disabled items use pointer-events: none in CSS", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes('pointer-events: none'), "Disabled items have pointer-events: none");
+    });
+  });
+
+  describe("A7R.2.1 — Admin Root Scoping", () => {
+    it("AdminShell has data-admin-root attribute", () => {
+      const content = fs.readFileSync("components/admin/layout/AdminShell.tsx", "utf-8");
+      assert.ok(content.includes("data-admin-root"), "AdminShell has data-admin-root");
+    });
+
+    it("admin-shell has color property set", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-shell"), "Has .admin-shell class");
+      assert.ok(css.includes("color: var(--admin-text-primary)"), "admin-shell sets explicit color");
+    });
+
+    it("admin headings use body font not display font", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".admin-shell h1"), "Has admin heading override");
+      assert.ok(css.includes("font-family: var(--font-body)"), "Admin headings use body font");
+    });
+  });
+
+  describe("A7R.2.1 — Sidebar Bottom Spacing", () => {
+    it("sidebar bottom has safe-area padding", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes("safe-area-inset-bottom"), "Sidebar bottom accounts for safe area");
+    });
+  });
+
+  describe("A7R.2.1 — Auth Debug Cleanup", () => {
+    it("login actions.ts does not log email values", () => {
+      const content = fs.readFileSync("app/admin/(auth)/login/actions.ts", "utf-8");
+      assert.ok(!content.includes("JSON.stringify(email)"), "No email value logging");
+      assert.ok(!content.includes("email mismatch"), "No email mismatch debug logging");
+    });
+
+    it("lib/auth.ts does not log credential values", () => {
+      const content = fs.readFileSync("lib/auth.ts", "utf-8");
+      assert.ok(!content.includes("ADMIN_EMAIL:"), "No ADMIN_EMAIL logging");
+      assert.ok(!content.includes("ADMIN_PASSWORD_HASH:"), "No ADMIN_PASSWORD_HASH logging");
+      assert.ok(!content.includes("ALL_ENV_KEYS:"), "No ALL_ENV_KEYS logging");
+      assert.ok(!content.includes("substring(0,6)"), "No hash prefix logging");
+    });
+
+    it("login actions.ts preserves safe error handling", () => {
+      const content = fs.readFileSync("app/admin/(auth)/login/actions.ts", "utf-8");
+      assert.ok(content.includes("return { success: false"), "Returns error result");
+      assert.ok(content.includes("Invalid email or password"), "Generic error message");
+      assert.ok(content.includes("catch"), "Has catch block");
+    });
+
+    it("lib/auth.ts preserves getAdminCredentials functionality", () => {
+      const content = fs.readFileSync("lib/auth.ts", "utf-8");
+      assert.ok(content.includes("getAdminCredentials"), "Function exists");
+      assert.ok(content.includes("ADMIN_EMAIL"), "Reads ADMIN_EMAIL env");
+      assert.ok(content.includes("ADMIN_PASSWORD_HASH"), "Reads ADMIN_PASSWORD_HASH env");
+      assert.ok(content.includes("Admin credentials not configured"), "Throws on missing");
+    });
+  });
+
+  describe("A7R.2.1 — Public Layout Unaffected (Extended)", () => {
+    it("public pages do not use admin-shell class", () => {
+      const publicFiles = ["app/page.tsx", "app/layout.tsx"];
+      publicFiles.forEach((file) => {
+        const content = fs.readFileSync(file, "utf-8");
+        assert.ok(!content.includes("admin-shell"), `${file} does not use admin-shell`);
+      });
+    });
+
+    it("public CSS classes (ct-btn, ct-nav) are preserved", () => {
+      const css = fs.readFileSync("app/globals.css", "utf-8");
+      assert.ok(css.includes(".ct-btn"), "Public ct-btn preserved");
+      assert.ok(css.includes(".ct-nav"), "Public ct-nav preserved");
+      assert.ok(css.includes(".ct-hero"), "Public ct-hero preserved");
+    });
+  });
 });
