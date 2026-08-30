@@ -728,7 +728,7 @@ img { max-width: 100%; height: auto; display: block; }
   --admin-draft: #D97706;
   --admin-published: #059669;
   --admin-archived: #6B7280;
-  --admin-focus-ring: #C9A882;
+  --admin-focus-ring: #3E2723;
   --admin-sidebar-bg: #1A1614;
   --admin-sidebar-text: #A19A93;
   --admin-sidebar-active-bg: rgba(201, 168, 130, 0.12);
@@ -1117,7 +1117,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* Breadcrumbs */
 .admin-breadcrumb-link {
-  color: var(--admin-text-muted);
+  color: var(--admin-text-secondary);
   text-decoration: none;
   transition: color 0.15s;
 }
@@ -1250,41 +1250,41 @@ img { max-width: 100%; height: auto; display: block; }
 
 .admin-btn:disabled,
 .admin-btn[aria-disabled="true"] {
-  opacity: 0.5;
+  opacity: 0.65;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* Primary button */
+/* Primary button — dark brown bg, white text for WCAG AA (16:1) */
 .admin-btn-primary {
-  background-color: var(--admin-brand-accent);
+  background-color: #3E2723;
   color: #FFFFFF;
   border-color: transparent;
 }
 .admin-btn-primary:hover {
-  background-color: var(--admin-brand-hover);
+  background-color: #2C1A12;
   color: #FFFFFF;
 }
 
-/* Secondary button */
+/* Secondary button — beige bg, dark brown text for WCAG AA (7.3:1) */
 .admin-btn-secondary {
-  background-color: var(--admin-surface);
-  color: var(--admin-text-primary);
-  border-color: var(--admin-border);
+  background-color: var(--admin-brand-accent);
+  color: #3E2723;
+  border-color: transparent;
 }
 .admin-btn-secondary:hover {
-  background-color: var(--admin-bg);
-  color: var(--admin-text-primary);
+  background-color: var(--admin-brand-hover);
+  color: #3E2723;
 }
 
-/* Ghost button */
+/* Ghost button — transparent bg, dark readable text (4.6:1) */
 .admin-btn-ghost {
   background-color: transparent;
-  color: var(--admin-text-secondary);
+  color: var(--admin-text-primary);
   border-color: transparent;
 }
 .admin-btn-ghost:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.06);
   color: var(--admin-text-primary);
 }
 
@@ -1328,10 +1328,19 @@ img { max-width: 100%; height: auto; display: block; }
   position: absolute;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #FFFFFF;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: admin-spin 0.6s linear infinite;
+}
+.admin-btn-primary .admin-btn-loading::after,
+.admin-btn-danger .admin-btn-loading::after {
+  border-color: rgba(255,255,255,0.3);
+  border-top-color: #FFFFFF;
+}
+.admin-btn-secondary .admin-btn-loading::after {
+  border-color: rgba(62,39,35,0.3);
+  border-top-color: #3E2723;
 }
 
 @keyframes admin-spin {
