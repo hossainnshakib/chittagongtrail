@@ -6,15 +6,13 @@ import { useRouter } from "next/navigation";
 interface DeleteButtonProps {
   id: number;
   name: string;
-  type: "trail" | "journal";
-  expectedType?: "STORY" | "FOOD";
+  scope: "trail" | "story" | "food";
 }
 
 export default function DeleteButton({
   id,
   name,
-  type,
-  expectedType,
+  scope,
 }: DeleteButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,15 +27,15 @@ export default function DeleteButton({
       const response = await fetch(`/api/admin/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type, expectedType }),
+        body: JSON.stringify({ id, scope }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        if (type === "trail") {
+        if (scope === "trail") {
           router.push("/admin/trails");
-        } else if (expectedType === "FOOD") {
+        } else if (scope === "food") {
           router.push("/admin/food");
         } else {
           router.push("/admin/journal");

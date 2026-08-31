@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { JournalType } from "@prisma/client";
+
+const VALID_SCOPES = ["trail", "story", "food"] as const;
+type DeleteScope = (typeof VALID_SCOPES)[number];
 
 export async function POST(request: NextRequest) {
   const session = await verifySession(
@@ -13,13 +17,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, type, expectedType } = body;
+    const { id, scope } = body;
 
-    if (typeof id !== "number" || !["trail", "journal"].includes(type)) {
+    if (typeof id !== "number") {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    if (type === "trail") {
+    if (typeof scope !== "string" || !VALID_SCOPES.includes(scope as DeleteScope)) {
+      return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
+    }
+
+    if (scope === "trail") {
       const trail = await prisma.trailLocation.findUnique({
         where: { id },
         include: { _count: { select: { journalPosts: true } } },
@@ -39,17 +47,14 @@ export async function POST(request: NextRequest) {
       }
 
       await prisma.trailLocation.delete({ where: { id } });
-    } else if (type === "journal") {
-      const post = await prisma.journalPost.findUnique({ where: { id } });
+    } else {
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+
+      const post = await prisma.journalPost.findUnique({
+        where: { id, type: expectedType },
+      });
 
       if (!post) {
-        return NextResponse.json(
-          { error: "Journal post not found" },
-          { status: 404 }
-        );
-      }
-
-      if (expectedType && post.type !== expectedType) {
         return NextResponse.json(
           { error: "Journal post not found" },
           { status: 404 }

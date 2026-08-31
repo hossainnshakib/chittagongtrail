@@ -367,8 +367,7 @@ export default function JournalForm({
           <DeleteButton
             id={post.id}
             name={post.title}
-            type="journal"
-            expectedType={contentType}
+            scope={contentType === "FOOD" ? "food" : "story"}
           />
         )}
       </div>

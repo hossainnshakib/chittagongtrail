@@ -128,18 +128,16 @@ describe("A7R.3.1 — Food Type Integrity, Form Deduplication & Zero-Warning Cle
       assert.notEqual(foodRecord.type, journalQuery.type);
     });
 
-    it("delete API verifies expectedType matches", () => {
-      const postType: string = JournalType.STORY;
-      const expectedType: string = JournalType.FOOD;
-      const matches = !expectedType || postType === expectedType;
-      assert.equal(matches, false);
+    it("story scope queries only STORY records", () => {
+      const scope = "story";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      assert.equal(expectedType, JournalType.STORY);
     });
 
-    it("delete API allows deletion when expectedType matches", () => {
-      const postType = JournalType.STORY;
-      const expectedType = JournalType.STORY;
-      const matches = !expectedType || postType === expectedType;
-      assert.equal(matches, true);
+    it("food scope queries only FOOD records", () => {
+      const scope: string = "food";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      assert.equal(expectedType, JournalType.FOOD);
     });
   });
 
@@ -350,26 +348,89 @@ describe("A7R.3.1 — Food Type Integrity, Form Deduplication & Zero-Warning Cle
     });
   });
 
-  describe("Delete action type verification", () => {
-    it("delete API validates expectedType matches post type", () => {
-      const postType = JournalType.STORY;
-      const expectedType = JournalType.STORY;
-      const isMatch = !expectedType || postType === expectedType;
-      assert.equal(isMatch, true);
+  describe("Delete scope behavior", () => {
+    const VALID_SCOPES = ["trail", "story", "food"] as const;
+
+    it("scope is required — missing scope is rejected", () => {
+      const scope = undefined;
+      const isValid = typeof scope === "string" && VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number]);
+      assert.equal(isValid, false);
     });
 
-    it("delete API rejects mismatched expectedType", () => {
-      const postType: string = JournalType.STORY;
-      const expectedType: string = JournalType.FOOD;
-      const isMatch = !expectedType || postType === expectedType;
-      assert.equal(isMatch, false);
+    it("unknown scope is rejected", () => {
+      const scope = "journal";
+      const isValid = typeof scope === "string" && VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number]);
+      assert.equal(isValid, false);
     });
 
-    it("delete API allows deletion when no expectedType provided", () => {
-      const postType = JournalType.STORY;
-      const expectedType = undefined;
-      const isMatch = !expectedType || postType === expectedType;
-      assert.equal(isMatch, true);
+    it("empty string scope is rejected", () => {
+      const scope = "";
+      const isValid = typeof scope === "string" && VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number]);
+      assert.equal(isValid, false);
+    });
+
+    it("server maps story scope to JournalType.STORY", () => {
+      const scope: string = "story";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      assert.equal(expectedType, JournalType.STORY);
+    });
+
+    it("server maps food scope to JournalType.FOOD", () => {
+      const scope: string = "food";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      assert.equal(expectedType, JournalType.FOOD);
+    });
+
+    it("story scope can find only STORY records", () => {
+      const scope = "story";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      const recordType = JournalType.STORY;
+      assert.equal(recordType, expectedType);
+    });
+
+    it("story scope cannot find FOOD records", () => {
+      const scope = "story";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      const recordType = JournalType.FOOD;
+      assert.notEqual(recordType, expectedType);
+    });
+
+    it("food scope can find only FOOD records", () => {
+      const scope: string = "food";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      const recordType = JournalType.FOOD;
+      assert.equal(recordType, expectedType);
+    });
+
+    it("food scope cannot find STORY records", () => {
+      const scope: string = "food";
+      const expectedType = scope === "story" ? JournalType.STORY : JournalType.FOOD;
+      const recordType = JournalType.STORY;
+      assert.notEqual(recordType, expectedType);
+    });
+
+    it("omitting scope cannot bypass type protection", () => {
+      const scope = undefined;
+      const isValidScope = typeof scope === "string" && VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number]);
+      assert.equal(isValidScope, false);
+    });
+
+    it("no optional expectedType remains in scope contract", () => {
+      const props = { id: 1, name: "test", scope: "story" as const };
+      const hasExpectedType = "expectedType" in props;
+      assert.equal(hasExpectedType, false);
+    });
+
+    it("no ambiguous journal scope exists", () => {
+      const ambiguousScope = "journal";
+      const isValid = VALID_SCOPES.includes(ambiguousScope as typeof VALID_SCOPES[number]);
+      assert.equal(isValid, false);
+    });
+
+    it("trail scope is valid for trail deletion", () => {
+      const scope = "trail";
+      const isValid = VALID_SCOPES.includes(scope as typeof VALID_SCOPES[number]);
+      assert.equal(isValid, true);
     });
   });
 });

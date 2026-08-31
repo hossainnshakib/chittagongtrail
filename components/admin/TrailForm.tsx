@@ -461,7 +461,7 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
           <DeleteButton
             id={trail.id}
             name={trail.name}
-            type="trail"
+            scope="trail"
           />
         )}
       </div>
