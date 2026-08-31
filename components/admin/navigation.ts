@@ -23,7 +23,7 @@ export const adminNavigation: AdminNavGroup[] = [
     items: [
       { label: "Trails", href: "/admin/trails", icon: "trails" },
       { label: "Journal", href: "/admin/journal", icon: "journal" },
-      { label: "Food", href: "/admin/food", icon: "food", disabled: true, tooltip: "Coming in next phase" },
+      { label: "Food", href: "/admin/food", icon: "food" },
     ],
   },
   {

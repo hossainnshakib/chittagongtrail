@@ -17,7 +17,7 @@ import AdminRowActions from "@/components/admin/content/AdminRowActions";
 import AdminListEmptyState from "@/components/admin/content/AdminListEmptyState";
 import AdminMobileContentCard from "@/components/admin/content/AdminMobileContentCard";
 
-interface AdminJournalPageProps {
+interface AdminFoodPageProps {
   searchParams: Promise<{
     page?: string;
     search?: string;
@@ -29,7 +29,7 @@ interface AdminJournalPageProps {
   }>;
 }
 
-export default async function AdminJournalPage({ searchParams }: AdminJournalPageProps) {
+export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
   const search = params.search || "";
@@ -42,7 +42,7 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
 
   const [result, trails] = await Promise.all([
     listAdminJournalPosts({
-      page, pageSize: 20, search, type: JournalType.STORY, status, isFeatured, trailId, sortBy, sortOrder,
+      page, pageSize: 20, search, type: JournalType.FOOD, status, isFeatured, trailId, sortBy, sortOrder,
     }),
     prisma.trailLocation.findMany({
       orderBy: { name: "asc" },
@@ -64,7 +64,7 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
       if (!v || v === "ALL" || v === "") sp.delete(k); else sp.set(k, v);
     }
     const s = sp.toString();
-    return s ? `/admin/journal?${s}` : "/admin/journal";
+    return s ? `/admin/food?${s}` : "/admin/food";
   };
 
   const buildPageUrl = (p: number) => buildQueryString({ page: p > 1 ? String(p) : "" });
@@ -74,9 +74,9 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
   return (
     <div style={{ "--admin-content-max-width": "1400px" } as React.CSSProperties}>
       <AdminPageHeader
-        title="Stories"
-        description={`${total} story ${total !== 1 ? "stories" : "story"}`}
-        primaryAction={<AdminButton href="/admin/journal/new" variant="primary" size="sm">New Story</AdminButton>}
+        title="Food Posts"
+        description={`${total} food post${total !== 1 ? "s" : ""}`}
+        primaryAction={<AdminButton href="/admin/food/new" variant="primary" size="sm">New Food Post</AdminButton>}
       />
 
       <AdminContentToolbar>
@@ -127,24 +127,24 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
           />
           <button type="submit" className="admin-btn admin-btn-primary admin-btn-sm">Apply</button>
           {hasFilters && (
-            <Link href="/admin/journal" className="admin-btn admin-btn-secondary admin-btn-sm">Clear</Link>
+            <Link href="/admin/food" className="admin-btn admin-btn-secondary admin-btn-sm">Clear</Link>
           )}
         </div>
       </AdminContentToolbar>
 
       <div style={{ marginTop: "16px" }}>
-        <AdminResultSummary total={total} page={page} totalPages={totalPages} label="stories" />
+        <AdminResultSummary total={total} page={page} totalPages={totalPages} label="food posts" />
       </div>
 
       {posts.length === 0 ? (
         <AdminListEmptyState
-          title={hasFilters ? "No stories match your filters" : "No stories yet"}
-          description={hasFilters ? "Try adjusting your search or filters." : "Create your first story to get started."}
+          title={hasFilters ? "No food posts match your filters" : "No food posts yet"}
+          description={hasFilters ? "Try adjusting your search or filters." : "Create your first food post to get started."}
           action={
             hasFilters ? (
-              <Link href="/admin/journal" className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
+              <Link href="/admin/food" className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
             ) : (
-              <AdminButton href="/admin/journal/new" variant="primary" size="sm">Create First Story</AdminButton>
+              <AdminButton href="/admin/food/new" variant="primary" size="sm">Create First Food Post</AdminButton>
             )
           }
         />
@@ -152,7 +152,7 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
         <>
           {/* Desktop table */}
           <div className="hidden lg:block" style={{ background: "var(--admin-surface)", border: "1px solid var(--admin-border)", borderRadius: "var(--admin-radius-lg)", overflow: "hidden", boxShadow: "var(--admin-shadow)" }}>
-            <table className="admin-content-table" aria-label="Stories">
+            <table className="admin-content-table" aria-label="Food posts">
               <thead>
                 <tr>
                   <th scope="col" style={{ width: "44px" }}><span className="sr-only">Cover</span></th>
@@ -223,7 +223,7 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
                         <AdminRowActions actions={[
                           { label: "Edit", href: `/admin/journal/${post.id}/edit` },
                           { label: "Preview", href: `/admin/journal/${post.id}/preview` },
-                          ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/journal/${post.slug}` }] : []),
+                          ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
                         ]} />
                       </td>
                     </tr>
@@ -255,7 +255,7 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
                   actions={[
                     { label: "Edit", href: `/admin/journal/${post.id}/edit` },
                     { label: "Preview", href: `/admin/journal/${post.id}/preview` },
-                    ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/journal/${post.slug}` }] : []),
+                    ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
                   ]}
                 />
               );

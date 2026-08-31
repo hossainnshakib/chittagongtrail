@@ -16,7 +16,7 @@ export interface AdminJournalListParams {
   status?: ContentStatus | "ALL";
   isFeatured?: string | "ALL";
   trailId?: number | "ALL";
-  sortBy?: "updatedAt" | "createdAt" | "publishedAt" | "title";
+  sortBy?: "updatedAt" | "createdAt" | "publishedAt" | "title" | "featuredOrder";
   sortOrder?: "asc" | "desc";
 }
 
@@ -70,6 +70,7 @@ export async function listAdminJournalPosts(params: AdminJournalListParams = {})
         take: pageSize,
         include: {
           coverMedia: true,
+          ogMedia: true,
           trail: { select: { id: true, name: true, slug: true, status: true } },
         },
       }),

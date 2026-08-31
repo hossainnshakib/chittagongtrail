@@ -15,8 +15,10 @@ export interface AdminTrailListParams {
   district?: District | "ALL";
   status?: ContentStatus | "ALL";
   isFeatured?: string | "ALL";
-  sortBy?: "updatedAt" | "createdAt" | "publishedAt" | "name";
+  sortBy?: "updatedAt" | "createdAt" | "publishedAt" | "name" | "featuredOrder";
   sortOrder?: "asc" | "desc";
+  terrainType?: string | "ALL";
+  placeType?: string | "ALL";
 }
 
 export async function listAdminTrails(params: AdminTrailListParams = {}) {
@@ -50,6 +52,14 @@ export async function listAdminTrails(params: AdminTrailListParams = {}) {
     where.isFeatured = false;
   }
 
+  if (params.terrainType && params.terrainType !== "ALL") {
+    where.terrainType = params.terrainType as import("@prisma/client").TerrainType;
+  }
+
+  if (params.placeType && params.placeType !== "ALL") {
+    where.placeType = params.placeType as import("@prisma/client").PlaceType;
+  }
+
   const sortBy = params.sortBy || "updatedAt";
   const sortOrder = params.sortOrder || "desc";
   const orderBy: Prisma.TrailLocationOrderByWithRelationInput[] = [
@@ -66,6 +76,7 @@ export async function listAdminTrails(params: AdminTrailListParams = {}) {
         take: pageSize,
         include: {
           coverMedia: true,
+          ogMedia: true,
           _count: {
             select: { journalPosts: true, gallery: true },
           },

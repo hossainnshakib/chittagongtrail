@@ -31,13 +31,13 @@ describe("Admin Navigation Tests", () => {
       assert.equal(journalItem.href, "/admin/journal");
     });
 
-    it("has Food as disabled under Content group", () => {
+    it("has Food as enabled under Content group", () => {
       const contentGroup = adminNavigation.find((g) => g.label === "Content");
       assert.ok(contentGroup);
       const foodItem = contentGroup.items.find((i) => i.label === "Food");
       assert.ok(foodItem);
-      assert.equal(foodItem.disabled, true);
-      assert.ok(foodItem.tooltip);
+      assert.notEqual(foodItem.disabled, true);
+      assert.equal(foodItem.href, "/admin/food");
     });
 
     it("has Media Library under Media group", () => {
@@ -142,6 +142,7 @@ describe("Admin Navigation Tests", () => {
       assert.ok(allHrefs.includes("/admin"), "Dashboard route exists");
       assert.ok(allHrefs.includes("/admin/trails"), "Trails route exists");
       assert.ok(allHrefs.includes("/admin/journal"), "Journal route exists");
+      assert.ok(allHrefs.includes("/admin/food"), "Food route exists");
       assert.ok(allHrefs.includes("/admin/media"), "Media route exists");
       assert.ok(allHrefs.includes("/admin/settings"), "Settings route exists");
     });

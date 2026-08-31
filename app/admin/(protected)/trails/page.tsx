@@ -1,6 +1,20 @@
 import Link from "next/link";
 import { listAdminTrails } from "@/lib/trail-service";
+import { evaluateTrailSeoReadiness } from "@/lib/seo-readiness";
 import { District, ContentStatus } from "@prisma/client";
+import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminContentToolbar from "@/components/admin/content/AdminContentToolbar";
+import AdminSearchInput from "@/components/admin/content/AdminSearchInput";
+import AdminFilterGroup from "@/components/admin/content/AdminFilterGroup";
+import AdminSortControl from "@/components/admin/content/AdminSortControl";
+import AdminPagination from "@/components/admin/content/AdminPagination";
+import AdminResultSummary from "@/components/admin/content/AdminResultSummary";
+import AdminSeoStatus from "@/components/admin/content/AdminSeoStatus";
+import AdminMediaThumbnail from "@/components/admin/content/AdminMediaThumbnail";
+import AdminRowActions from "@/components/admin/content/AdminRowActions";
+import AdminListEmptyState from "@/components/admin/content/AdminListEmptyState";
+import AdminMobileContentCard from "@/components/admin/content/AdminMobileContentCard";
 
 interface AdminTrailsPageProps {
   searchParams: Promise<{
@@ -9,6 +23,8 @@ interface AdminTrailsPageProps {
     district?: string;
     status?: string;
     isFeatured?: string;
+    terrainType?: string;
+    placeType?: string;
     sortBy?: string;
     sortOrder?: string;
   }>;
@@ -21,230 +37,208 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
   const district = (params.district as District | "ALL") || "ALL";
   const status = (params.status as ContentStatus | "ALL") || "ALL";
   const isFeatured = params.isFeatured || "ALL";
-  const sortBy = (params.sortBy as "updatedAt" | "createdAt" | "publishedAt" | "name") || "updatedAt";
+  const terrainType = params.terrainType || "ALL";
+  const placeType = params.placeType || "ALL";
+  const sortBy = (params.sortBy as "updatedAt" | "createdAt" | "publishedAt" | "name" | "featuredOrder") || "updatedAt";
   const sortOrder = (params.sortOrder as "asc" | "desc") || "desc";
 
   const { trails, total, totalPages } = await listAdminTrails({
-    page,
-    pageSize: 20,
-    search,
-    district,
-    status,
-    isFeatured,
-    sortBy,
-    sortOrder,
+    page, pageSize: 20, search, district, status, isFeatured, terrainType, placeType, sortBy, sortOrder,
   });
 
-  const districtsList = [
-    { value: "ALL", label: "All Districts" },
-    { value: "CHITTAGONG", label: "Chittagong" },
-    { value: "COX_BAZAR", label: "Cox's Bazar" },
-    { value: "RANGAMATI", label: "Rangamati" },
-    { value: "BANDARBAN", label: "Bandarban" },
-    { value: "KHAGRACHARI", label: "Khagrachari" },
-  ];
+  const buildQueryString = (overrides: Record<string, string>) => {
+    const sp = new URLSearchParams();
+    if (search) sp.set("search", search);
+    if (district !== "ALL") sp.set("district", district);
+    if (status !== "ALL") sp.set("status", status);
+    if (isFeatured !== "ALL") sp.set("isFeatured", isFeatured);
+    if (terrainType !== "ALL") sp.set("terrainType", terrainType);
+    if (placeType !== "ALL") sp.set("placeType", placeType);
+    if (sortBy !== "updatedAt") sp.set("sortBy", sortBy);
+    if (sortOrder !== "desc") sp.set("sortOrder", sortOrder);
+    for (const [k, v] of Object.entries(overrides)) {
+      if (!v || v === "ALL" || v === "") sp.delete(k); else sp.set(k, v);
+    }
+    const s = sp.toString();
+    return s ? `?${s}` : "/admin/trails";
+  };
+
+  const buildPageUrl = (p: number) => buildQueryString({ page: p > 1 ? String(p) : "" });
+
+  const hasFilters = search || district !== "ALL" || status !== "ALL" || isFeatured !== "ALL" || terrainType !== "ALL" || placeType !== "ALL";
 
   return (
-    <div style={{ '--admin-content-max-width': '1400px' } as React.CSSProperties}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="font-[family-name:var(--font-playfair)] text-3xl text-[#5D4037] mb-1">
-            Trails Management
-          </h1>
-          <p className="text-[#8D6E63] text-sm">
-            {total} total trail{total !== 1 ? "s" : ""} found
-          </p>
+    <div style={{ "--admin-content-max-width": "1400px" } as React.CSSProperties}>
+      <AdminPageHeader
+        title="Trails"
+        description={`${total} trail${total !== 1 ? "s" : ""}`}
+        primaryAction={<AdminButton href="/admin/trails/new" variant="primary" size="sm">New Trail</AdminButton>}
+      />
+
+      <AdminContentToolbar>
+        <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+          <AdminSearchInput defaultValue={search} placeholder="Search name, slug, area..." />
         </div>
-        <Link
-          href="/admin/trails/new"
-          className="bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-2 px-4 rounded-md transition-colors text-sm text-center"
-        >
-          + New Trail
-        </Link>
+        <AdminFilterGroup
+          name="district"
+          label="District"
+          defaultValue={district}
+          options={[
+            { value: "ALL", label: "All Districts" },
+            { value: "CHITTAGONG", label: "Chittagong" },
+            { value: "COX_BAZAR", label: "Cox's Bazar" },
+            { value: "RANGAMATI", label: "Rangamati" },
+            { value: "BANDARBAN", label: "Bandarban" },
+            { value: "KHAGRACHARI", label: "Khagrachari" },
+          ]}
+        />
+        <AdminFilterGroup
+          name="status"
+          label="Status"
+          defaultValue={status}
+          options={[
+            { value: "ALL", label: "All Statuses" },
+            { value: "DRAFT", label: "Draft" },
+            { value: "PUBLISHED", label: "Published" },
+            { value: "ARCHIVED", label: "Archived" },
+          ]}
+        />
+        <AdminFilterGroup
+          name="isFeatured"
+          label="Featured"
+          defaultValue={isFeatured}
+          options={[
+            { value: "ALL", label: "All" },
+            { value: "true", label: "Featured" },
+            { value: "false", label: "Not Featured" },
+          ]}
+        />
+        <AdminFilterGroup
+          name="terrainType"
+          label="Terrain"
+          defaultValue={terrainType}
+          options={[
+            { value: "ALL", label: "All Terrain" },
+            { value: "COAST", label: "Coast" },
+            { value: "HILLS", label: "Hills" },
+            { value: "RIVER", label: "River" },
+            { value: "CITY", label: "City" },
+            { value: "RURAL", label: "Rural" },
+          ]}
+        />
+        <AdminFilterGroup
+          name="placeType"
+          label="Place Type"
+          defaultValue={placeType}
+          options={[
+            { value: "ALL", label: "All Places" },
+            { value: "TOURIST_ATTRACTION", label: "Tourist Attraction" },
+            { value: "PLACE", label: "Place" },
+            { value: "NATURAL_FEATURE", label: "Natural Feature" },
+            { value: "PARK", label: "Park" },
+          ]}
+        />
+        <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
+          <AdminSortControl
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            options={[
+              { value: "updatedAt", label: "Updated Date" },
+              { value: "createdAt", label: "Created Date" },
+              { value: "publishedAt", label: "Published Date" },
+              { value: "name", label: "Name" },
+              { value: "featuredOrder", label: "Featured Order" },
+            ]}
+          />
+          <button type="submit" className="admin-btn admin-btn-primary admin-btn-sm">Apply</button>
+          {hasFilters && (
+            <Link href="/admin/trails" className="admin-btn admin-btn-secondary admin-btn-sm">Clear</Link>
+          )}
+        </div>
+      </AdminContentToolbar>
+
+      <div style={{ marginTop: "16px" }}>
+        <AdminResultSummary total={total} page={page} totalPages={totalPages} label="trails" />
       </div>
 
-      {/* Filter and Search Bar */}
-      <form method="GET" className="bg-white rounded-lg border border-[#E8DCC8] p-4 mb-6 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-[#5D4037] mb-1">Search Name / Slug</label>
-            <input
-              type="text"
-              name="search"
-              defaultValue={search}
-              placeholder="Search trails..."
-              className="w-full px-3 py-1.5 text-sm border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#5D4037] mb-1">District</label>
-            <select
-              name="district"
-              defaultValue={district}
-              className="w-full px-3 py-1.5 text-sm border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            >
-              {districtsList.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#5D4037] mb-1">Status</label>
-            <select
-              name="status"
-              defaultValue={status}
-              className="w-full px-3 py-1.5 text-sm border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#5D4037] mb-1">Featured</label>
-            <select
-              name="isFeatured"
-              defaultValue={isFeatured}
-              className="w-full px-3 py-1.5 text-sm border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            >
-              <option value="ALL">All Featured States</option>
-              <option value="true">Featured Only</option>
-              <option value="false">Not Featured</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#F5E6D3]">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-[#5D4037]">Sort By:</label>
-            <select
-              name="sortBy"
-              defaultValue={sortBy}
-              className="px-2 py-1 text-xs border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            >
-              <option value="updatedAt">Updated Date</option>
-              <option value="createdAt">Created Date</option>
-              <option value="publishedAt">Published Date</option>
-              <option value="name">Name</option>
-            </select>
-            <select
-              name="sortOrder"
-              defaultValue={sortOrder}
-              className="px-2 py-1 text-xs border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]"
-            >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="bg-[#5D4037] hover:bg-[#3E2723] text-white text-xs font-medium px-4 py-1.5 rounded-md transition-colors"
-            >
-              Filter & Sort
-            </button>
-            <Link
-              href="/admin/trails"
-              className="bg-[#E8DCC8] hover:bg-[#D7C9B8] text-[#5D4037] text-xs font-medium px-4 py-1.5 rounded-md transition-colors"
-            >
-              Reset
-            </Link>
-          </div>
-        </div>
-      </form>
-
       {trails.length === 0 ? (
-        <div className="bg-white rounded-lg border border-[#E8DCC8] p-12 text-center">
-          <p className="text-[#A1887F] mb-4">No trails found matching your criteria.</p>
-          <Link
-            href="/admin/trails"
-            className="text-sm text-[#C9A882] hover:underline font-medium"
-          >
-            Clear filters
-          </Link>
-        </div>
+        <AdminListEmptyState
+          title={hasFilters ? "No trails match your filters" : "No trails yet"}
+          description={hasFilters ? "Try adjusting your search or filters." : "Create your first trail to get started."}
+          action={
+            hasFilters ? (
+              <Link href="/admin/trails" className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
+            ) : (
+              <AdminButton href="/admin/trails/new" variant="primary" size="sm">Create First Trail</AdminButton>
+            )
+          }
+        />
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden lg:block bg-white rounded-lg border border-[#E8DCC8] overflow-hidden shadow-sm">
-            <table className="w-full text-left border-collapse">
+          <div className="hidden lg:block" style={{ background: "var(--admin-surface)", border: "1px solid var(--admin-border)", borderRadius: "var(--admin-radius-lg)", overflow: "hidden", boxShadow: "var(--admin-shadow)" }}>
+            <table className="admin-content-table" aria-label="Trails">
               <thead>
-                <tr className="bg-[#F5E6D3] border-b border-[#E8DCC8]">
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">Name / Slug</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">District</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">Featured</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">Journal</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider">Updated</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[#5D4037] uppercase tracking-wider text-right">Actions</th>
+                <tr>
+                  <th scope="col" style={{ width: "44px" }}><span className="sr-only">Cover</span></th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Slug</th>
+                  <th scope="col">District</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Featured</th>
+                  <th scope="col">SEO</th>
+                  <th scope="col">Updated</th>
+                  <th scope="col" className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E8DCC8]">
+              <tbody>
                 {trails.map((trail) => {
-                  const districtLabel =
-                    trail.district === "COX_BAZAR"
-                      ? "Cox’s Bazar"
-                      : trail.district.charAt(0) + trail.district.slice(1).toLowerCase();
-
-                  const statusBadgeClass =
-                    trail.status === "PUBLISHED"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : trail.status === "ARCHIVED"
-                      ? "bg-stone-200 text-stone-700"
-                      : "bg-amber-100 text-amber-800";
+                  const districtLabel = trail.district === "COX_BAZAR" ? "Cox's Bazar" : trail.district.charAt(0) + trail.district.slice(1).toLowerCase();
+                  const seo = evaluateTrailSeoReadiness({
+                    slug: trail.slug, metaTitle: trail.metaTitle, metaDescription: trail.metaDescription,
+                    excerpt: trail.excerpt, coverMedia: trail.coverMedia, ogMedia: trail.ogMedia, status: trail.status,
+                  });
 
                   return (
-                    <tr key={trail.id} className="hover:bg-[#FDF5E6] transition-colors">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/trails/${trail.id}/edit`}
-                          className="font-medium text-[#5D4037] hover:text-[#C9A882] block"
-                        >
+                    <tr key={trail.id}>
+                      <td>
+                        <AdminMediaThumbnail url={trail.coverMedia?.secureUrl ?? null} alt={trail.name} size={40} />
+                      </td>
+                      <td>
+                        <Link href={`/admin/trails/${trail.id}/edit`} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
                           {trail.name}
                         </Link>
-                        <span className="text-xs font-mono text-[#8D6E63]">/{trail.slug}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-[#8D6E63]">{districtLabel}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusBadgeClass}`}>
+                      <td>
+                        <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--admin-text-muted)" }}>/{trail.slug}</span>
+                      </td>
+                      <td style={{ fontSize: "0.8125rem", color: "var(--admin-text-secondary)" }}>{districtLabel}</td>
+                      <td>
+                        <span className={`admin-content-status-badge admin-content-status-${trail.status.toLowerCase()}`}>
                           {trail.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td>
                         {trail.isFeatured ? (
-                          <span className="text-amber-700 font-medium">★ Featured ({trail.featuredOrder ?? 0})</span>
+                          <span style={{ fontSize: "0.75rem", color: "#92400E", fontWeight: 500 }}>
+                            Featured {trail.featuredOrder != null ? `#${trail.featuredOrder}` : ""}
+                          </span>
                         ) : (
-                          <span className="text-[#A1887F]">—</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--admin-text-muted)" }}>—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-[#8D6E63]">{trail._count.journalPosts}</td>
-                      <td className="px-4 py-3 text-xs text-[#8D6E63]">{trail.updatedAt.toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-right space-x-3">
-                        <Link
-                          href={`/admin/trails/${trail.id}/edit`}
-                          className="text-xs font-medium text-[#5D4037] hover:text-[#C9A882]"
-                        >
-                          Edit
-                        </Link>
-                        <Link
-                          href={`/admin/trails/${trail.id}/preview`}
-                          target="_blank"
-                          className="text-xs font-medium text-[#7FB5C4] hover:underline"
-                        >
-                          Preview
-                        </Link>
-                        {trail.status === "PUBLISHED" && (
-                          <Link
-                            href={`/trails/${trail.slug}`}
-                            target="_blank"
-                            className="text-xs font-medium text-emerald-700 hover:underline"
-                          >
-                            View Public
-                          </Link>
-                        )}
+                      <td>
+                        <AdminSeoStatus status={seo.status} missingFields={seo.missingFields} />
+                      </td>
+                      <td style={{ fontSize: "0.75rem", color: "var(--admin-text-secondary)" }}>
+                        {trail.updatedAt.toLocaleDateString()}
+                      </td>
+                      <td>
+                        <AdminRowActions actions={[
+                          { label: "Edit", href: `/admin/trails/${trail.id}/edit` },
+                          { label: "Preview", href: `/admin/trails/${trail.id}/preview` },
+                          ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}` }] : []),
+                        ]} />
                       </td>
                     </tr>
                   );
@@ -254,103 +248,35 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
           </div>
 
           {/* Mobile cards */}
-          <div className="lg:hidden space-y-3">
+          <div className="lg:hidden" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {trails.map((trail) => {
-              const districtLabel =
-                trail.district === "COX_BAZAR"
-                  ? "Cox’s Bazar"
-                  : trail.district.charAt(0) + trail.district.slice(1).toLowerCase();
-
-              const statusBadgeClass =
-                trail.status === "PUBLISHED"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : trail.status === "ARCHIVED"
-                  ? "bg-stone-200 text-stone-700"
-                  : "bg-amber-100 text-amber-800";
+              const districtLabel = trail.district === "COX_BAZAR" ? "Cox's Bazar" : trail.district.charAt(0) + trail.district.slice(1).toLowerCase();
+              const seo = evaluateTrailSeoReadiness({
+                slug: trail.slug, metaTitle: trail.metaTitle, metaDescription: trail.metaDescription,
+                excerpt: trail.excerpt, coverMedia: trail.coverMedia, ogMedia: trail.ogMedia, status: trail.status,
+              });
 
               return (
-                <div key={trail.id} className="bg-white rounded-lg border border-[#E8DCC8] p-4 shadow-sm space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <Link href={`/admin/trails/${trail.id}/edit`} className="font-medium text-[#5D4037] text-base block">
-                        {trail.name}
-                      </Link>
-                      <p className="text-xs font-mono text-[#8D6E63]">/{trail.slug}</p>
-                    </div>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusBadgeClass}`}>
-                      {trail.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-[#8D6E63] pt-2 border-t border-[#F5E6D3]">
-                    <span>{districtLabel}</span>
-                    <span>{trail._count.journalPosts} journal posts</span>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 pt-2">
-                    <Link
-                      href={`/admin/trails/${trail.id}/edit`}
-                      className="text-xs font-medium text-[#5D4037] hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/admin/trails/${trail.id}/preview`}
-                      target="_blank"
-                      className="text-xs font-medium text-[#7FB5C4] hover:underline"
-                    >
-                      Preview
-                    </Link>
-                    {trail.status === "PUBLISHED" && (
-                      <Link
-                        href={`/trails/${trail.slug}`}
-                        target="_blank"
-                        className="text-xs font-medium text-emerald-700 hover:underline"
-                      >
-                        Public
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                <AdminMobileContentCard
+                  key={trail.id}
+                  title={trail.name}
+                  slug={trail.slug}
+                  status={trail.status}
+                  coverUrl={trail.coverMedia?.secureUrl ?? null}
+                  metaInfo={districtLabel}
+                  updatedAt={trail.updatedAt}
+                  seoStatus={<AdminSeoStatus status={seo.status} missingFields={seo.missingFields} />}
+                  actions={[
+                    { label: "Edit", href: `/admin/trails/${trail.id}/edit` },
+                    { label: "Preview", href: `/admin/trails/${trail.id}/preview` },
+                    ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}` }] : []),
+                  ]}
+                />
               );
             })}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 bg-white p-4 rounded-lg border border-[#E8DCC8]">
-              <p className="text-xs text-[#8D6E63]">
-                Page {page} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                {page > 1 ? (
-                  <Link
-                    href={`/admin/trails?page=${page - 1}&search=${encodeURIComponent(search)}&district=${district}&status=${status}&isFeatured=${isFeatured}&sortBy=${sortBy}&sortOrder=${sortOrder}`}
-                    className="px-3 py-1 text-xs font-medium bg-[#E8DCC8] text-[#5D4037] rounded hover:bg-[#D7C9B8]"
-                  >
-                    Previous
-                  </Link>
-                ) : (
-                  <span className="px-3 py-1 text-xs font-medium bg-stone-100 text-stone-400 rounded cursor-not-allowed">
-                    Previous
-                  </span>
-                )}
-
-                {page < totalPages ? (
-                  <Link
-                    href={`/admin/trails?page=${page + 1}&search=${encodeURIComponent(search)}&district=${district}&status=${status}&isFeatured=${isFeatured}&sortBy=${sortBy}&sortOrder=${sortOrder}`}
-                    className="px-3 py-1 text-xs font-medium bg-[#E8DCC8] text-[#5D4037] rounded hover:bg-[#D7C9B8]"
-                  >
-                    Next
-                  </Link>
-                ) : (
-                  <span className="px-3 py-1 text-xs font-medium bg-stone-100 text-stone-400 rounded cursor-not-allowed">
-                    Next
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+          <AdminPagination page={page} totalPages={totalPages} total={total} buildPageUrl={buildPageUrl} />
         </>
       )}
     </div>
