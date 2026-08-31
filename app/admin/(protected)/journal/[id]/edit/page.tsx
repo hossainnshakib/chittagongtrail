@@ -19,6 +19,7 @@ export default async function EditJournalPage({
   const [post, trails] = await Promise.all([
     prisma.journalPost.findUnique({
       where: { id: postId, type: JournalType.STORY },
+      include: { coverMedia: true, ogMedia: true },
     }),
     prisma.trailLocation.findMany({
       orderBy: { name: "asc" },
@@ -29,6 +30,28 @@ export default async function EditJournalPage({
   if (!post) {
     notFound();
   }
+
+  const initialCover = post.coverMedia ? {
+    id: post.coverMedia.id,
+    publicId: post.coverMedia.publicId,
+    secureUrl: post.coverMedia.secureUrl,
+    resourceType: post.coverMedia.resourceType,
+    format: post.coverMedia.format,
+    width: post.coverMedia.width,
+    height: post.coverMedia.height,
+    altText: post.coverMedia.altText,
+  } : null;
+
+  const initialOg = post.ogMedia ? {
+    id: post.ogMedia.id,
+    publicId: post.ogMedia.publicId,
+    secureUrl: post.ogMedia.secureUrl,
+    resourceType: post.ogMedia.resourceType,
+    format: post.ogMedia.format,
+    width: post.ogMedia.width,
+    height: post.ogMedia.height,
+    altText: post.ogMedia.altText,
+  } : null;
 
   return (
     <div>
@@ -47,6 +70,8 @@ export default async function EditJournalPage({
         contentType="STORY"
         createAction={createJournalPost}
         updateAction={updateJournalPost}
+        initialCover={initialCover}
+        initialOg={initialOg}
       />
     </div>
   );

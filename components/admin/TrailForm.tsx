@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import type { TrailLocation } from "@prisma/client";
@@ -9,15 +10,21 @@ import {
   type TrailActionResult,
 } from "@/app/admin/(protected)/trails/actions";
 import DeleteButton from "@/components/admin/DeleteButton";
+import MediaField from "@/components/admin/media/MediaField";
+import GalleryManager from "@/components/admin/media/GalleryManager";
+import type { MediaAssetData } from "@/components/admin/media/types";
 
 interface TrailFormProps {
   trail?: TrailLocation;
   mode: "create" | "edit";
+  initialCover?: MediaAssetData | null;
+  initialOg?: MediaAssetData | null;
+  initialGallery?: MediaAssetData[];
 }
 
 const initialState: TrailActionResult = { success: false };
 
-export default function TrailForm({ trail, mode }: TrailFormProps) {
+export default function TrailForm({ trail, mode, initialCover, initialOg, initialGallery }: TrailFormProps) {
   const router = useRouter();
   const action =
     mode === "create"
@@ -25,6 +32,10 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
       : updateTrail.bind(null, trail!.id);
 
   const [state, formAction, isPending] = useActionState(action, initialState);
+
+  const [coverAsset, setCoverAsset] = useState<MediaAssetData | null>(initialCover || null);
+  const [ogAsset, setOgAsset] = useState<MediaAssetData | null>(initialOg || null);
+  const [galleryAssets, setGalleryAssets] = useState<MediaAssetData[]>(initialGallery || []);
 
   function handleSlugGenerate() {
     const nameInput = document.getElementById("name") as HTMLInputElement;
@@ -48,6 +59,10 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
 
   return (
     <form action={formAction} className="space-y-8">
+      <input type="hidden" name="coverMediaId" value={coverAsset?.id || ""} />
+      <input type="hidden" name="ogMediaId" value={ogAsset?.id || ""} />
+      <input type="hidden" name="galleryIds" value={galleryAssets.map((a) => a.id).join(",")} />
+
       {state.error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
           {state.error}
@@ -332,39 +347,49 @@ export default function TrailForm({ trail, mode }: TrailFormProps) {
 
       <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
         <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
-          Media & Curation
+          Cover Image
+        </h2>
+        <MediaField
+          label="Cover Image"
+          value={coverAsset}
+          onChange={setCoverAsset}
+          folder="chittagong-trail/trails"
+          recommendedDimensions="1200×630"
+        />
+      </section>
+
+      <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
+        <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
+          Social Sharing (OG)
+        </h2>
+        <MediaField
+          label="OG Image"
+          value={ogAsset}
+          onChange={setOgAsset}
+          folder="chittagong-trail/trails"
+          recommendedDimensions="1200×630"
+          showUseCoverOption
+          coverValue={coverAsset}
+          onUseCover={() => setOgAsset(coverAsset)}
+        />
+      </section>
+
+      <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
+        <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
+          Gallery
+        </h2>
+        <GalleryManager
+          assets={galleryAssets}
+          onChange={setGalleryAssets}
+          folder="chittagong-trail/trails"
+        />
+      </section>
+
+      <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
+        <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
+          Curation
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="coverMediaId"
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              Cover Media ID
-            </label>
-            <input
-              type="number"
-              id="coverMediaId"
-              name="coverMediaId"
-              defaultValue={trail?.coverMediaId ?? ""}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="ogMediaId"
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              OG Media ID
-            </label>
-            <input
-              type="number"
-              id="ogMediaId"
-              name="ogMediaId"
-              defaultValue={trail?.ogMediaId ?? ""}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
           <div className="flex items-center gap-2 pt-2">
             <input
               type="checkbox"

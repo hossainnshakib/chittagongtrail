@@ -19,6 +19,7 @@ export default async function EditFoodPage({
   const [post, trails] = await Promise.all([
     prisma.journalPost.findUnique({
       where: { id: postId, type: JournalType.FOOD },
+      include: { coverMedia: true, ogMedia: true },
     }),
     prisma.trailLocation.findMany({
       orderBy: { name: "asc" },
@@ -29,6 +30,28 @@ export default async function EditFoodPage({
   if (!post) {
     notFound();
   }
+
+  const initialCover = post.coverMedia ? {
+    id: post.coverMedia.id,
+    publicId: post.coverMedia.publicId,
+    secureUrl: post.coverMedia.secureUrl,
+    resourceType: post.coverMedia.resourceType,
+    format: post.coverMedia.format,
+    width: post.coverMedia.width,
+    height: post.coverMedia.height,
+    altText: post.coverMedia.altText,
+  } : null;
+
+  const initialOg = post.ogMedia ? {
+    id: post.ogMedia.id,
+    publicId: post.ogMedia.publicId,
+    secureUrl: post.ogMedia.secureUrl,
+    resourceType: post.ogMedia.resourceType,
+    format: post.ogMedia.format,
+    width: post.ogMedia.width,
+    height: post.ogMedia.height,
+    altText: post.ogMedia.altText,
+  } : null;
 
   return (
     <div style={{ "--admin-content-max-width": "800px" } as React.CSSProperties}>
@@ -50,6 +73,8 @@ export default async function EditFoodPage({
         contentType="FOOD"
         createAction={createFoodPost}
         updateAction={updateFoodPost}
+        initialCover={initialCover}
+        initialOg={initialOg}
       />
     </div>
   );

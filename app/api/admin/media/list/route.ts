@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") || undefined;
   const format = searchParams.get("format") || undefined;
   const folder = searchParams.get("folder") || undefined;
+  const resourceType = searchParams.get("resourceType") || undefined;
 
   try {
     const result = await listAdminMediaAssets({
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
       search,
       format,
       folder,
+      resourceType: resourceType === "image" || resourceType === "video" ? resourceType : undefined,
       sortBy: "createdAt",
       sortOrder: "desc",
     });

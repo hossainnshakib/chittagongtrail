@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
-import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, UploadFolder } from "@/lib/cloudinary";
+import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, UploadFolder, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/cloudinary";
 import { registerUploadedAsset, cleanupOrphanCloudinaryAsset } from "@/lib/media-service";
 
-const ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
+const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES];
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = MAX_IMAGE_SIZE;
 
 export async function POST(request: NextRequest) {
   const session = await verifySession(
@@ -34,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!(ALLOWED_TYPES as readonly string[]).includes(file.type)) {
       return NextResponse.json(
         {
           error: `Invalid file type. Allowed: ${ALLOWED_TYPES.map((t) => t.split("/")[1]).join(", ")}`,

@@ -8,6 +8,7 @@ export interface MediaAssetListOptions {
   search?: string;
   format?: string;
   folder?: string;
+  resourceType?: "image" | "video";
   sortBy?: "createdAt" | "publicId" | "format";
   sortOrder?: "asc" | "desc";
 }
@@ -43,6 +44,10 @@ export async function listAdminMediaAssets(options: MediaAssetListOptions = {}) 
 
   if (options.format) {
     where.format = options.format;
+  }
+
+  if (options.resourceType) {
+    where.resourceType = options.resourceType;
   }
 
   if (options.folder) {
@@ -151,6 +156,81 @@ export async function registerUploadedAsset(data: {
       height: data.height || null,
       format: data.format || null,
       resourceType: data.resourceType || "image",
+      altText: data.altText ? data.altText.trim() : null,
+    },
+  });
+}
+
+const ALLOWED_NAMESPACES = [
+  "chittagong-trail/trails",
+  "chittagong-trail/journal",
+  "chittagong-trail/food",
+  "chittagong-trail/homepage",
+  "chittagong-trail/general",
+  "chittagong-trail/video",
+] as const;
+
+const ALLOWED_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "gif"];
+const ALLOWED_VIDEO_FORMATS = ["mp4", "webm"];
+
+export async function registerDirectUpload(data: {
+  publicId: string;
+  secureUrl: string;
+  resourceType: string;
+  format?: string;
+  width?: number;
+  height?: number;
+  altText?: string;
+}) {
+  if (!data.publicId || !data.secureUrl) {
+    throw new Error("publicId and secureUrl are required");
+  }
+
+  const urlObj = new URL(data.secureUrl);
+  if (urlObj.protocol !== "https:" || urlObj.hostname !== "res.cloudinary.com") {
+    throw new Error("Invalid Cloudinary secure URL");
+  }
+
+  const hasValidNamespace = ALLOWED_NAMESPACES.some((ns) => data.publicId.startsWith(ns));
+  if (!hasValidNamespace) {
+    throw new Error("publicId does not belong to approved namespace");
+  }
+
+  const rt = data.resourceType;
+  if (rt !== "image" && rt !== "video") {
+    throw new Error("resourceType must be image or video");
+  }
+
+  if (rt === "image" && data.format && !ALLOWED_IMAGE_FORMATS.includes(data.format)) {
+    throw new Error("Unsupported image format");
+  }
+  if (rt === "video" && data.format && !ALLOWED_VIDEO_FORMATS.includes(data.format)) {
+    throw new Error("Unsupported video format");
+  }
+
+  if (data.width !== undefined && (data.width < 0 || !Number.isInteger(data.width))) {
+    throw new Error("width must be a non-negative integer");
+  }
+  if (data.height !== undefined && (data.height < 0 || !Number.isInteger(data.height))) {
+    throw new Error("height must be a non-negative integer");
+  }
+
+  const existing = await prisma.mediaAsset.findUnique({
+    where: { publicId: data.publicId },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.mediaAsset.create({
+    data: {
+      publicId: data.publicId,
+      secureUrl: data.secureUrl,
+      resourceType: rt,
+      format: data.format || null,
+      width: data.width || null,
+      height: data.height || null,
       altText: data.altText ? data.altText.trim() : null,
     },
   });

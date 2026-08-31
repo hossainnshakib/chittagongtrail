@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import type { JournalPost, TrailLocation } from "@prisma/client";
 import DeleteButton from "@/components/admin/DeleteButton";
+import MediaField from "@/components/admin/media/MediaField";
+import type { MediaAssetData } from "@/components/admin/media/types";
 
 type FormActionResult = {
   success: boolean;
@@ -18,6 +21,8 @@ interface JournalFormProps {
   contentType: "STORY" | "FOOD";
   createAction: (prevState: FormActionResult, formData: FormData) => Promise<FormActionResult>;
   updateAction: (id: number, prevState: FormActionResult, formData: FormData) => Promise<FormActionResult>;
+  initialCover?: MediaAssetData | null;
+  initialOg?: MediaAssetData | null;
 }
 
 const initialState: FormActionResult = { success: false };
@@ -29,6 +34,8 @@ export default function JournalForm({
   contentType,
   createAction,
   updateAction,
+  initialCover,
+  initialOg,
 }: JournalFormProps) {
   const router = useRouter();
   const action =
@@ -37,6 +44,9 @@ export default function JournalForm({
       : updateAction.bind(null, post!.id);
 
   const [state, formAction, isPending] = useActionState(action, initialState);
+
+  const [coverAsset, setCoverAsset] = useState<MediaAssetData | null>(initialCover || null);
+  const [ogAsset, setOgAsset] = useState<MediaAssetData | null>(initialOg || null);
 
   const isFood = contentType === "FOOD";
   const idPrefix = isFood ? "food-" : "";
@@ -47,6 +57,7 @@ export default function JournalForm({
   const contentPlaceholder = isFood
     ? "<p>Your food story content here...</p>"
     : "<p>Your content here...</p>";
+  const mediaFolder = isFood ? "chittagong-trail/food" : "chittagong-trail/journal";
 
   function handleSlugGenerate() {
     const titleInput = document.getElementById(`${idPrefix}title`) as HTMLInputElement;
@@ -70,6 +81,9 @@ export default function JournalForm({
 
   return (
     <form action={formAction} className="space-y-8">
+      <input type="hidden" name="coverMediaId" value={coverAsset?.id || ""} />
+      <input type="hidden" name="ogMediaId" value={ogAsset?.id || ""} />
+
       {state.error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
           {state.error}
@@ -240,39 +254,38 @@ export default function JournalForm({
 
       <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
         <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
-          Media & Curation
+          Cover Image
+        </h2>
+        <MediaField
+          label="Cover Image"
+          value={coverAsset}
+          onChange={setCoverAsset}
+          folder={mediaFolder}
+          recommendedDimensions="1200×630"
+        />
+      </section>
+
+      <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
+        <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
+          Social Sharing (OG)
+        </h2>
+        <MediaField
+          label="OG Image"
+          value={ogAsset}
+          onChange={setOgAsset}
+          folder={mediaFolder}
+          recommendedDimensions="1200×630"
+          showUseCoverOption
+          coverValue={coverAsset}
+          onUseCover={() => setOgAsset(coverAsset)}
+        />
+      </section>
+
+      <section className="bg-white rounded-lg border border-[#E8DCC8] p-6">
+        <h2 className="font-[family-name:var(--font-playfair)] text-lg text-[#5D4037] mb-4">
+          Curation
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor={`${idPrefix}coverMediaId`}
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              Cover Media ID
-            </label>
-            <input
-              type="number"
-              id={`${idPrefix}coverMediaId`}
-              name="coverMediaId"
-              defaultValue={post?.coverMediaId ?? ""}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor={`${idPrefix}ogMediaId`}
-              className="block text-sm font-medium text-[#5D4037] mb-1"
-            >
-              OG Media ID
-            </label>
-            <input
-              type="number"
-              id={`${idPrefix}ogMediaId`}
-              name="ogMediaId"
-              defaultValue={post?.ogMediaId ?? ""}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-            />
-          </div>
           <div className="flex items-center gap-2 pt-2">
             <input
               type="checkbox"
