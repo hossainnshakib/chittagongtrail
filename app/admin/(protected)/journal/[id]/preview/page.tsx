@@ -19,7 +19,7 @@ export async function generateMetadata({
   const { id } = await params;
   const post = await getJournalPreviewById(parseInt(id, 10));
 
-  if (!post) {
+  if (!post || post.type !== "STORY") {
     return { title: "Journal Preview Not Found" };
   }
 
@@ -35,13 +35,14 @@ export default async function JournalPreviewPage({ params }: JournalPreviewPageP
   const { id } = await params;
   const post = await getJournalPreviewById(parseInt(id, 10));
 
-  if (!post) {
+  if (!post || post.type !== "STORY") {
     notFound();
   }
 
   const coverUrl = post.coverMedia?.secureUrl || null;
   const coverAlt = post.coverMedia?.altText || post.title;
-  const publicRoute = post.type === "FOOD" ? `/food/${post.slug}` : `/journal/${post.slug}`;
+  const postType = post.type as string;
+  const publicRoute = postType === "FOOD" ? `/food/${post.slug}` : `/journal/${post.slug}`;
 
   return (
     <PublicLayout>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import FoodJournalForm from "@/components/admin/FoodJournalForm";
+import JournalForm from "@/components/admin/JournalForm";
+import { createFoodPost, updateFoodPost } from "@/app/admin/(protected)/food/actions";
 
 export default async function NewFoodPage() {
   const trails = await prisma.trailLocation.findMany({
@@ -17,10 +18,16 @@ export default async function NewFoodPage() {
           New Food Post
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--admin-text-secondary)" }}>
-          Create a new food story. Type is preselected as Food.
+          Create a new food story.
         </p>
       </div>
-      <FoodJournalForm trails={trails} mode="create" />
+      <JournalForm
+        trails={trails}
+        mode="create"
+        contentType="FOOD"
+        createAction={createFoodPost}
+        updateAction={updateFoodPost}
+      />
     </div>
   );
 }

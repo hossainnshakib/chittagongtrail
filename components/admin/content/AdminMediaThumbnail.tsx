@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function AdminMediaThumbnail({
   url,
   alt,
@@ -25,12 +27,14 @@ export default function AdminMediaThumbnail({
   }
 
   return (
-    <img
+    <Image
       src={url}
       alt={alt || ""}
+      width={size}
+      height={size}
       className="admin-content-thumbnail"
-      style={{ width: size, height: size }}
-      loading="lazy"
+      style={{ objectFit: "cover" }}
+      sizes={`${size}px`}
     />
   );
 }

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import FoodJournalForm from "@/components/admin/FoodJournalForm";
 import { JournalType } from "@prisma/client";
+import JournalForm from "@/components/admin/JournalForm";
+import { createFoodPost, updateFoodPost } from "@/app/admin/(protected)/food/actions";
 
 export default async function EditFoodPage({
   params,
@@ -16,14 +17,16 @@ export default async function EditFoodPage({
   }
 
   const [post, trails] = await Promise.all([
-    prisma.journalPost.findUnique({ where: { id: postId } }),
+    prisma.journalPost.findUnique({
+      where: { id: postId, type: JournalType.FOOD },
+    }),
     prisma.trailLocation.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
   ]);
 
-  if (!post || post.type !== JournalType.FOOD) {
+  if (!post) {
     notFound();
   }
 
@@ -40,7 +43,14 @@ export default async function EditFoodPage({
           Editing &ldquo;{post.title}&rdquo;
         </p>
       </div>
-      <FoodJournalForm post={post} trails={trails} mode="edit" />
+      <JournalForm
+        post={post}
+        trails={trails}
+        mode="edit"
+        contentType="FOOD"
+        createAction={createFoodPost}
+        updateAction={updateFoodPost}
+      />
     </div>
   );
 }

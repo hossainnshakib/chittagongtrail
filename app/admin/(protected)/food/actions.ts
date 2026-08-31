@@ -7,16 +7,16 @@ import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
 import { ContentStatus, JournalType } from "@prisma/client";
 
-export interface JournalActionResult {
+export interface FoodActionResult {
   success: boolean;
   error?: string;
   errors?: Record<string, string>;
 }
 
-export async function createJournalPost(
-  _prevState: JournalActionResult,
+export async function createFoodPost(
+  _prevState: FoodActionResult,
   formData: FormData
-): Promise<JournalActionResult> {
+): Promise<FoodActionResult> {
   await requireAdmin();
 
   const raw = {
@@ -69,7 +69,7 @@ export async function createJournalPost(
         slug: data.slug,
         excerpt: data.excerpt,
         content: data.content,
-        type: JournalType.STORY,
+        type: JournalType.FOOD,
         status: data.status as ContentStatus,
         publishedAt,
         isFeatured: data.isFeatured,
@@ -82,21 +82,21 @@ export async function createJournalPost(
       },
     });
 
-    revalidatePath("/admin/journal");
-    revalidatePath("/journal");
+    revalidatePath("/admin/food");
+    revalidatePath("/food");
   } catch (error) {
-    console.error("[admin:journal:create]", error);
-    return { success: false, error: "Failed to create journal post" };
+    console.error("[admin:food:create]", error);
+    return { success: false, error: "Failed to create food post" };
   }
 
-  redirect("/admin/journal");
+  redirect("/admin/food");
 }
 
-export async function updateJournalPost(
+export async function updateFoodPost(
   id: number,
-  _prevState: JournalActionResult,
+  _prevState: FoodActionResult,
   formData: FormData
-): Promise<JournalActionResult> {
+): Promise<FoodActionResult> {
   await requireAdmin();
 
   const raw = {
@@ -131,8 +131,8 @@ export async function updateJournalPost(
     const existing = await prisma.journalPost.findUnique({
       where: { id },
     });
-    if (!existing || existing.type !== JournalType.STORY) {
-      return { success: false, error: "Journal post not found" };
+    if (!existing || existing.type !== JournalType.FOOD) {
+      return { success: false, error: "Food post not found" };
     }
 
     if (existing.slug !== data.slug) {
@@ -159,7 +159,7 @@ export async function updateJournalPost(
         slug: data.slug,
         excerpt: data.excerpt,
         content: data.content,
-        type: JournalType.STORY,
+        type: JournalType.FOOD,
         status: data.status as ContentStatus,
         publishedAt,
         isFeatured: data.isFeatured,
@@ -172,48 +172,17 @@ export async function updateJournalPost(
       },
     });
 
-    revalidatePath("/admin/journal");
-    revalidatePath(`/admin/journal/${id}/edit`);
-    revalidatePath("/journal");
-    revalidatePath(`/journal/${data.slug}`);
-    if (existing.slug !== data.slug) {
-      revalidatePath(`/journal/${existing.slug}`);
-    }
-  } catch (error) {
-    console.error("[admin:journal:update]", error);
-    return { success: false, error: "Failed to update journal post" };
-  }
-
-  redirect("/admin/journal");
-}
-
-export async function deleteJournalPost(id: number): Promise<JournalActionResult> {
-  await requireAdmin();
-
-  try {
-    const post = await prisma.journalPost.findUnique({ where: { id } });
-    if (!post || post.type !== JournalType.STORY) {
-      return { success: false, error: "Journal post not found" };
-    }
-
-    await prisma.journalPost.delete({ where: { id } });
-
-    revalidatePath("/admin/journal");
-    revalidatePath("/journal");
+    revalidatePath("/admin/food");
+    revalidatePath(`/admin/food/${id}/edit`);
     revalidatePath("/food");
+    revalidatePath(`/food/${data.slug}`);
+    if (existing.slug !== data.slug) {
+      revalidatePath(`/food/${existing.slug}`);
+    }
   } catch (error) {
-    console.error("[admin:journal:delete]", error);
-    return { success: false, error: "Failed to delete journal post" };
+    console.error("[admin:food:update]", error);
+    return { success: false, error: "Failed to update food post" };
   }
 
-  return { success: true };
-}
-
-export async function generateSlug(name: string): Promise<string> {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
+  redirect("/admin/food");
 }

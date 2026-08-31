@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { id, type } = await request.json();
+    const body = await request.json();
+    const { id, type, expectedType } = body;
 
     if (typeof id !== "number" || !["trail", "journal"].includes(type)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -42,6 +43,13 @@ export async function POST(request: NextRequest) {
       const post = await prisma.journalPost.findUnique({ where: { id } });
 
       if (!post) {
+        return NextResponse.json(
+          { error: "Journal post not found" },
+          { status: 404 }
+        );
+      }
+
+      if (expectedType && post.type !== expectedType) {
         return NextResponse.json(
           { error: "Journal post not found" },
           { status: 404 }

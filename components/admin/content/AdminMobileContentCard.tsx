@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminMobileContentCard({
   title,
@@ -34,7 +35,15 @@ export default function AdminMobileContentCard({
     <article className="admin-content-card" aria-label={title}>
       <div className="admin-content-card-header">
         {coverUrl ? (
-          <img src={coverUrl} alt="" className="admin-content-card-thumb" loading="lazy" />
+          <Image
+            src={coverUrl}
+            alt={title}
+            width={44}
+            height={44}
+            className="admin-content-card-thumb"
+            style={{ objectFit: "cover" }}
+            sizes="44px"
+          />
         ) : (
           <div className="admin-content-card-thumb admin-content-card-thumb-empty" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

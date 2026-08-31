@@ -7,12 +7,14 @@ interface DeleteButtonProps {
   id: number;
   name: string;
   type: "trail" | "journal";
+  expectedType?: "STORY" | "FOOD";
 }
 
 export default function DeleteButton({
   id,
   name,
   type,
+  expectedType,
 }: DeleteButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -27,13 +29,19 @@ export default function DeleteButton({
       const response = await fetch(`/api/admin/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type }),
+        body: JSON.stringify({ id, type, expectedType }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        router.push(type === "trail" ? "/admin/trails" : "/admin/journal");
+        if (type === "trail") {
+          router.push("/admin/trails");
+        } else if (expectedType === "FOOD") {
+          router.push("/admin/food");
+        } else {
+          router.push("/admin/journal");
+        }
         router.refresh();
       } else {
         setError(result.error || "Delete failed");

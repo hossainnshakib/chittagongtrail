@@ -180,7 +180,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                         <AdminMediaThumbnail url={post.coverMedia?.secureUrl ?? null} alt={post.title} size={40} />
                       </td>
                       <td>
-                        <Link href={`/admin/journal/${post.id}/edit`} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
+                        <Link href={`/admin/food/${post.id}/edit`} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
                           {post.title}
                         </Link>
                       </td>
@@ -221,8 +221,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                       </td>
                       <td>
                         <AdminRowActions actions={[
-                          { label: "Edit", href: `/admin/journal/${post.id}/edit` },
-                          { label: "Preview", href: `/admin/journal/${post.id}/preview` },
+                          { label: "Edit", href: `/admin/food/${post.id}/edit` },
                           ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
                         ]} />
                       </td>
@@ -253,8 +252,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                   updatedAt={post.updatedAt}
                   seoStatus={<AdminSeoStatus status={seo.status} missingFields={seo.missingFields} />}
                   actions={[
-                    { label: "Edit", href: `/admin/journal/${post.id}/edit` },
-                    { label: "Preview", href: `/admin/journal/${post.id}/preview` },
+                    { label: "Edit", href: `/admin/food/${post.id}/edit` },
                     ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
                   ]}
                 />
