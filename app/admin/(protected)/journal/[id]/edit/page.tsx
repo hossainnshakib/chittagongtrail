@@ -55,11 +55,11 @@ export default async function EditJournalPage({
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-playfair)] text-3xl text-[#5D4037] mb-2">
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold tracking-tight text-[#3E2723]" style={{ fontFamily: "var(--font-body)" }}>
           Edit Story
         </h1>
-        <p className="text-[#8D6E63]">
+        <p className="mt-1 text-sm text-[#8D6E63]">
           Editing &ldquo;{post.title}&rdquo;
         </p>
       </div>

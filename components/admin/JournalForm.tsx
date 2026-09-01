@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import type { JournalPost, TrailLocation } from "@prisma/client";
 import DeleteButton from "@/components/admin/DeleteButton";
 import MediaField from "@/components/admin/media/MediaField";
@@ -57,13 +56,15 @@ export default function JournalForm({
     return initialOg || null;
   });
   const [seoExpanded, setSeoExpanded] = useState(false);
+  const [status, setStatus] = useState<string>(post?.status ?? "DRAFT");
+  const [isFeatured, setIsFeatured] = useState(post?.isFeatured ?? false);
 
   const isFood = contentType === "FOOD";
   const idPrefix = isFood ? "food-" : "";
   const cancelUrl = isFood ? "/admin/food" : "/admin/journal";
   const createLabel = isFood ? "Create Food Post" : "Create Story";
   const editLabel = "Save Changes";
-  const creatingLabel = "Creating...";
+  const creatingLabel = isFood ? "Creating..." : "Creating...";
   const contentPlaceholder = isFood
     ? "<p>Your food story content here...</p>"
     : "<p>Your content here...</p>";
@@ -169,7 +170,7 @@ export default function JournalForm({
         </div>
 
         {/* Sidebar Column */}
-        <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
+        <div className="w-full lg:w-80 flex-shrink-0 space-y-4 lg:sticky lg:top-16 lg:self-start">
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
             <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Publish</h3>
             <div className="space-y-3">
@@ -178,7 +179,8 @@ export default function JournalForm({
                 <select
                   id={`${idPrefix}status`}
                   name="status"
-                  defaultValue={post?.status ?? "DRAFT"}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
                   className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
                 >
                   <option value="DRAFT">Draft</option>
@@ -187,13 +189,17 @@ export default function JournalForm({
                 </select>
               </div>
               <div>
-                <label htmlFor={`${idPrefix}publishedAt`} className="block text-xs font-medium text-[#5D4037] mb-1">Published Date</label>
+                <label htmlFor={`${idPrefix}publishedAt`} className="block text-xs font-medium text-[#5D4037] mb-1">
+                  Published Date
+                  {status !== "PUBLISHED" && <span className="text-[#8D6E63] font-normal ml-1">(auto-set on publish)</span>}
+                </label>
                 <input
                   type="date"
                   id={`${idPrefix}publishedAt`}
                   name="publishedAt"
-                  defaultValue={formatDateForInput(post?.publishedAt ?? new Date())}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+                  defaultValue={mode === "edit" && post?.publishedAt ? formatDateForInput(post.publishedAt) : ""}
+                  disabled={status !== "PUBLISHED"}
+                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent disabled:bg-[#F5F0EB] disabled:opacity-60"
                 />
               </div>
               <div>
@@ -215,7 +221,8 @@ export default function JournalForm({
                   type="checkbox"
                   id={`${idPrefix}isFeatured`}
                   name="isFeatured"
-                  defaultChecked={post?.isFeatured ?? false}
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
                   value="true"
                   className="w-3.5 h-3.5 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
                 />
@@ -223,16 +230,50 @@ export default function JournalForm({
                   {isFood ? "Featured" : "Featured on section"}
                 </label>
               </div>
-              <div>
-                <label htmlFor={`${idPrefix}featuredOrder`} className="block text-xs font-medium text-[#5D4037] mb-1">Featured Order</label>
-                <input
-                  type="number"
-                  id={`${idPrefix}featuredOrder`}
-                  name="featuredOrder"
-                  defaultValue={post?.featuredOrder ?? ""}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                />
+              {isFeatured && (
+                <div>
+                  <label htmlFor={`${idPrefix}featuredOrder`} className="block text-xs font-medium text-[#5D4037] mb-1">
+                    Featured Order <span className="text-[#8D6E63] font-normal">(lower = first)</span>
+                  </label>
+                  <input
+                    type="number"
+                    id={`${idPrefix}featuredOrder`}
+                    name="featuredOrder"
+                    defaultValue={post?.featuredOrder ?? ""}
+                    min="0"
+                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+                  />
+                </div>
+              )}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-2 px-4 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isPending
+                    ? creatingLabel
+                    : mode === "create"
+                      ? createLabel
+                      : editLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(cancelUrl)}
+                  className="w-full mt-2 bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-2 px-4 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
+              {mode === "edit" && post && (
+                <div className="pt-2">
+                  <DeleteButton
+                    id={post.id}
+                    name={post.title}
+                    scope={contentType === "FOOD" ? "food" : "story"}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -243,12 +284,12 @@ export default function JournalForm({
               value={coverAsset}
               onChange={setCoverAsset}
               folder={mediaFolder}
-              recommendedDimensions="1200×630"
+              recommendedDimensions="Landscape editorial image, min 1200px wide"
             />
           </div>
 
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <h3 className="text-xs font-semibold text-[#5D4037] mb-2 uppercase tracking-wide">Social Sharing</h3>
+            <h3 className="text-xs font-semibold text-[#5D4037] mb-2 uppercase tracking-wide">Social Sharing (OG)</h3>
             <div className="flex items-center gap-2 mb-2">
               <input
                 type="checkbox"
@@ -262,22 +303,16 @@ export default function JournalForm({
               />
               <label htmlFor={`${idPrefix}useCoverForOg`} className="text-xs text-[#5D4037] cursor-pointer">Use cover image</label>
             </div>
-            {!useCoverForOg && (
+            {useCoverForOg ? (
+              <p className="text-[11px] text-[#8D6E63]">OG image will use the cover as fallback.</p>
+            ) : (
               <MediaField
                 label="OG Image"
                 value={ogAsset}
                 onChange={setOgAsset}
                 folder={mediaFolder}
-                recommendedDimensions="1200×630"
+                recommendedDimensions="1200 x 630 recommended for social sharing"
               />
-            )}
-            {useCoverForOg && coverAsset && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="relative w-10 h-6 rounded overflow-hidden border border-[#D7C9B8]">
-                  <Image src={coverAsset.secureUrl} alt="" fill className="object-cover" sizes="40px" />
-                </div>
-                <span className="text-[10px] text-[#5D4037]/60">Will use cover</span>
-              </div>
             )}
           </div>
 
@@ -318,36 +353,6 @@ export default function JournalForm({
             )}
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#E8DCC8]">
-        <div className="flex items-center gap-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-1.5 px-5 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            {isPending
-              ? creatingLabel
-              : mode === "create"
-                ? createLabel
-                : editLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(cancelUrl)}
-            className="bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-1.5 px-5 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
-        {mode === "edit" && post && (
-          <DeleteButton
-            id={post.id}
-            name={post.title}
-            scope={contentType === "FOOD" ? "food" : "story"}
-          />
-        )}
       </div>
     </form>
   );

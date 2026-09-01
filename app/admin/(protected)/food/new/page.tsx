@@ -9,17 +9,12 @@ export default async function NewFoodPage() {
   });
 
   return (
-    <div style={{ "--admin-content-max-width": "800px" } as React.CSSProperties}>
+    <div>
       <div className="mb-6">
-        <h1
-          className="text-xl font-semibold tracking-tight"
-          style={{ color: "var(--admin-text-primary)", fontFamily: "var(--font-body)" }}
-        >
+        <h1 className="text-xl font-semibold tracking-tight text-[#3E2723]" style={{ fontFamily: "var(--font-body)" }}>
           New Food Post
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--admin-text-secondary)" }}>
-          Create a new food story.
-        </p>
+        <p className="mt-1 text-sm text-[#8D6E63]">Create a new food story.</p>
       </div>
       <JournalForm
         trails={trails}

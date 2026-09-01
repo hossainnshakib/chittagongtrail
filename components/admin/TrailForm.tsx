@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import type { TrailLocation } from "@prisma/client";
 import {
   createTrail,
@@ -46,6 +45,8 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
   });
   const [galleryAssets, setGalleryAssets] = useState<MediaAssetData[]>(initialGallery || []);
   const [seoExpanded, setSeoExpanded] = useState(false);
+  const [status, setStatus] = useState<string>(trail?.status ?? "DRAFT");
+  const [isFeatured, setIsFeatured] = useState(trail?.isFeatured ?? false);
 
   function handleSlugGenerate() {
     const nameInput = document.getElementById("name") as HTMLInputElement;
@@ -244,7 +245,10 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
           </div>
 
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Trail Gallery</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-[#5D4037] uppercase tracking-wide">Trail Gallery</h3>
+              <span className="text-[11px] text-[#8D6E63]">{galleryAssets.length} image{galleryAssets.length !== 1 ? "s" : ""}</span>
+            </div>
             <GalleryManager
               assets={galleryAssets}
               onChange={setGalleryAssets}
@@ -254,7 +258,7 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
         </div>
 
         {/* Sidebar Column */}
-        <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
+        <div className="w-full lg:w-80 flex-shrink-0 space-y-4 lg:sticky lg:top-16 lg:self-start">
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
             <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Publish</h3>
             <div className="space-y-3">
@@ -263,7 +267,8 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                 <select
                   id="status"
                   name="status"
-                  defaultValue={trail?.status ?? "DRAFT"}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
                   className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
                 >
                   <option value="DRAFT">Draft</option>
@@ -272,13 +277,17 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                 </select>
               </div>
               <div>
-                <label htmlFor="publishedAt" className="block text-xs font-medium text-[#5D4037] mb-1">Published Date</label>
+                <label htmlFor="publishedAt" className="block text-xs font-medium text-[#5D4037] mb-1">
+                  Published Date
+                  {status !== "PUBLISHED" && <span className="text-[#8D6E63] font-normal ml-1">(auto-set on publish)</span>}
+                </label>
                 <input
                   type="date"
                   id="publishedAt"
                   name="publishedAt"
-                  defaultValue={formatDateForInput(trail?.publishedAt ?? new Date())}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+                  defaultValue={mode === "edit" && trail?.publishedAt ? formatDateForInput(trail.publishedAt) : ""}
+                  disabled={status !== "PUBLISHED"}
+                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent disabled:bg-[#F5F0EB] disabled:opacity-60"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -286,22 +295,51 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                   type="checkbox"
                   id="isFeatured"
                   name="isFeatured"
-                  defaultChecked={trail?.isFeatured ?? false}
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
                   value="true"
                   className="w-3.5 h-3.5 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
                 />
                 <label htmlFor="isFeatured" className="text-xs text-[#5D4037]">Featured on homepage</label>
               </div>
-              <div>
-                <label htmlFor="featuredOrder" className="block text-xs font-medium text-[#5D4037] mb-1">Featured Order</label>
-                <input
-                  type="number"
-                  id="featuredOrder"
-                  name="featuredOrder"
-                  defaultValue={trail?.featuredOrder ?? ""}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                />
+              {isFeatured && (
+                <div>
+                  <label htmlFor="featuredOrder" className="block text-xs font-medium text-[#5D4037] mb-1">
+                    Featured Order <span className="text-[#8D6E63] font-normal">(lower = first)</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="featuredOrder"
+                    name="featuredOrder"
+                    defaultValue={trail?.featuredOrder ?? ""}
+                    min="0"
+                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+                  />
+                </div>
+              )}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-2 px-4 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isPending
+                    ? mode === "create" ? "Creating..." : "Saving..."
+                    : mode === "create" ? "Create Trail" : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/trails")}
+                  className="w-full mt-2 bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-2 px-4 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
+              {mode === "edit" && trail && (
+                <div className="pt-2">
+                  <DeleteButton id={trail.id} name={trail.name} scope="trail" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -312,12 +350,12 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
               value={coverAsset}
               onChange={setCoverAsset}
               folder="chittagong-trail/trails"
-              recommendedDimensions="1200×630"
+              recommendedDimensions="Landscape editorial image, min 1200px wide"
             />
           </div>
 
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <h3 className="text-xs font-semibold text-[#5D4037] mb-2 uppercase tracking-wide">Social Sharing</h3>
+            <h3 className="text-xs font-semibold text-[#5D4037] mb-2 uppercase tracking-wide">Social Sharing (OG)</h3>
             <div className="flex items-center gap-2 mb-2">
               <input
                 type="checkbox"
@@ -331,22 +369,16 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
               />
               <label htmlFor="useCoverForOg" className="text-xs text-[#5D4037] cursor-pointer">Use cover image</label>
             </div>
-            {!useCoverForOg && (
+            {useCoverForOg ? (
+              <p className="text-[11px] text-[#8D6E63]">OG image will use the cover as fallback.</p>
+            ) : (
               <MediaField
                 label="OG Image"
                 value={ogAsset}
                 onChange={setOgAsset}
                 folder="chittagong-trail/trails"
-                recommendedDimensions="1200×630"
+                recommendedDimensions="1200 x 630 recommended for social sharing"
               />
-            )}
-            {useCoverForOg && coverAsset && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="relative w-10 h-6 rounded overflow-hidden border border-[#D7C9B8]">
-                  <Image src={coverAsset.secureUrl} alt="" fill className="object-cover" sizes="40px" />
-                </div>
-                <span className="text-[10px] text-[#5D4037]/60">Will use cover</span>
-              </div>
             )}
           </div>
 
@@ -387,34 +419,6 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
             )}
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#E8DCC8]">
-        <div className="flex items-center gap-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-1.5 px-5 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            {isPending
-              ? mode === "create" ? "Creating..." : "Saving..."
-              : mode === "create" ? "Create Trail" : "Save Changes"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/trails")}
-            className="bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-1.5 px-5 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
-        {mode === "edit" && trail && (
-          <DeleteButton
-            id={trail.id}
-            name={trail.name}
-            scope="trail"
-          />
-        )}
       </div>
     </form>
   );

@@ -1,3 +1,6 @@
+// @internal Legacy server-proxied upload route. Not called by any current Admin UI.
+// Active admin workflows use DirectUpload (sign -> Cloudinary -> register).
+// Retained for backward compatibility only. Do not use for new admin upload flows.
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, UploadFolder, ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/cloudinary";
@@ -40,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum size: 5MB" },
+        { error: "File too large. Maximum size: 10MB" },
         { status: 400 }
       );
     }
