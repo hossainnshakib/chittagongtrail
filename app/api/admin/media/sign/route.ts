@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
     const paramsToSign: Record<string, string | number> = {
       folder,
       timestamp,
-      resource_type: resourceType,
     };
 
     const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET!);

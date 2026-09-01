@@ -171,7 +171,6 @@ export default function AdminMediaLibraryPage() {
         formData.append("timestamp", String(params.timestamp));
         formData.append("signature", params.signature);
         formData.append("folder", params.folder);
-        formData.append("resource_type", params.resourceType);
 
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
@@ -181,7 +180,15 @@ export default function AdminMediaLibraryPage() {
         });
         xhr.addEventListener("load", () => {
           if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
-          else reject(new Error("Cloudinary upload failed"));
+          else {
+            try {
+              const errData = JSON.parse(xhr.responseText);
+              const msg = errData?.error?.message || errData?.error || `Cloudinary rejected the upload (${xhr.status})`;
+              reject(new Error(msg));
+            } catch {
+              reject(new Error(`Cloudinary upload failed (HTTP ${xhr.status})`));
+            }
+          }
         });
         xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
         xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));

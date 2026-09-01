@@ -1,24 +1,20 @@
 import { v2 as cloudinary } from "cloudinary";
 
-if (
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-) {
+const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || "").trim();
+const apiKey = (process.env.CLOUDINARY_API_KEY || "").trim();
+const apiSecret = (process.env.CLOUDINARY_API_SECRET || "").trim();
+
+if (cloudName && apiKey && apiSecret) {
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
     secure: true,
   });
 }
 
 export function getCloudinaryClient() {
-  const cloud_name = process.env.CLOUDINARY_CLOUD_NAME;
-  const api_key = process.env.CLOUDINARY_API_KEY;
-  const api_secret = process.env.CLOUDINARY_API_SECRET;
-
-  if (!cloud_name || !api_key || !api_secret) {
+  if (!cloudName || !apiKey || !apiSecret) {
     throw new Error("Cloudinary credentials are not configured");
   }
 
@@ -51,4 +47,4 @@ export const ALLOWED_VIDEO_TYPES = [
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
-export const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "";
+export const CLOUDINARY_CLOUD_NAME = cloudName;

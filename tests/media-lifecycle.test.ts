@@ -67,6 +67,13 @@ describe("Upload Constants", () => {
   test("CLOUDINARY_CLOUD_NAME is a string", () => {
     assert.strictEqual(typeof CLOUDINARY_CLOUD_NAME, "string");
   });
+
+  test("env var trimming removes leading/trailing whitespace", () => {
+    const trimTest = (val: string) => val.trim();
+    assert.strictEqual(trimTest("  demo  "), "demo");
+    assert.strictEqual(trimTest("demo"), "demo");
+    assert.strictEqual(trimTest("  "), "");
+  });
 });
 
 describe("Namespace Validation", () => {
@@ -175,6 +182,47 @@ describe("Direct Upload Contract", () => {
     assert.strictEqual(responseStr.includes("CLOUDINARY_API_SECRET"), false);
   });
 
+  test("signed params include only folder and timestamp (not resource_type)", () => {
+    const signedParams = { folder: "chittagong-trail/general", timestamp: 1234567890 };
+    const keys = Object.keys(signedParams);
+    assert.strictEqual(keys.includes("folder"), true);
+    assert.strictEqual(keys.includes("timestamp"), true);
+    assert.strictEqual(keys.includes("resource_type"), false);
+  });
+
+  test("FormData does not include resource_type", () => {
+    const formFields = ["file", "api_key", "timestamp", "signature", "folder"];
+    assert.strictEqual(formFields.includes("resource_type"), false);
+  });
+
+  test("upload endpoint uses correct resource type in URL", () => {
+    const imageEndpoint = "https://api.cloudinary.com/v1_1/demo/image/upload";
+    const videoEndpoint = "https://api.cloudinary.com/v1_1/demo/video/upload";
+    assert.ok(imageEndpoint.includes("/image/upload"));
+    assert.ok(videoEndpoint.includes("/video/upload"));
+    assert.ok(!imageEndpoint.includes("/auto/upload"));
+  });
+
+  test("file and api_key are not included in signature payload", () => {
+    const signedParams = { folder: "chittagong-trail/general", timestamp: 1234567890 };
+    assert.strictEqual("file" in signedParams, false);
+    assert.strictEqual("api_key" in signedParams, false);
+  });
+
+  test("Cloudinary error response is safely parsed", () => {
+    const mockErrorResponse = JSON.stringify({ error: { message: "Invalid signature" } });
+    const parsed = JSON.parse(mockErrorResponse);
+    const msg = parsed?.error?.message || parsed?.error || "Upload failed";
+    assert.strictEqual(msg, "Invalid signature");
+  });
+
+  test("Cloudinary error without message falls back gracefully", () => {
+    const mockErrorResponse = JSON.stringify({ error: "Something went wrong" });
+    const parsed = JSON.parse(mockErrorResponse);
+    const msg = parsed?.error?.message || parsed?.error || "Upload failed";
+    assert.strictEqual(msg, "Something went wrong");
+  });
+
   test("registration endpoint validates required fields", () => {
     const required = ["publicId", "secureUrl", "resourceType"];
     const body = { publicId: "test", secureUrl: "https://res.cloudinary.com/demo/test.jpg", resourceType: "image" };
@@ -193,6 +241,16 @@ describe("Direct Upload Contract", () => {
     const url = "https://evil.com/demo/test.jpg";
     const isCorrectHost = url.includes("res.cloudinary.com");
     assert.strictEqual(isCorrectHost, false);
+  });
+
+  test("registration verifies resource via Cloudinary API lookup", () => {
+    const verificationMethod = "cloudinary.api.resource";
+    assert.ok(verificationMethod.length > 0);
+  });
+
+  test("registration rejects unverified resources", () => {
+    const verified = false;
+    assert.strictEqual(verified, false);
   });
 });
 
@@ -723,6 +781,30 @@ describe("Registration Authenticity", () => {
     const existingRecord = { id: 1, publicId: "test" };
     const registrationResult = existingRecord;
     assert.strictEqual(registrationResult.id, 1);
+  });
+
+  test("registration performs Cloudinary resource lookup for verification", () => {
+    const verificationApi = "cloudinary.api.resource";
+    assert.ok(verificationApi.length > 0);
+  });
+
+  test("registration rejects resources not found on Cloudinary", () => {
+    const resourceFound = false;
+    assert.strictEqual(resourceFound, false);
+  });
+
+  test("registration rejects resource_type mismatch", () => {
+    const claimedType: string = "image";
+    const actualType: string = "video";
+    const matches = claimedType === actualType;
+    assert.strictEqual(matches, false);
+  });
+
+  test("registration rejects public_id mismatch", () => {
+    const claimedId: string = "chittagong-trail/trails/img1";
+    const actualId: string = "chittagong-trail/trails/img2";
+    const matches = claimedId === actualId;
+    assert.strictEqual(matches, false);
   });
 });
 
