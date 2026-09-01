@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
+import { validateImageMediaId } from "@/lib/media-validation";
 import { ContentStatus, JournalType } from "@prisma/client";
 
 export interface JournalActionResult {
@@ -45,6 +46,16 @@ export async function createJournalPost(
     return { success: false, errors };
   }
 
+  const coverResult = await validateImageMediaId(raw.coverMediaId, "Cover image");
+  if (!coverResult.valid) {
+    return { success: false, error: coverResult.error };
+  }
+
+  const ogResult = await validateImageMediaId(raw.ogMediaId, "OG image");
+  if (!ogResult.valid) {
+    return { success: false, error: ogResult.error };
+  }
+
   const data = parsed.data;
 
   try {
@@ -63,6 +74,9 @@ export async function createJournalPost(
       publishedAt = new Date();
     }
 
+    const coverId = coverResult.assetId ?? null;
+    const ogId = ogResult.assetId ?? coverId;
+
     await prisma.journalPost.create({
       data: {
         title: data.title,
@@ -74,8 +88,8 @@ export async function createJournalPost(
         publishedAt,
         isFeatured: data.isFeatured,
         featuredOrder: data.featuredOrder ?? null,
-        coverMediaId: data.coverMediaId ?? null,
-        ogMediaId: data.ogMediaId ?? null,
+        coverMediaId: coverId,
+        ogMediaId: ogId,
         metaTitle: data.metaTitle,
         metaDescription: data.metaDescription,
         trailId: data.trailId ?? null,
@@ -125,6 +139,16 @@ export async function updateJournalPost(
     return { success: false, errors };
   }
 
+  const coverResult = await validateImageMediaId(raw.coverMediaId, "Cover image");
+  if (!coverResult.valid) {
+    return { success: false, error: coverResult.error };
+  }
+
+  const ogResult = await validateImageMediaId(raw.ogMediaId, "OG image");
+  if (!ogResult.valid) {
+    return { success: false, error: ogResult.error };
+  }
+
   const data = parsed.data;
 
   try {
@@ -152,6 +176,9 @@ export async function updateJournalPost(
       publishedAt = existing.publishedAt || new Date();
     }
 
+    const coverId = coverResult.assetId ?? null;
+    const ogId = ogResult.assetId ?? coverId;
+
     await prisma.journalPost.update({
       where: { id },
       data: {
@@ -164,8 +191,8 @@ export async function updateJournalPost(
         publishedAt,
         isFeatured: data.isFeatured,
         featuredOrder: data.featuredOrder ?? null,
-        coverMediaId: data.coverMediaId ?? null,
-        ogMediaId: data.ogMediaId ?? null,
+        coverMediaId: coverId,
+        ogMediaId: ogId,
         metaTitle: data.metaTitle,
         metaDescription: data.metaDescription,
         trailId: data.trailId ?? null,
@@ -207,13 +234,4 @@ export async function deleteJournalPost(id: number): Promise<JournalActionResult
   }
 
   return { success: true };
-}
-
-export async function generateSlug(name: string): Promise<string> {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
 }

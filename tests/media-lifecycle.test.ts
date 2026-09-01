@@ -191,41 +191,43 @@ describe("Direct Upload Contract", () => {
 
 describe("MediaPicker Mode Logic", () => {
   test("image mode rejects video assets", () => {
-    const mode = "image";
-    const assetResourceType = "video";
+    const mode = "image" as string;
+    const assetResourceType = "video" as string;
     const matches = mode === "image" ? assetResourceType === "image" : mode === "video" ? assetResourceType === "video" : true;
     assert.strictEqual(matches, false);
   });
 
   test("video mode rejects image assets", () => {
-    const mode = "video";
-    const assetResourceType = "image";
+    const mode = "video" as string;
+    const assetResourceType = "image" as string;
     const matches = mode === "image" ? assetResourceType === "image" : mode === "video" ? assetResourceType === "video" : true;
     assert.strictEqual(matches, false);
   });
 
   test("image mode accepts image assets", () => {
-    const mode = "image";
-    const assetResourceType = "image";
+    const mode = "image" as string;
+    const assetResourceType = "image" as string;
     const matches = mode === "image" ? assetResourceType === "image" : mode === "video" ? assetResourceType === "video" : true;
     assert.strictEqual(matches, true);
   });
 
   test("video mode accepts video assets", () => {
-    const mode = "video";
-    const assetResourceType = "video";
+    const mode = "video" as string;
+    const assetResourceType = "video" as string;
     const matches = mode === "image" ? assetResourceType === "image" : mode === "video" ? assetResourceType === "video" : true;
     assert.strictEqual(matches, true);
   });
 
   test("any mode accepts both image and video", () => {
-    const mode = "any";
+    const mode = "any" as string;
+    const imageType = "image" as string;
+    const videoType = "video" as string;
     assert.strictEqual(
-      mode === "image" ? "image" === "image" : mode === "video" ? "video" === "video" : true,
+      mode === "image" ? imageType === "image" : mode === "video" ? videoType === "video" : true,
       true
     );
     assert.strictEqual(
-      mode === "image" ? "video" === "image" : mode === "video" ? "video" === "video" : true,
+      mode === "image" ? videoType === "image" : mode === "video" ? videoType === "video" : true,
       true
     );
   });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
-import { registerDirectUpload, cleanupOrphanCloudinaryAsset } from "@/lib/media-service";
+import { registerDirectUpload } from "@/lib/media-service";
 
 export async function POST(request: NextRequest) {
   const session = await verifySession(
@@ -19,6 +19,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    if (typeof publicId !== "string" || typeof secureUrl !== "string" || typeof resourceType !== "string") {
+      return NextResponse.json({ error: "Invalid field types" }, { status: 400 });
+    }
+
+    if (resourceType !== "image" && resourceType !== "video") {
+      return NextResponse.json({ error: "resourceType must be image or video" }, { status: 400 });
+    }
+
     let mediaAsset;
     try {
       mediaAsset = await registerDirectUpload({
@@ -26,14 +34,11 @@ export async function POST(request: NextRequest) {
         secureUrl,
         resourceType,
         format,
-        width,
-        height,
+        width: typeof width === "number" ? width : undefined,
+        height: typeof height === "number" ? height : undefined,
         altText,
       });
     } catch {
-      if (resourceType === "image" || resourceType === "video") {
-        await cleanupOrphanCloudinaryAsset(publicId, resourceType);
-      }
       return NextResponse.json(
         { error: "Failed to register media asset" },
         { status: 500 }

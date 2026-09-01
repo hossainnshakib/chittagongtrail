@@ -9,7 +9,6 @@ interface DirectUploadProps {
   onUploadComplete: (asset: MediaAssetData) => void;
   onUploadError?: (error: string) => void;
   accept?: string;
-  maxSize?: number;
   label?: string;
 }
 
@@ -21,7 +20,6 @@ export default function DirectUpload({
   onUploadComplete,
   onUploadError,
   accept,
-  maxSize,
   label = "Upload",
 }: DirectUploadProps) {
   const [state, setState] = useState<UploadState>("idle");
@@ -30,29 +28,42 @@ export default function DirectUpload({
   const fileRef = useRef<File | null>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
 
-  const reset = useCallback(() => {
-    setState("idle");
-    setProgress(0);
-    setError(null);
-    fileRef.current = null;
+  const uploadToCloudinary = useCallback((file: File, params: SignedUploadParams): Promise<Record<string, unknown>> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", params.apiKey);
+      formData.append("timestamp", String(params.timestamp));
+      formData.append("signature", params.signature);
+      formData.append("folder", params.folder);
+      formData.append("resource_type", params.resourceType);
+
+      const xhr = new XMLHttpRequest();
+      xhrRef.current = xhr;
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          setProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      });
+
+      xhr.addEventListener("load", () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error("Cloudinary upload failed"));
+        }
+      });
+
+      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+      xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
+
+      xhr.open("POST", `https://api.cloudinary.com/v1_1/${params.cloudName}/${params.resourceType}/upload`);
+      xhr.send(formData);
+    });
   }, []);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    fileRef.current = file;
-    startUpload(file);
-  }, [folder, resourceType]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    fileRef.current = file;
-    startUpload(file);
-  }, [folder, resourceType]);
-
-  const startUpload = async (file: File) => {
+  const startUpload = useCallback(async (file: File) => {
     setError(null);
     setState("signing");
 
@@ -104,42 +115,29 @@ export default function DirectUpload({
       setState("error");
       onUploadError?.(msg);
     }
-  };
+  }, [folder, resourceType, uploadToCloudinary, onUploadComplete, onUploadError]);
 
-  const uploadToCloudinary = (file: File, params: SignedUploadParams): Promise<Record<string, unknown>> => {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", params.apiKey);
-      formData.append("timestamp", String(params.timestamp));
-      formData.append("signature", params.signature);
-      formData.append("folder", params.folder);
-      formData.append("resource_type", params.resourceType);
+  const reset = useCallback(() => {
+    setState("idle");
+    setProgress(0);
+    setError(null);
+    fileRef.current = null;
+  }, []);
 
-      const xhr = new XMLHttpRequest();
-      xhrRef.current = xhr;
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    fileRef.current = file;
+    startUpload(file);
+  }, [startUpload]);
 
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          setProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      });
-
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
-        } else {
-          reject(new Error("Cloudinary upload failed"));
-        }
-      });
-
-      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
-      xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
-
-      xhr.open("POST", `https://api.cloudinary.com/v1_1/${params.cloudName}/${params.resourceType}/upload`);
-      xhr.send(formData);
-    });
-  };
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    fileRef.current = file;
+    startUpload(file);
+  }, [startUpload]);
 
   const handleCancel = useCallback(() => {
     xhrRef.current?.abort();

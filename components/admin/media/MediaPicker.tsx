@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import type { MediaAssetData, MediaPickerMode, MediaPickerProps } from "./types";
+import type { MediaAssetData, MediaPickerProps } from "./types";
 import DirectUpload from "./DirectUpload";
 
 interface MediaListResponse {
@@ -13,7 +13,7 @@ interface MediaListResponse {
   totalPages: number;
 }
 
-export default function MediaPicker({
+function MediaPickerInner({
   open,
   mode,
   folder,
@@ -33,33 +33,19 @@ export default function MediaPicker({
     mode === "video" ? "video" : mode === "image" ? "image" : "all"
   );
   const [showUpload, setShowUpload] = useState(false);
-  const [previewAsset, setPreviewAsset] = useState<MediaAssetData | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      dialogRef.current?.showModal();
-      setPage(1);
-      setSearch("");
-      fetchAssets(1, "");
-      setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
-      dialogRef.current?.close();
-      previousFocusRef.current?.focus();
-    }
-  }, [open]);
-
-  const fetchAssets = useCallback(async (p: number, q: string) => {
+  const fetchAssets = useCallback(async (p: number, q: string, ft?: "all" | "image" | "video") => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set("page", String(p));
       params.set("limit", "24");
       if (q) params.set("search", q);
-      if (filterType !== "all") params.set("resourceType", filterType);
+      const effectiveFilter = ft ?? filterType;
+      if (effectiveFilter !== "all") params.set("resourceType", effectiveFilter);
       if (folder) params.set("folder", folder);
 
       const res = await fetch(`/api/admin/media/list?${params.toString()}`);
@@ -77,9 +63,23 @@ export default function MediaPicker({
 
   useEffect(() => {
     if (open) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      dialogRef.current?.showModal();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional dialog data fetch on open
+      fetchAssets(1, "", mode === "video" ? "video" : mode === "image" ? "image" : "all");
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      dialogRef.current?.close();
+      previousFocusRef.current?.focus();
+    }
+  }, [open, fetchAssets, mode]);
+
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional pagination/filter data fetch
       fetchAssets(page, search);
     }
-  }, [page, filterType, open]);
+  }, [page, filterType, open, fetchAssets, search]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,11 +89,7 @@ export default function MediaPicker({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      if (previewAsset) {
-        setPreviewAsset(null);
-      } else {
-        onClose();
-      }
+      onClose();
     }
   };
 
@@ -121,39 +117,35 @@ export default function MediaPicker({
     onClose();
   };
 
-  const formatDimensions = (asset: MediaAssetData) => {
-    if (asset.width && asset.height) return `${asset.width}×${asset.height}`;
-    return null;
-  };
-
   return (
     <dialog
       ref={dialogRef}
       onClose={onClose}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
-      className="backdrop:bg-black/50 rounded-lg border border-[#E8DCC8] shadow-xl max-w-4xl w-full mx-auto p-0"
+      className="backdrop:bg-black/50 rounded-lg border border-[#E8DCC8] shadow-xl w-full mx-auto p-0 max-w-3xl"
+      style={{ maxWidth: "64rem" }}
       aria-labelledby="media-picker-title"
       aria-describedby={description ? "media-picker-desc" : undefined}
     >
-      <div className="flex flex-col h-[80vh] max-h-[700px]">
+      <div className="flex flex-col h-[80vh] max-h-[600px] sm:h-[70vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#E8DCC8]">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#E8DCC8]">
           <div>
-            <h2 id="media-picker-title" className="text-lg font-semibold text-[#5D4037]">
+            <h2 id="media-picker-title" className="text-sm font-semibold text-[#5D4037]">
               {title}
             </h2>
             {description && (
-              <p id="media-picker-desc" className="text-sm text-[#5D4037]/60">{description}</p>
+              <p id="media-picker-desc" className="text-[10px] text-[#5D4037]/60">{description}</p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => setShowUpload(!showUpload)}
-              className="px-3 py-1.5 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
+              className="px-2 py-1 text-[11px] bg-[#3E2723] text-[#FDF5E6] rounded hover:bg-[#5D4037] transition-colors cursor-pointer"
             >
-              {showUpload ? "Library" : "Upload New"}
+              {showUpload ? "Library" : "Upload"}
             </button>
             <button
               type="button"
@@ -161,7 +153,7 @@ export default function MediaPicker({
               className="p-1 text-[#5D4037] hover:text-[#3E2723] cursor-pointer"
               aria-label="Close media picker"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -170,7 +162,7 @@ export default function MediaPicker({
 
         {showUpload ? (
           /* Upload Panel */
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-3">
             <DirectUpload
               folder={folder || "chittagong-trail/general"}
               resourceType={mode === "video" ? "video" : "image"}
@@ -181,27 +173,27 @@ export default function MediaPicker({
         ) : (
           <>
             {/* Search and Filters */}
-            <div className="flex items-center gap-3 p-4 border-b border-[#E8DCC8]">
-              <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E8DCC8]">
+              <form onSubmit={handleSearch} className="flex-1 flex gap-1.5">
                 <input
                   ref={searchInputRef}
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by filename..."
-                  className="flex-1 px-3 py-1.5 text-sm border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+                  placeholder="Search..."
+                  className="flex-1 px-2 py-1 text-xs border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
                 />
-                <button type="submit" className="px-3 py-1.5 text-sm bg-[#E8DCC8] hover:bg-[#D7C9B8] text-[#5D4037] rounded-md cursor-pointer">
+                <button type="submit" className="px-2 py-1 text-[11px] bg-[#E8DCC8] hover:bg-[#D7C9B8] text-[#5D4037] rounded cursor-pointer">
                   Search
                 </button>
               </form>
-              <div className="flex gap-1">
+              <div className="flex gap-0.5">
                 {(["all", "image", "video"] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => { setFilterType(t); setPage(1); }}
-                    className={`px-2 py-1 text-xs rounded-md capitalize cursor-pointer ${
+                    className={`px-1.5 py-0.5 text-[10px] rounded capitalize cursor-pointer ${
                       filterType === t
                         ? "bg-[#3E2723] text-[#FDF5E6]"
                         : "bg-[#E8DCC8] text-[#5D4037] hover:bg-[#D7C9B8]"
@@ -214,31 +206,31 @@ export default function MediaPicker({
             </div>
 
             {/* Grid */}
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 overflow-auto p-3">
               {loading ? (
-                <div className="flex items-center justify-center h-32 text-[#5D4037]" role="status" aria-live="polite">
-                  <span className="animate-spin inline-block w-5 h-5 border-2 border-[#C9A882] border-t-transparent rounded-full mr-2" />
-                  Loading media...
+                <div className="flex items-center justify-center h-24 text-[#5D4037]" role="status" aria-live="polite">
+                  <span className="animate-spin inline-block w-4 h-4 border-2 border-[#C9A882] border-t-transparent rounded-full mr-1.5" />
+                  <span className="text-xs">Loading...</span>
                 </div>
               ) : assets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-[#5D4037]/60">
-                  <p>No media found</p>
+                <div className="flex flex-col items-center justify-center h-24 text-[#5D4037]/60">
+                  <p className="text-xs">No media found</p>
                   <button
                     type="button"
                     onClick={() => setShowUpload(true)}
-                    className="mt-2 text-sm text-[#C9A882] hover:underline cursor-pointer"
+                    className="mt-1 text-[11px] text-[#C9A882] hover:underline cursor-pointer"
                   >
-                    Upload new media
+                    Upload new
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
                   {assets.map((asset) => (
                     <button
                       key={asset.id}
                       type="button"
-                      onClick={() => matchesMode(asset) ? setPreviewAsset(asset) : undefined}
-                      className={`group relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      onClick={() => matchesMode(asset) ? handleSelect(asset) : undefined}
+                      className={`group relative aspect-square rounded overflow-hidden border-2 transition-all ${
                         selected?.id === asset.id
                           ? "border-[#C9A882] ring-2 ring-[#C9A882]/50"
                           : matchesMode(asset)
@@ -250,7 +242,7 @@ export default function MediaPicker({
                     >
                       {asset.resourceType === "video" ? (
                         <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center">
-                          <svg className="w-8 h-8 text-white/70" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-white/70" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z" />
                           </svg>
                         </div>
@@ -260,18 +252,18 @@ export default function MediaPicker({
                           alt={asset.altText || asset.publicId.split("/").pop() || "Media"}
                           fill
                           className="object-cover"
-                          sizes="120px"
+                          sizes="100px"
                         />
                       )}
                       {selected?.id === asset.id && (
-                        <div className="absolute top-1 right-1 w-5 h-5 bg-[#C9A882] rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-[#C9A882] rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       )}
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-1">
-                        <p className="text-[10px] text-white truncate">
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-0.5">
+                        <p className="text-[8px] text-white truncate">
                           {asset.publicId.split("/").pop()}
                         </p>
                       </div>
@@ -283,23 +275,23 @@ export default function MediaPicker({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 p-3 border-t border-[#E8DCC8]">
+              <div className="flex items-center justify-center gap-1.5 py-1.5 border-t border-[#E8DCC8]">
                 <button
                   type="button"
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page <= 1}
-                  className="px-3 py-1 text-sm border border-[#D7C9B8] rounded-md disabled:opacity-50 cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] border border-[#D7C9B8] rounded disabled:opacity-50 cursor-pointer"
                 >
-                  Previous
+                  Prev
                 </button>
-                <span className="text-sm text-[#5D4037]">
-                  Page {page} of {totalPages}
+                <span className="text-[11px] text-[#5D4037]">
+                  {page}/{totalPages}
                 </span>
                 <button
                   type="button"
                   onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 text-sm border border-[#D7C9B8] rounded-md disabled:opacity-50 cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] border border-[#D7C9B8] rounded disabled:opacity-50 cursor-pointer"
                 >
                   Next
                 </button>
@@ -308,30 +300,30 @@ export default function MediaPicker({
 
             {/* Selected asset actions */}
             {selected && (
-              <div className="flex items-center justify-between p-3 border-t border-[#E8DCC8] bg-[#FDF5E6]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded overflow-hidden border border-[#D7C9B8] flex-shrink-0">
+              <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#E8DCC8] bg-[#FDF5E6]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded overflow-hidden border border-[#D7C9B8] flex-shrink-0">
                     {selected.resourceType === "video" ? (
                       <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 text-white/70" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       </div>
                     ) : (
-                      <Image src={selected.secureUrl} alt="" fill className="object-cover" sizes="40px" />
+                      <Image src={selected.secureUrl} alt="" fill className="object-cover" sizes="32px" />
                     )}
                   </div>
-                  <div className="text-sm">
-                    <p className="text-[#5D4037] truncate max-w-[200px]">{selected.publicId.split("/").pop()}</p>
-                    {selected.altText && <p className="text-[#5D4037]/60 text-xs truncate max-w-[200px]">{selected.altText}</p>}
+                  <div className="text-[11px]">
+                    <p className="text-[#5D4037] truncate max-w-[150px]">{selected.publicId.split("/").pop()}</p>
+                    {selected.altText && <p className="text-[#5D4037]/60 truncate max-w-[150px]">{selected.altText}</p>}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {onRemove && (
                     <button
                       type="button"
                       onClick={() => { onRemove(); onClose(); }}
-                      className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 cursor-pointer"
+                      className="px-2 py-1 text-[11px] text-red-600 hover:text-red-800 cursor-pointer"
                     >
                       Remove
                     </button>
@@ -339,75 +331,21 @@ export default function MediaPicker({
                   <button
                     type="button"
                     onClick={() => handleSelect(selected)}
-                    className="px-3 py-1.5 text-sm bg-[#C9A882] text-[#3E2723] rounded-md hover:bg-[#D4956A] transition-colors cursor-pointer"
+                    className="px-2.5 py-1 text-[11px] bg-[#C9A882] text-[#3E2723] rounded hover:bg-[#D4956A] transition-colors cursor-pointer"
                   >
-                    Use Selected
+                    Select
                   </button>
                 </div>
               </div>
             )}
           </>
         )}
-
-        {/* Preview Modal */}
-        {previewAsset && (
-          <div
-            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-            onClick={() => setPreviewAsset(null)}
-            role="dialog"
-            aria-label="Media preview"
-          >
-            <div
-              className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-[#5D4037]">Preview</h3>
-                  <button type="button" onClick={() => setPreviewAsset(null)} className="text-[#5D4037] hover:text-[#3E2723] cursor-pointer" aria-label="Close preview">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] mb-3">
-                  {previewAsset.resourceType === "video" ? (
-                    <video
-                      src={previewAsset.secureUrl}
-                      controls
-                      preload="metadata"
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <Image src={previewAsset.secureUrl} alt={previewAsset.altText || ""} fill className="object-contain" sizes="(max-width: 768px) 100vw, 672px" />
-                  )}
-                </div>
-                <div className="space-y-1 text-sm text-[#5D4037]">
-                  <p><span className="font-medium">File:</span> {previewAsset.publicId.split("/").pop()}</p>
-                  <p><span className="font-medium">Type:</span> {previewAsset.resourceType}</p>
-                  {previewAsset.format && <p><span className="font-medium">Format:</span> {previewAsset.format}</p>}
-                  {formatDimensions(previewAsset) && <p><span className="font-medium">Dimensions:</span> {formatDimensions(previewAsset)}</p>}
-                  {previewAsset.altText && <p><span className="font-medium">Alt:</span> {previewAsset.altText}</p>}
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => { handleSelect(previewAsset); }}
-                    className={`flex-1 py-2 text-sm rounded-md transition-colors cursor-pointer ${
-                      matchesMode(previewAsset)
-                        ? "bg-[#C9A882] text-[#3E2723] hover:bg-[#D4956A]"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    }`}
-                    disabled={!matchesMode(previewAsset)}
-                  >
-                    {matchesMode(previewAsset) ? "Select This" : `Cannot select (${previewAsset.resourceType})`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </dialog>
   );
+}
+
+export default function MediaPicker(props: MediaPickerProps) {
+  if (!props.open) return null;
+  return <MediaPickerInner {...props} />;
 }
