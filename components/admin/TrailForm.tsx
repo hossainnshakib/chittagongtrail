@@ -9,11 +9,11 @@ import {
   updateTrail,
   type TrailActionResult,
 } from "@/app/admin/(protected)/trails/actions";
-import SeoPanel from "@/components/admin/SeoPanel";
-import MediaField from "@/components/admin/media/MediaField";
 import DeleteButton from "@/components/admin/DeleteButton";
 import GalleryManager from "@/components/admin/media/GalleryManager";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
+import CoverImageModule from "@/components/admin/CoverImageModule";
+import OnPageSeoWorkspace from "@/components/admin/OnPageSeoWorkspace";
 import type { MediaAssetData } from "@/components/admin/media/types";
 
 interface TrailFormProps {
@@ -48,20 +48,20 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
   const [galleryAssets, setGalleryAssets] = useState<MediaAssetData[]>(initialGallery || []);
   const [status, setStatus] = useState<string>(trail?.status ?? "DRAFT");
   const [isFeatured, setIsFeatured] = useState(trail?.isFeatured ?? false);
+  const [slug, setSlug] = useState(trail?.slug ?? "");
+  const [title, setTitle] = useState(trail?.name ?? "");
 
-  function handleSlugGenerate() {
-    const nameInput = document.getElementById("name") as HTMLInputElement;
-    if (nameInput?.value) {
-      const slug = nameInput.value
+  const handleSlugGenerate = () => {
+    if (title) {
+      const newSlug = title
         .toLowerCase()
         .replace(/[^\w\s-]/g, "")
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
         .trim();
-      const slugInput = document.getElementById("slug") as HTMLInputElement;
-      if (slugInput) slugInput.value = slug;
+      setSlug(newSlug);
     }
-  }
+  };
 
   const formatDateForInput = (date: Date | string | null) => {
     if (!date) return "";
@@ -89,25 +89,27 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="md:col-span-2">
-                <label htmlFor="name" className="block text-xs font-medium text-[#5D4037] mb-1">Name *</label>
+                <label htmlFor="name" className="block text-xs font-medium text-[#5D4037] mb-1">Name <span className="text-red-600">*</span></label>
                 <input
                   type="text"
                   id="name"
                   name="name"
-                  defaultValue={trail?.name}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                   className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
                 />
                 {state.errors?.name && <p className="text-red-600 text-xs mt-0.5">{state.errors.name}</p>}
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="slug" className="block text-xs font-medium text-[#5D4037] mb-1">Slug *</label>
+                <label htmlFor="slug" className="block text-xs font-medium text-[#5D4037] mb-1">Slug <span className="text-red-600">*</span></label>
                 <div className="flex gap-1.5">
                   <input
                     type="text"
                     id="slug"
                     name="slug"
-                    defaultValue={trail?.slug}
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
                     required
                     pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
                     className="flex-1 px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
@@ -136,8 +138,8 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                 <AdminRichTextEditor
                   initialContent={trail?.description ?? ""}
                   name="description"
-                  label="Description *"
-                  placeholder="Describe the place, experience, access and context..."
+                  label="Description"
+                  placeholder="Describe the place, experience, access, landscape and local context..."
                   required
                 />
                 {state.errors?.description && <p className="text-red-600 text-xs mt-0.5">{state.errors.description}</p>}
@@ -149,7 +151,7 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
             <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Geography</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="district" className="block text-xs font-medium text-[#5D4037] mb-1">District *</label>
+                <label htmlFor="district" className="block text-xs font-medium text-[#5D4037] mb-1">District <span className="text-red-600">*</span></label>
                 <select
                   id="district"
                   name="district"
@@ -201,7 +203,7 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                 </select>
               </div>
               <div>
-                <label htmlFor="placeType" className="block text-xs font-medium text-[#5D4037] mb-1">Place Type *</label>
+                <label htmlFor="placeType" className="block text-xs font-medium text-[#5D4037] mb-1">Place Type <span className="text-red-600">*</span></label>
                 <select
                   id="placeType"
                   name="placeType"
@@ -258,6 +260,7 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
 
         {/* Sidebar Column */}
         <div className="w-full lg:w-80 flex-shrink-0 space-y-4 lg:sticky lg:top-16 lg:self-start">
+          {/* Publish */}
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
             <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Publish</h3>
             <div className="space-y-3">
@@ -342,54 +345,33 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
             </div>
           </div>
 
+          {/* Cover Image & Image SEO */}
           <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <h3 className="text-xs font-semibold text-[#5D4037] mb-3 uppercase tracking-wide">Cover Image</h3>
-            <MediaField
-              label="Cover"
-              value={coverAsset}
-              onChange={setCoverAsset}
+            <CoverImageModule
+              asset={coverAsset}
+              onAssetChange={setCoverAsset}
+              useCoverForOg={useCoverForOg}
+              onUseCoverForOgChange={setUseCoverForOg}
+              ogAsset={ogAsset}
+              onOgAssetChange={setOgAsset}
               folder="chittagong-trail/trails"
-              recommendedDimensions="Landscape editorial image, min 1200px wide"
             />
           </div>
-
-          <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <h3 className="text-xs font-semibold text-[#5D4037] mb-2 uppercase tracking-wide">Social Sharing (OG)</h3>
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
-                id="useCoverForOg"
-                checked={useCoverForOg}
-                onChange={(e) => {
-                  setUseCoverForOg(e.target.checked);
-                  if (e.target.checked) setOgAsset(null);
-                }}
-                className="w-3.5 h-3.5 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882] cursor-pointer"
-              />
-              <label htmlFor="useCoverForOg" className="text-xs text-[#5D4037] cursor-pointer">Use cover image</label>
-            </div>
-            {useCoverForOg ? (
-              <p className="text-[11px] text-[#8D6E63]">OG image will use the cover as fallback.</p>
-            ) : (
-              <MediaField
-                label="OG Image"
-                value={ogAsset}
-                onChange={setOgAsset}
-                folder="chittagong-trail/trails"
-                recommendedDimensions="1200 x 630 recommended for social sharing"
-              />
-            )}
-          </div>
-
-          <SeoPanel
-            initialMetaTitle={trail?.metaTitle}
-            initialMetaDescription={trail?.metaDescription}
-            defaultTitle={trail?.name}
-            defaultDescription={trail?.excerpt ?? undefined}
-            canonicalPath={trail ? `/trails/${trail.slug}` : "/trails/new"}
-            coverUrl={coverAsset?.secureUrl}
-          />
         </div>
+      </div>
+
+      {/* Full-width SEO workspace */}
+      <div className="mt-6">
+        <OnPageSeoWorkspace
+          contentType="trail"
+          contentTitle={title}
+          contentSlug={slug}
+          contentExcerpt={trail?.excerpt ?? ""}
+          initialMetaTitle={trail?.metaTitle}
+          initialMetaDescription={trail?.metaDescription}
+          coverUrl={coverAsset?.secureUrl}
+          status={status}
+        />
       </div>
     </form>
   );

@@ -24,7 +24,7 @@ export default function SeoPanel({
   const [metaDescription, setMetaDescription] = useState(initialMetaDescription || "");
 
   const effectiveTitle = metaTitle.trim() || defaultTitle || "Chittagong Trail";
-  const effectiveDescription = metaDescription.trim() || defaultDescription || "Explore scenic trails and stories across the Chittagong Hill Tracts.";
+  const effectiveDescription = metaDescription.trim() || defaultDescription || "Explore places, stories, food and landscapes across Chittagong's five districts.";
 
   const titleLen = metaTitle.length;
   const descLen = metaDescription.length;
@@ -47,7 +47,7 @@ export default function SeoPanel({
       ? { text: `Too short (${descLen}/160 recommended)`, color: "text-amber-700" }
       : { text: `Too long (${descLen}/160 recommended)`, color: "text-red-700" };
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://chittagongtrail.com";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
   const fullCanonicalUrl = `${origin}${canonicalPath}`;
 
   return (
