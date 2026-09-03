@@ -1,21 +1,22 @@
 import Image from "next/image";
 import { SectionReveal } from "@/components/ui";
-import { prisma } from "@/lib/prisma";
 
-async function getGalleryImages() {
-  try {
-    return await prisma.homepageGallery.findMany({
-      orderBy: { sortOrder: "asc" },
-      include: { mediaAsset: true },
-      take: 7,
-    });
-  } catch {
-    return [];
-  }
+interface GalleryItem {
+  id: number;
+  sortOrder: number;
+  mediaAsset: {
+    id: number;
+    secureUrl: string;
+    altText: string | null;
+  };
 }
 
-export async function UneditedGallery() {
-  const gallery = await getGalleryImages();
+interface UneditedGalleryProps {
+  galleryItems?: GalleryItem[];
+}
+
+export async function UneditedGallery({ galleryItems }: UneditedGalleryProps) {
+  const gallery = galleryItems && galleryItems.length > 0 ? galleryItems : [];
 
   return (
     <section className="ct-section ct-cream">
@@ -34,7 +35,7 @@ export async function UneditedGallery() {
         <div className="ct-container">
           <SectionReveal>
             <p className="text-text-secondary text-base py-12 text-center">
-              Gallery images will appear here once curated in Admin.
+              Gallery images will appear here once curated in Admin (Gallery).
             </p>
           </SectionReveal>
         </div>

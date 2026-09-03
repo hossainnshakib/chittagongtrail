@@ -8,7 +8,7 @@ import { resolveVideoUrl, type VideoProvider } from "@/lib/video";
 interface HeroProps {
   title?: string;
   subtitle?: string;
-  media?: { secureUrl: string; altText: string | null } | null;
+  media?: { secureUrl: string; altText: string | null; width?: number | null; height?: number | null; format?: string | null; resourceType?: string | null } | null;
   videoEnabled?: boolean;
   videoProvider?: VideoProvider;
   videoUrl?: string | null;
@@ -40,14 +40,16 @@ export function Hero({
 }: HeroProps) {
   const heroRef = useHeroReveal();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
 
+  const [directReady, setDirectReady] = useState(false);
+  const [directError, setDirectError] = useState(false);
   const [iframeReady, setIframeReady] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
   const posterSrc = media?.secureUrl || FALLBACK_IMAGE;
-  const posterAlt = media?.altText || "Chittagong";
+  const posterAlt = media?.altText || "Chittagong landscape";
 
   const resolved = resolveVideoUrl(
     videoEnabled ? videoProvider : "NONE",
@@ -55,20 +57,21 @@ export function Hero({
     posterSrc
   );
 
-  const showIframe =
-    !reducedMotion &&
-    (resolved.provider === "YOUTUBE" || resolved.provider === "VIMEO") &&
-    resolved.embedUrl;
+  const isDirectVideo = resolved.provider === "DIRECT" && !!resolved.embedUrl;
+  const isIframeVideo =
+    (resolved.provider === "YOUTUBE" || resolved.provider === "VIMEO") && !!resolved.embedUrl;
 
-  const showDirectVideo =
-    !reducedMotion && resolved.provider === "DIRECT" && resolved.embedUrl;
+  const showDirectVideo = !reducedMotion && isDirectVideo && !directError;
+  const showIframe = !reducedMotion && isIframeVideo && !directError;
 
-  const showKenBurns = reducedMotion || !videoEnabled || resolved.provider === "NONE";
+  // Ken Burns only when no video will play
+  const showKenBurns = reducedMotion || !videoEnabled || resolved.provider === "NONE" || directError;
 
   const handleIframeLoad = useCallback(() => setIframeReady(true), []);
 
   const gradientStrength = Math.max(0, Math.min(100, videoOverlay)) / 100;
 
+  // Scroll indicator animation
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || reducedMotion) return;
@@ -87,58 +90,161 @@ export function Hero({
     return () => anim.cancel();
   }, [reducedMotion]);
 
+  // Direct video event handling: wait for playing/canplay to reveal
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !showDirectVideo) return;
+
+    const onCanPlay = () => {
+      // autoplay may still fail; attempt play and wait for playing
+      const p = video.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          // autoplay blocked - keep poster
+          setDirectError(true);
+        });
+      }
+    };
+    const onPlaying = () => setDirectReady(true);
+    const onError = () => setDirectError(true);
+
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("error", onError);
+
+    // Some browsers need explicit play attempt
+    if (video.readyState >= 3) {
+      onCanPlay();
+    }
+
+    return () => {
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("error", onError);
+    };
+  }, [showDirectVideo]);
+
+  // Pause when not visible (performance-safe)
+  useEffect(() => {
+    const video = videoRef.current;
+    const section = heroSectionRef.current;
+    if (!video || !section || !showDirectVideo) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (video.paused && directReady && !directError && !reducedMotion) {
+              video.play().catch(() => setDirectError(true));
+            }
+          } else {
+            if (!video.paused) video.pause();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [showDirectVideo, directReady, directError, reducedMotion]);
+
+  // Reset ready/error when provider/url changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset for new media source
+    setDirectReady(false);
+    setDirectError(false);
+    setIframeReady(false);
+  }, [resolved.embedUrl, resolved.provider]);
+
   const displayTitle =
     title?.trim() || "Five Districts.\nHills to the Sea.\n*One Chittagong.*";
   const displaySubtitle =
     subtitle?.trim() ||
     "From the cloud-piercing peaks of the Chittagong Hill Tracts to the golden sands of Cox's Bazar — five districts, one unbroken trail.";
 
+  // Poster alt strategy: if media has altText use it, else fallback; video is decorative so aria-hidden
+  const posterImgAlt = posterAlt;
+
   return (
-    <section className="ct-hero" aria-label="Hero">
-      <div className="ct-hero-bg">
-        {/* Poster image (always present) */}
+    <section className="ct-hero" aria-label="Hero" ref={heroSectionRef as React.RefObject<HTMLElement>}>
+      {/* Edge-to-edge media wrapper: covers full hero without black bars */}
+      <div
+        className="ct-hero-bg"
+        style={{ overflow: "hidden" }}
+        aria-hidden="true"
+      >
+        {/* Poster image: always present, first paint, covers container */}
         <Image
           src={posterSrc}
-          alt={posterAlt}
+          alt={posterImgAlt}
           fill
-          className={`object-cover ${showKenBurns ? "ken-burns" : ""}`}
+          className={showKenBurns ? "ken-burns" : ""}
           priority
           sizes="100vw"
+          style={{
+            objectFit: "cover",
+            objectPosition: "center",
+            width: "100%",
+            height: "100%",
+          }}
         />
 
-        {/* YouTube / Vimeo iframe */}
-        {showIframe && (
-          <iframe
-            ref={iframeRef}
-            src={resolved.embedUrl!}
-            title={posterAlt}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-1000 ${
-              iframeReady ? "opacity-100" : "opacity-0"
-            }`}
-            onLoad={handleIframeLoad}
-            style={{ border: "none" }}
-          />
-        )}
-
-        {/* Direct video */}
+        {/* Direct Cloudinary video: decorative, covers container, crossfade only after playing */}
         {showDirectVideo && (
           <video
             ref={videoRef}
             autoPlay
-            loop
             muted
+            loop
             playsInline
-            className="absolute inset-0 w-full h-full object-cover"
+            preload="metadata"
+            aria-hidden="true"
+            tabIndex={-1}
             poster={posterSrc}
+            // Ensure video covers container exactly
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              opacity: directReady ? 1 : 0,
+              transition: directReady ? "opacity 700ms ease" : "none",
+              pointerEvents: "none",
+            }}
           >
             <source src={resolved.embedUrl!} type="video/mp4" />
           </video>
         )}
 
-        {/* Dark gradient overlay */}
+        {/* YouTube / Vimeo iframe: only when external explicitly chosen; truthful branding limitation note handled in CMS */}
+        {showIframe && (
+          <iframe
+            src={resolved.embedUrl!}
+            title={posterAlt + " background video"}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            aria-hidden="true"
+            tabIndex={-1}
+            onLoad={handleIframeLoad}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              border: "none",
+              objectFit: "cover",
+              opacity: iframeReady ? 1 : 0,
+              transition: "opacity 700ms ease",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
+        {/* Dark gradient overlay: stable independent of selected media for contrast */}
         <div
           className="absolute inset-0 z-[1]"
+          aria-hidden="true"
           style={{
             background: `linear-gradient(
               to top,
@@ -179,6 +285,9 @@ export function Hero({
           </span>
         </div>
       </div>
+
+      {/* Reduced-motion notice for testing hooks: data attribute reflects behavior */}
+      <div data-testid="hero-motion" data-reduced={reducedMotion ? "true" : "false"} className="sr-only" aria-hidden="true" />
     </section>
   );
 }

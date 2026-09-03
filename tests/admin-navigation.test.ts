@@ -48,13 +48,40 @@ describe("Admin Navigation Tests", () => {
       assert.equal(mediaItem.href, "/admin/media");
     });
 
-    it("has Homepage group with all sub-items disabled", () => {
+    it("has Homepage group with all sub-items enabled in A7R.6", () => {
       const homepageGroup = adminNavigation.find((g) => g.label === "Homepage");
       assert.ok(homepageGroup);
       assert.equal(homepageGroup.items.length, 7);
       homepageGroup.items.forEach((item) => {
-        assert.equal(item.disabled, true, `${item.label} should be disabled`);
-        assert.ok(item.tooltip, `${item.label} should have a tooltip`);
+        assert.notEqual(item.disabled, true, `${item.label} should be enabled in A7R.6`);
+        assert.equal(item.tooltip, undefined, `${item.label} should not have Planned tooltip when implemented`);
+      });
+      const expectedHrefs = [
+        "/admin/homepage",
+        "/admin/homepage/hero",
+        "/admin/homepage/featured-trails",
+        "/admin/homepage/featured-stories",
+        "/admin/homepage/featured-food",
+        "/admin/homepage/seasonal",
+        "/admin/homepage/gallery",
+      ];
+      expectedHrefs.forEach((href) => {
+        assert.ok(
+          homepageGroup.items.some((i) => i.href === href),
+          `Homepage should contain href ${href}`
+        );
+      });
+    });
+
+    it("A7R.7 Site Settings sub-items remain Planned", () => {
+      const settingsGroup = adminNavigation.find((g) => g.label === "Site Settings");
+      assert.ok(settingsGroup);
+      const planned = ["Introduction / About", "Contact & Social", "Footer"];
+      planned.forEach((label) => {
+        const item = settingsGroup.items.find((i) => i.label === label);
+        assert.ok(item, `Should have item ${label}`);
+        assert.equal(item.disabled, true, `${label} should remain disabled for A7R.7`);
+        assert.ok(item.tooltip, `${label} should have Planned tooltip`);
       });
     });
 
@@ -145,6 +172,14 @@ describe("Admin Navigation Tests", () => {
       assert.ok(allHrefs.includes("/admin/food"), "Food route exists");
       assert.ok(allHrefs.includes("/admin/media"), "Media route exists");
       assert.ok(allHrefs.includes("/admin/settings"), "Settings route exists");
+      // A7R.6 homepage routes
+      assert.ok(allHrefs.includes("/admin/homepage"), "Homepage overview exists");
+      assert.ok(allHrefs.includes("/admin/homepage/hero"), "Hero exists");
+      assert.ok(allHrefs.includes("/admin/homepage/featured-trails"), "Featured Trails exists");
+      assert.ok(allHrefs.includes("/admin/homepage/featured-stories"), "Featured Stories exists");
+      assert.ok(allHrefs.includes("/admin/homepage/featured-food"), "Featured Food exists");
+      assert.ok(allHrefs.includes("/admin/homepage/seasonal"), "Seasonal exists");
+      assert.ok(allHrefs.includes("/admin/homepage/gallery"), "Gallery exists");
     });
   });
 });

@@ -1,11 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SectionReveal } from "@/components/ui";
-import { getTrails } from "@/lib/data";
 
-export async function DestinationsGrid() {
-  const trails = await getTrails();
-  const displayTrails = trails.slice(0, 4);
+interface TrailItem {
+  id: number;
+  name: string;
+  slug: string;
+  excerpt?: string | null;
+  coverMedia?: { secureUrl: string; altText: string | null } | null;
+}
+
+interface DestinationsGridProps {
+  trails?: TrailItem[];
+}
+
+export async function DestinationsGrid({ trails }: DestinationsGridProps) {
+  const displayTrails = trails && trails.length > 0 ? trails : [];
 
   return (
     <section className="ct-section ct-cream">
@@ -24,7 +34,7 @@ export async function DestinationsGrid() {
         <div className="ct-container">
           <SectionReveal>
             <p className="text-text-secondary text-base py-12 text-center">
-              Featured trails will appear here once configured in Admin.
+              Featured trails will appear here once configured in Admin (Featured Trails).
             </p>
           </SectionReveal>
         </div>
@@ -52,7 +62,7 @@ export async function DestinationsGrid() {
                   <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/70 via-dark-bg/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10">
                     <span className="text-dark-text/50 text-xs uppercase tracking-wider block mb-2">
-                      Featured
+                      Featured #1
                     </span>
                     <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-dark-text mb-2">
                       {displayTrails[0].name}

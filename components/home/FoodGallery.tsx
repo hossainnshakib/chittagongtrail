@@ -1,10 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SectionReveal } from "@/components/ui";
-import { getLatestFoodPosts } from "@/lib/data";
 
-export async function FoodGallery() {
-  const stories = await getLatestFoodPosts(3);
+interface FoodItem {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  coverMedia?: { secureUrl: string; altText: string | null } | null;
+  trail?: { id: number; name: string; slug: string } | null;
+}
+
+interface FoodGalleryProps {
+  foodPosts?: FoodItem[];
+}
+
+export async function FoodGallery({ foodPosts }: FoodGalleryProps) {
+  const stories = foodPosts && foodPosts.length > 0 ? foodPosts : [];
 
   return (
     <section className="ct-section ct-warm">
@@ -26,7 +38,7 @@ export async function FoodGallery() {
         <div className="ct-container">
           <SectionReveal>
             <p className="text-text-secondary text-base py-12 text-center">
-              Food stories will appear here.
+              Featured food stories will appear here once configured in Admin (Featured Food).
             </p>
           </SectionReveal>
         </div>

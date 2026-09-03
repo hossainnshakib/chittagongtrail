@@ -35,13 +35,13 @@ export const adminNavigation: AdminNavGroup[] = [
   {
     label: "Homepage",
     items: [
-      { label: "Overview", href: "/admin/homepage", icon: "overview", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Hero", href: "/admin/homepage/hero", icon: "hero", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Featured Trails", href: "/admin/homepage/featured-trails", icon: "featured", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Featured Stories", href: "/admin/homepage/featured-stories", icon: "featured", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Featured Food", href: "/admin/homepage/featured-food", icon: "featured", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Seasonal / Mood", href: "/admin/homepage/seasonal", icon: "seasonal", disabled: true, tooltip: "Coming in A7R.6" },
-      { label: "Gallery", href: "/admin/homepage/gallery", icon: "gallery", disabled: true, tooltip: "Coming in A7R.6" },
+      { label: "Overview", href: "/admin/homepage", icon: "overview" },
+      { label: "Hero", href: "/admin/homepage/hero", icon: "hero" },
+      { label: "Featured Trails", href: "/admin/homepage/featured-trails", icon: "featured" },
+      { label: "Featured Stories", href: "/admin/homepage/featured-stories", icon: "featured" },
+      { label: "Featured Food", href: "/admin/homepage/featured-food", icon: "featured" },
+      { label: "Seasonal / Mood", href: "/admin/homepage/seasonal", icon: "seasonal" },
+      { label: "Gallery", href: "/admin/homepage/gallery", icon: "gallery" },
     ],
   },
   {
