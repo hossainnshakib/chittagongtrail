@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
@@ -24,16 +24,15 @@ export default function FeaturedStoriesEditor() {
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     fetch(`/api/admin/homepage/featured-stories?search=${encodeURIComponent(search)}`)
       .then((r) => r.json())
       .then((j) => { setFeatured(j.featured || []); setPublished(j.published || []); })
       .catch(() => setError("Failed to load"));
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { const t = setTimeout(load, 400); return () => clearTimeout(t); }, [search]);
+  }, [search]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const t = setTimeout(load, 400); return () => clearTimeout(t); }, [load]);
 
   const isSelected = (id: number) => featured.some((f) => f.id === id);
   const toggleSelect = (p: Post) => {

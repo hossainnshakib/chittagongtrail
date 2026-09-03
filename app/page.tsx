@@ -52,6 +52,7 @@ export default async function Home() {
         videoEnabled={settings.heroVideoEnabled}
         videoProvider={settings.heroVideoProvider as "NONE" | "YOUTUBE" | "VIMEO" | "DIRECT"}
         videoUrl={settings.heroVideoUrl}
+        videoFormat={(settings as unknown as { heroVideoFormat?: string | null }).heroVideoFormat || null}
         videoOverlay={settings.heroVideoOverlay}
       />
       <ChittagongStatement

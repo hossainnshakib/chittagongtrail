@@ -65,18 +65,19 @@ function MediaPickerInner({
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       dialogRef.current?.showModal();
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional dialog data fetch on open
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on dialog open is intentional side effect, not state sync
       fetchAssets(1, "", mode === "video" ? "video" : mode === "image" ? "image" : "all");
-      setTimeout(() => searchInputRef.current?.focus(), 100);
+      const t = setTimeout(() => searchInputRef.current?.focus(), 100);
+      return () => clearTimeout(t);
     } else {
       dialogRef.current?.close();
-      previousFocusRef.current?.focus();
+      if (previousFocusRef.current) previousFocusRef.current.focus();
     }
   }, [open, fetchAssets, mode]);
 
   useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional pagination/filter data fetch
+    if (open && page !== 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pagination fetch on page/filter change is intentional
       fetchAssets(page, search);
     }
   }, [page, filterType, open, fetchAssets, search]);

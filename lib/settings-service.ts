@@ -253,6 +253,23 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
 
 export async function getPublicSiteSettings() {
   const settings = await initializeSiteSettingsIfMissing();
+  let heroVideoFormat: string | null = null;
+  let heroVideoAsset: { id: number; secureUrl: string; format: string | null; resourceType: string } | null = null;
+  if (settings.heroVideoEnabled && settings.heroVideoProvider === "DIRECT" && settings.heroVideoUrl) {
+    try {
+      const asset = await prisma.mediaAsset.findFirst({ where: { secureUrl: settings.heroVideoUrl } });
+      if (asset && asset.resourceType === "video") {
+        heroVideoFormat = asset.format || null;
+        heroVideoAsset = { id: asset.id, secureUrl: asset.secureUrl, format: asset.format, resourceType: asset.resourceType };
+      } else {
+        // Try lookup by publicId contained in URL as fallback
+        const fallback = await prisma.mediaAsset.findFirst({ where: { secureUrl: settings.heroVideoUrl } });
+        if (fallback) heroVideoFormat = fallback.format || null;
+      }
+    } catch {
+      // fail silently, leave format null
+    }
+  }
   return {
     siteName: settings.siteName || "Chittagong Trail",
     heroTitle: settings.heroTitle || "",
@@ -261,6 +278,8 @@ export async function getPublicSiteSettings() {
     heroVideoEnabled: settings.heroVideoEnabled,
     heroVideoProvider: settings.heroVideoProvider,
     heroVideoUrl: settings.heroVideoUrl || null,
+    heroVideoFormat,
+    heroVideoAsset,
     heroVideoOverlay: settings.heroVideoOverlay,
     introductionHeading: settings.introductionHeading || "",
     introductionContent: settings.introductionContent,

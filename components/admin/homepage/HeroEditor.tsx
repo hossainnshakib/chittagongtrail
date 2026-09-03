@@ -18,6 +18,8 @@ interface HeroData {
   heroVideoProvider: "NONE" | "YOUTUBE" | "VIMEO" | "DIRECT";
   heroVideoUrl: string | null;
   heroVideoOverlay: number;
+  heroVideoMediaId?: number | null;
+  heroVideoAsset?: MediaAssetData | null;
 }
 
 export default function HeroEditor() {
@@ -54,8 +56,20 @@ export default function HeroEditor() {
         setVideoProvider(j.heroVideoProvider);
         setVideoUrl(j.heroVideoUrl || "");
         setOverlay(j.heroVideoOverlay ?? 45);
-        if (j.heroVideoProvider === "DIRECT" && j.heroVideoUrl) {
-          // try to resolve video media asset by URL later
+        if (j.heroVideoProvider === "DIRECT" && j.heroVideoAsset) {
+          setVideoMedia(j.heroVideoAsset);
+          setVideoUrl(j.heroVideoAsset.secureUrl);
+        } else if (j.heroVideoProvider === "DIRECT" && j.heroVideoMediaId) {
+          // fallback: fetch asset detail by id if asset not included
+          fetch(`/api/admin/media?id=${j.heroVideoMediaId}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((asset: MediaAssetData | null) => {
+              if (asset && asset.resourceType === "video") {
+                setVideoMedia(asset);
+                setVideoUrl(asset.secureUrl);
+              }
+            })
+            .catch(() => {});
         }
       })
       .catch((e) => setError(e.message))
@@ -74,8 +88,12 @@ export default function HeroEditor() {
       setValidationMsg("Poster image is required whenever Hero is enabled.");
       return;
     }
-    if (videoEnabled && videoProvider !== "NONE" && !videoUrl.trim()) {
+    if (videoEnabled && videoProvider !== "NONE" && videoProvider !== "DIRECT" && !videoUrl.trim()) {
       setValidationMsg("Video URL is required when video is enabled.");
+      return;
+    }
+    if (videoEnabled && videoProvider === "DIRECT" && !videoMedia) {
+      setValidationMsg("DIRECT video requires selecting a registered Cloudinary video asset (MP4/WebM).");
       return;
     }
     if (heroTitle.includes("<") || heroTitle.includes(">") || heroSubtitle.includes("<") || heroSubtitle.includes(">")) {
@@ -102,31 +120,48 @@ export default function HeroEditor() {
         return;
       }
     }
-    if (videoProvider === "DIRECT" && videoEnabled && videoUrl) {
-      if (!videoUrl.startsWith("https://")) {
-        setValidationMsg("Direct video URL must be HTTPS.");
+    if (videoProvider === "DIRECT" && videoEnabled) {
+      if (!videoMedia) {
+        setValidationMsg("DIRECT video requires a selected video asset.");
         return;
       }
-      if (videoUrl.toLowerCase().includes("javascript:") || videoUrl.toLowerCase().includes("data:")) {
-        setValidationMsg("Unsafe video URL.");
+      if (videoMedia.resourceType !== "video") {
+        setValidationMsg("Selected asset must be a video.");
+        return;
+      }
+      const fmt = (videoMedia.format || "").toLowerCase();
+      if (!["mp4", "webm"].includes(fmt)) {
+        setValidationMsg(`Unsupported video format: ${videoMedia.format || "unknown"}. Allowed: mp4, webm`);
+        return;
+      }
+      if (!videoMedia.secureUrl.startsWith("https://")) {
+        setValidationMsg("Direct video URL must be HTTPS.");
         return;
       }
     }
 
     setSaving(true);
     try {
+      const payload: Record<string, unknown> = {
+        heroTitle,
+        heroSubtitle,
+        heroMediaId,
+        heroVideoEnabled: videoEnabled,
+        heroVideoProvider: videoProvider,
+        heroVideoOverlay: overlay,
+      };
+      if (videoProvider === "DIRECT") {
+        payload.heroVideoMediaId = videoMedia ? videoMedia.id : null;
+        // Do not trust client URL for DIRECT; server derives from ID
+        payload.heroVideoUrl = videoMedia ? videoMedia.secureUrl : null;
+      } else {
+        payload.heroVideoUrl = videoUrl || null;
+        payload.heroVideoMediaId = null;
+      }
       const res = await fetch("/api/admin/homepage/hero", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          heroTitle,
-          heroSubtitle,
-          heroMediaId,
-          heroVideoEnabled: videoEnabled,
-          heroVideoProvider: videoProvider,
-          heroVideoUrl: videoUrl || null,
-          heroVideoOverlay: overlay,
-        }),
+        body: JSON.stringify(payload),
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Failed to save");

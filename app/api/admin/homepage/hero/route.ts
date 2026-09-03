@@ -24,7 +24,16 @@ export async function GET(request: NextRequest) {
       where: { id: 1 },
       include: { heroMedia: true },
     });
-    if (!settings) return NextResponse.json({ heroTitle: "", heroSubtitle: "", heroMedia: null, heroVideoEnabled: false, heroVideoProvider: "NONE", heroVideoUrl: null, heroVideoOverlay: 45 });
+    if (!settings) return NextResponse.json({ heroTitle: "", heroSubtitle: "", heroMedia: null, heroVideoEnabled: false, heroVideoProvider: "NONE", heroVideoUrl: null, heroVideoOverlay: 45, heroVideoMediaId: null, heroVideoAsset: null });
+    let heroVideoAsset = null as unknown as null | { id: number; secureUrl: string; format: string | null; resourceType: string };
+    let heroVideoMediaId: number | null = null;
+    if (settings.heroVideoProvider === "DIRECT" && settings.heroVideoUrl) {
+      const asset = await prisma.mediaAsset.findFirst({ where: { secureUrl: settings.heroVideoUrl } });
+      if (asset && asset.resourceType === "video") {
+        heroVideoAsset = { id: asset.id, secureUrl: asset.secureUrl, format: asset.format, resourceType: asset.resourceType };
+        heroVideoMediaId = asset.id;
+      }
+    }
     return NextResponse.json({
       heroTitle: settings.heroTitle || "",
       heroSubtitle: settings.heroSubtitle || "",
@@ -34,6 +43,8 @@ export async function GET(request: NextRequest) {
       heroVideoProvider: settings.heroVideoProvider,
       heroVideoUrl: settings.heroVideoUrl,
       heroVideoOverlay: settings.heroVideoOverlay,
+      heroVideoMediaId,
+      heroVideoAsset,
     });
   } catch {
     return NextResponse.json({ error: "Failed to load hero" }, { status: 500 });
@@ -51,7 +62,8 @@ export async function POST(request: NextRequest) {
     const heroMediaId = body.heroMediaId === null || body.heroMediaId === undefined || body.heroMediaId === "" ? null : Number(body.heroMediaId);
     const heroVideoEnabled = Boolean(body.heroVideoEnabled);
     const heroVideoProvider = (body.heroVideoProvider as string) || "NONE";
-    const heroVideoUrl = typeof body.heroVideoUrl === "string" && body.heroVideoUrl.trim() !== "" ? body.heroVideoUrl.trim() : null;
+    let heroVideoUrl: string | null = typeof body.heroVideoUrl === "string" && body.heroVideoUrl.trim() !== "" ? body.heroVideoUrl.trim() : null;
+    const heroVideoMediaIdRaw = body.heroVideoMediaId === null || body.heroVideoMediaId === undefined || body.heroVideoMediaId === "" ? null : Number(body.heroVideoMediaId);
     const heroVideoOverlay = Number.isInteger(body.heroVideoOverlay) ? Math.max(0, Math.min(100, body.heroVideoOverlay)) : 45;
 
     // Validate provider
@@ -77,29 +89,55 @@ export async function POST(request: NextRequest) {
     }
 
     // Video validation: video-only resource check when provider DIRECT corresponds to video asset
+    // For DIRECT, require stable numeric MediaAsset ID and derive URL server-side
+    const ALLOWED_VIDEO_FORMATS = ["mp4", "webm"];
     if (heroVideoEnabled && heroVideoProvider !== "NONE") {
-      if (!heroVideoUrl) return NextResponse.json({ error: "Video URL is required when video is enabled" }, { status: 400 });
-      if (heroVideoUrl.toLowerCase().includes("javascript:") || heroVideoUrl.toLowerCase().includes("data:")) {
-        return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
+      if (heroVideoProvider === "DIRECT") {
+        if (heroVideoMediaIdRaw === null || heroVideoMediaIdRaw === undefined) {
+          return NextResponse.json({ error: "DIRECT video requires a registered MediaAsset (heroVideoMediaId)" }, { status: 400 });
+        }
+        if (!Number.isInteger(heroVideoMediaIdRaw) || heroVideoMediaIdRaw <= 0) {
+          return NextResponse.json({ error: "Invalid heroVideoMediaId" }, { status: 400 });
+        }
+        const videoAsset = await prisma.mediaAsset.findUnique({ where: { id: heroVideoMediaIdRaw } });
+        if (!videoAsset) return NextResponse.json({ error: "Selected video asset not found" }, { status: 400 });
+        if (videoAsset.resourceType !== "video") return NextResponse.json({ error: "Selected video asset must be a video" }, { status: 400 });
+        if (!videoAsset.secureUrl || !videoAsset.secureUrl.startsWith("https://")) {
+          return NextResponse.json({ error: "Video asset has invalid secure URL" }, { status: 400 });
+        }
+        if (videoAsset.secureUrl.toLowerCase().includes("javascript:") || videoAsset.secureUrl.toLowerCase().includes("data:")) {
+          return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
+        }
+        const fmt = (videoAsset.format || "").toLowerCase();
+        if (!ALLOWED_VIDEO_FORMATS.includes(fmt)) {
+          return NextResponse.json({ error: `Unsupported video format: ${videoAsset.format || "unknown"}. Allowed: mp4, webm` }, { status: 400 });
+        }
+        // Server-derived URL - never trust client-supplied URL metadata for DIRECT
+        heroVideoUrl = videoAsset.secureUrl;
+      } else {
+        // YOUTUBE / VIMEO: validate HTTPS-like URL
+        if (!heroVideoUrl) return NextResponse.json({ error: "Video URL is required when video is enabled" }, { status: 400 });
+        if (heroVideoUrl.toLowerCase().includes("javascript:") || heroVideoUrl.toLowerCase().includes("data:")) {
+          return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
+        }
+        switch (heroVideoProvider) {
+          case "YOUTUBE":
+            if (!parseYouTubeId(heroVideoUrl)) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
+            break;
+          case "VIMEO":
+            if (!parseVimeoId(heroVideoUrl)) return NextResponse.json({ error: "Invalid Vimeo URL" }, { status: 400 });
+            break;
+          default:
+            break;
+        }
+        // Ensure arbitrary DIRECT URLs are not accepted under YOUTUBE/VIMEO path
+        if (heroVideoMediaIdRaw !== null && heroVideoMediaIdRaw !== undefined) {
+          // For non-DIRECT providers, mediaId should not be supplied; ignore but don't treat as video asset
+        }
       }
-      switch (heroVideoProvider) {
-        case "YOUTUBE":
-          if (!parseYouTubeId(heroVideoUrl)) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
-          break;
-        case "VIMEO":
-          if (!parseVimeoId(heroVideoUrl)) return NextResponse.json({ error: "Invalid Vimeo URL" }, { status: 400 });
-          break;
-        case "DIRECT":
-          if (!heroVideoUrl.startsWith("https://")) return NextResponse.json({ error: "Direct video URL must be HTTPS" }, { status: 400 });
-          // Optionally validate Cloudinary video asset exists
-          const videoAsset = await prisma.mediaAsset.findFirst({ where: { secureUrl: heroVideoUrl } });
-          if (videoAsset) {
-            if (videoAsset.resourceType !== "video") return NextResponse.json({ error: "Selected video asset must be a video" }, { status: 400 });
-          } else {
-            // Allow non-DB HTTPS URL but still enforce https
-          }
-          break;
-      }
+    } else if (!heroVideoEnabled || heroVideoProvider === "NONE") {
+      // When disabled or NONE, clear video URL regardless of input
+      heroVideoUrl = null;
     }
 
     // Emphasis validation: allow lightweight *text* syntax, reject unsafe HTML

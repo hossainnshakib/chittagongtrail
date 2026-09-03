@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useHeroReveal } from "@/hooks/useGsap";
-import { resolveVideoUrl, type VideoProvider } from "@/lib/video";
+import { resolveVideoUrl, getVideoMimeType, type VideoProvider } from "@/lib/video";
 
 interface HeroProps {
   title?: string;
@@ -12,6 +12,7 @@ interface HeroProps {
   videoEnabled?: boolean;
   videoProvider?: VideoProvider;
   videoUrl?: string | null;
+  videoFormat?: string | null;
   videoOverlay?: number;
 }
 
@@ -19,14 +20,157 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80";
 
 function usePrefersReducedMotion() {
-  const subscribe = (cb: () => void) => {
+  const subscribe = useCallback((cb: () => void) => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     mq.addEventListener("change", cb);
     return () => mq.removeEventListener("change", cb);
-  };
-  const getSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const getServerSnapshot = () => true;
+  }, []);
+  const getSnapshot = useCallback(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  const getServerSnapshot = useCallback(() => true, []);
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+function DirectVideoLayer({
+  src,
+  posterSrc,
+  mimeType,
+  reducedMotion,
+  heroSectionRef,
+}: {
+  src: string;
+  posterSrc: string;
+  mimeType: string | null;
+  reducedMotion: boolean;
+  heroSectionRef: React.RefObject<HTMLElement | null>;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [directReady, setDirectReady] = useState(false);
+  const [directError, setDirectError] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || reducedMotion || directError) return;
+
+    const onCanPlay = () => {
+      const p = video.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          setDirectError(true);
+        });
+      }
+    };
+    const onPlaying = () => setDirectReady(true);
+    const onError = () => setDirectError(true);
+    const onAbort = () => setDirectError(true);
+    const onStalled = () => {
+      // keep poster visible
+    };
+
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("error", onError);
+    video.addEventListener("abort", onAbort);
+    video.addEventListener("stalled", onStalled);
+
+    if (video.readyState >= 3) {
+      onCanPlay();
+    }
+
+    return () => {
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("error", onError);
+      video.removeEventListener("abort", onAbort);
+      video.removeEventListener("stalled", onStalled);
+    };
+  }, [reducedMotion, directError]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const section = heroSectionRef.current;
+    if (!video || !section || reducedMotion || directError) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (video.paused && directReady && !directError && !reducedMotion) {
+              video.play().catch(() => setDirectError(true));
+            }
+          } else {
+            if (!video.paused) video.pause();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [directReady, directError, reducedMotion, heroSectionRef]);
+
+  if (reducedMotion || directError) return null;
+
+  return (
+    <>
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        tabIndex={-1}
+        poster={posterSrc}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          opacity: directReady ? 1 : 0,
+          transition: directReady ? "opacity 700ms ease" : "none",
+          pointerEvents: "none",
+        }}
+      >
+        {mimeType ? <source src={src} type={mimeType} /> : <source src={src} />}
+      </video>
+      <span data-testid="hero-direct-state" data-ready={directReady ? "true" : "false"} data-error={directError ? "true" : "false"} className="sr-only" aria-hidden="true" />
+    </>
+  );
+}
+
+function IframeVideoLayer({
+  src,
+  posterAlt,
+}: {
+  src: string;
+  posterAlt: string;
+}) {
+  const [iframeReady, setIframeReady] = useState(false);
+  const handleIframeLoad = useCallback(() => setIframeReady(true), []);
+  return (
+    <iframe
+      src={src}
+      title={posterAlt + " background video"}
+      allow="autoplay; encrypted-media; picture-in-picture"
+      aria-hidden="true"
+      tabIndex={-1}
+      onLoad={handleIframeLoad}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        border: "none",
+        objectFit: "cover",
+        opacity: iframeReady ? 1 : 0,
+        transition: "opacity 700ms ease",
+        pointerEvents: "none",
+      }}
+    />
+  );
 }
 
 export function Hero({
@@ -36,42 +180,39 @@ export function Hero({
   videoEnabled = false,
   videoProvider = "NONE",
   videoUrl,
+  videoFormat,
   videoOverlay = 45,
 }: HeroProps) {
   const heroRef = useHeroReveal();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
 
-  const [directReady, setDirectReady] = useState(false);
-  const [directError, setDirectError] = useState(false);
-  const [iframeReady, setIframeReady] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
   const posterSrc = media?.secureUrl || FALLBACK_IMAGE;
   const posterAlt = media?.altText || "Chittagong landscape";
 
+  const derivedMime = videoFormat ? getVideoMimeType(videoFormat) : null;
+  const inferredMime = !derivedMime && videoProvider === "DIRECT" && videoUrl ? getVideoMimeType(videoUrl.split(".").pop()?.split("?")[0] || null) : null;
+  const effectiveFormat = videoFormat || (videoUrl ? videoUrl.split(".").pop()?.split("?")[0] || null : null);
   const resolved = resolveVideoUrl(
     videoEnabled ? videoProvider : "NONE",
     videoUrl,
-    posterSrc
+    posterSrc,
+    effectiveFormat
   );
 
   const isDirectVideo = resolved.provider === "DIRECT" && !!resolved.embedUrl;
   const isIframeVideo =
     (resolved.provider === "YOUTUBE" || resolved.provider === "VIMEO") && !!resolved.embedUrl;
 
-  const showDirectVideo = !reducedMotion && isDirectVideo && !directError;
-  const showIframe = !reducedMotion && isIframeVideo && !directError;
+  const showDirectVideo = !reducedMotion && isDirectVideo;
+  const showIframe = !reducedMotion && isIframeVideo;
 
-  // Ken Burns only when no video will play
-  const showKenBurns = reducedMotion || !videoEnabled || resolved.provider === "NONE" || directError;
-
-  const handleIframeLoad = useCallback(() => setIframeReady(true), []);
+  const showKenBurns = reducedMotion || !videoEnabled || resolved.provider === "NONE";
 
   const gradientStrength = Math.max(0, Math.min(100, videoOverlay)) / 100;
 
-  // Scroll indicator animation
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || reducedMotion) return;
@@ -90,90 +231,23 @@ export function Hero({
     return () => anim.cancel();
   }, [reducedMotion]);
 
-  // Direct video event handling: wait for playing/canplay to reveal
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !showDirectVideo) return;
-
-    const onCanPlay = () => {
-      // autoplay may still fail; attempt play and wait for playing
-      const p = video.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          // autoplay blocked - keep poster
-          setDirectError(true);
-        });
-      }
-    };
-    const onPlaying = () => setDirectReady(true);
-    const onError = () => setDirectError(true);
-
-    video.addEventListener("canplay", onCanPlay);
-    video.addEventListener("playing", onPlaying);
-    video.addEventListener("error", onError);
-
-    // Some browsers need explicit play attempt
-    if (video.readyState >= 3) {
-      onCanPlay();
-    }
-
-    return () => {
-      video.removeEventListener("canplay", onCanPlay);
-      video.removeEventListener("playing", onPlaying);
-      video.removeEventListener("error", onError);
-    };
-  }, [showDirectVideo]);
-
-  // Pause when not visible (performance-safe)
-  useEffect(() => {
-    const video = videoRef.current;
-    const section = heroSectionRef.current;
-    if (!video || !section || !showDirectVideo) return;
-    if (typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (video.paused && directReady && !directError && !reducedMotion) {
-              video.play().catch(() => setDirectError(true));
-            }
-          } else {
-            if (!video.paused) video.pause();
-          }
-        });
-      },
-      { threshold: 0.25 }
-    );
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [showDirectVideo, directReady, directError, reducedMotion]);
-
-  // Reset ready/error when provider/url changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset for new media source
-    setDirectReady(false);
-    setDirectError(false);
-    setIframeReady(false);
-  }, [resolved.embedUrl, resolved.provider]);
-
   const displayTitle =
     title?.trim() || "Five Districts.\nHills to the Sea.\n*One Chittagong.*";
   const displaySubtitle =
     subtitle?.trim() ||
     "From the cloud-piercing peaks of the Chittagong Hill Tracts to the golden sands of Cox's Bazar — five districts, one unbroken trail.";
 
-  // Poster alt strategy: if media has altText use it, else fallback; video is decorative so aria-hidden
   const posterImgAlt = posterAlt;
+  const mimeForSource = resolved.mimeType || derivedMime || inferredMime;
+  const embedKey = `${resolved.provider}:${resolved.embedUrl ?? ""}:${effectiveFormat ?? ""}`;
 
   return (
     <section className="ct-hero" aria-label="Hero" ref={heroSectionRef as React.RefObject<HTMLElement>}>
-      {/* Edge-to-edge media wrapper: covers full hero without black bars */}
       <div
         className="ct-hero-bg"
         style={{ overflow: "hidden" }}
         aria-hidden="true"
       >
-        {/* Poster image: always present, first paint, covers container */}
         <Image
           src={posterSrc}
           alt={posterImgAlt}
@@ -189,59 +263,21 @@ export function Hero({
           }}
         />
 
-        {/* Direct Cloudinary video: decorative, covers container, crossfade only after playing */}
         {showDirectVideo && (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-            tabIndex={-1}
-            poster={posterSrc}
-            // Ensure video covers container exactly
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center",
-              opacity: directReady ? 1 : 0,
-              transition: directReady ? "opacity 700ms ease" : "none",
-              pointerEvents: "none",
-            }}
-          >
-            <source src={resolved.embedUrl!} type="video/mp4" />
-          </video>
-        )}
-
-        {/* YouTube / Vimeo iframe: only when external explicitly chosen; truthful branding limitation note handled in CMS */}
-        {showIframe && (
-          <iframe
+          <DirectVideoLayer
+            key={embedKey}
             src={resolved.embedUrl!}
-            title={posterAlt + " background video"}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            aria-hidden="true"
-            tabIndex={-1}
-            onLoad={handleIframeLoad}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              border: "none",
-              objectFit: "cover",
-              opacity: iframeReady ? 1 : 0,
-              transition: "opacity 700ms ease",
-              pointerEvents: "none",
-            }}
+            posterSrc={posterSrc}
+            mimeType={mimeForSource}
+            reducedMotion={reducedMotion}
+            heroSectionRef={heroSectionRef}
           />
         )}
 
-        {/* Dark gradient overlay: stable independent of selected media for contrast */}
+        {showIframe && (
+          <IframeVideoLayer key={embedKey} src={resolved.embedUrl!} posterAlt={posterAlt} />
+        )}
+
         <div
           className="absolute inset-0 z-[1]"
           aria-hidden="true"
@@ -258,7 +294,6 @@ export function Hero({
       </div>
 
       <div className="ct-hero-content" ref={heroRef}>
-        {/* Editorial eyebrow pills */}
         <div className="mb-6 flex flex-wrap gap-3">
           <span className="inline-block rounded-full border border-[color:var(--color-dark-text)]/20 bg-[color:var(--color-dark-text)]/5 px-4 py-1.5 font-[var(--font-body)] text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[color:var(--color-dark-text)]/70 backdrop-blur-sm">
             Chittagong, in every direction
@@ -286,7 +321,6 @@ export function Hero({
         </div>
       </div>
 
-      {/* Reduced-motion notice for testing hooks: data attribute reflects behavior */}
       <div data-testid="hero-motion" data-reduced={reducedMotion ? "true" : "false"} className="sr-only" aria-hidden="true" />
     </section>
   );

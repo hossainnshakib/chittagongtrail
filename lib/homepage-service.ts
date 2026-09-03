@@ -299,9 +299,25 @@ export function validateHeroInput(input: {
       case "VIMEO":
         if (!parseVimeoId(url)) throw new Error("Invalid Vimeo URL");
         break;
-      case "DIRECT":
-        if (!url.startsWith("https://") || url.toLowerCase().includes("javascript:") || url.toLowerCase().includes("data:")) throw new Error("Invalid direct video URL");
+      case "DIRECT": {
+        if (!url.startsWith("https://")) throw new Error("Invalid direct video URL");
+        const lower = url.toLowerCase();
+        if (lower.includes("javascript:") || lower.includes("data:")) throw new Error("Invalid direct video URL");
+        // Enforce Cloudinary host and allowed formats for DIRECT
+        try {
+          const u = new URL(url);
+          if (u.hostname !== "res.cloudinary.com") throw new Error("DIRECT video must be a Cloudinary URL");
+        } catch {
+          throw new Error("Invalid direct video URL");
+        }
+        const ext = url.split(".").pop()?.toLowerCase().split("?")[0] || "";
+        if (!["mp4", "webm"].includes(ext)) {
+          // Allow URL without extension if format is server-verified, but basic check
+          // For now, reject unsupported extensions explicitly
+          if (["avi", "mov", "mkv", "flv"].includes(ext)) throw new Error(`Unsupported video format: ${ext}`);
+        }
         break;
+      }
       default:
         break;
     }

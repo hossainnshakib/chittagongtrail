@@ -22,6 +22,7 @@ export interface MediaAssetReferenceSummary {
   homepageGalleries: Array<{ id: number; sortOrder: number }>;
   siteHeroMedias: Array<{ id: number; siteName: string }>;
   siteSeasonalMedias: Array<{ id: number; siteName: string }>;
+  siteHeroVideos: Array<{ id: number; siteName: string }>;
   inlineHtmlReferences: Array<{ type: string; id: number; title: string; slug?: string }>;
 }
 
@@ -269,6 +270,19 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
 
   const inlineHtmlReferences = await searchInlineMediaReferences(asset.secureUrl, asset.publicId);
 
+  // Check hero video usage: SiteSettings.heroVideoUrl when provider DIRECT
+  const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  let siteHeroVideos: Array<{ id: number; siteName: string }> = [];
+  if (
+    settings &&
+    settings.heroVideoEnabled &&
+    settings.heroVideoProvider === "DIRECT" &&
+    settings.heroVideoUrl &&
+    (settings.heroVideoUrl === asset.secureUrl || settings.heroVideoUrl.includes(asset.publicId))
+  ) {
+    siteHeroVideos = [{ id: settings.id, siteName: settings.siteName }];
+  }
+
   return {
     trailCovers: asset.trailCovers,
     trailOgMedias: asset.trailOgMedias,
@@ -285,6 +299,7 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
     })),
     siteHeroMedias: asset.siteHeroMedias,
     siteSeasonalMedias: asset.siteSeasonalMedias,
+    siteHeroVideos,
     inlineHtmlReferences,
   };
 }
@@ -300,7 +315,8 @@ export async function canDeleteMediaAsset(id: number): Promise<{ canDelete: bool
     summary.journalOgMedias.length > 0 ||
     summary.homepageGalleries.length > 0 ||
     summary.siteHeroMedias.length > 0 ||
-    summary.siteSeasonalMedias.length > 0;
+    summary.siteSeasonalMedias.length > 0 ||
+    summary.siteHeroVideos.length > 0;
 
   const hasInline = summary.inlineHtmlReferences.length > 0;
 
@@ -336,6 +352,13 @@ export async function searchInlineMediaReferences(secureUrl: string, publicId: s
     const combinedSettingsText = `${settings.introductionContent || ""} ${settings.seasonalContent || ""} ${settings.aboutContent || ""}`;
     if (combinedSettingsText.includes(secureUrl) || combinedSettingsText.includes(publicId)) {
       results.push({ type: "SiteSettings", id: settings.id, title: settings.siteName });
+    }
+    // Include hero video URL in inline reference detection for audit completeness
+    const heroVideoText = `${settings.heroVideoUrl || ""}`;
+    if (heroVideoText && (heroVideoText.includes(secureUrl) || heroVideoText.includes(publicId))) {
+      if (!results.some((r) => r.type === "SiteSettings" && r.id === settings.id)) {
+        results.push({ type: "SiteSettings:heroVideo", id: settings.id, title: settings.siteName });
+      }
     }
   }
 
