@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import JournalForm from "@/components/admin/JournalForm";
-import { createJournalPost, updateJournalPost } from "@/app/admin/(protected)/journal/actions";
 
 export default async function NewJournalPage() {
   const trails = await prisma.trailLocation.findMany({
@@ -20,8 +19,6 @@ export default async function NewJournalPage() {
         trails={trails}
         mode="create"
         contentType="STORY"
-        createAction={createJournalPost}
-        updateAction={updateJournalPost}
       />
     </div>
   );

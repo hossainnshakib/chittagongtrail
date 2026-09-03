@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { JournalType } from "@prisma/client";
 import JournalForm from "@/components/admin/JournalForm";
-import { createFoodPost, updateFoodPost } from "@/app/admin/(protected)/food/actions";
 
 export default async function EditFoodPage({
   params,
@@ -68,8 +67,6 @@ export default async function EditFoodPage({
         trails={trails}
         mode="edit"
         contentType="FOOD"
-        createAction={createFoodPost}
-        updateAction={updateFoodPost}
         initialCover={initialCover}
         initialOg={initialOg}
       />

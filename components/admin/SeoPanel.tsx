@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isSiteUrlConfigured, getSiteUrl, SITE_NAME } from "@/lib/seo-client";
 
 interface SeoPanelProps {
   initialMetaTitle?: string | null;
@@ -23,7 +24,7 @@ export default function SeoPanel({
   const [metaTitle, setMetaTitle] = useState(initialMetaTitle || "");
   const [metaDescription, setMetaDescription] = useState(initialMetaDescription || "");
 
-  const effectiveTitle = metaTitle.trim() || defaultTitle || "Chittagong Trail";
+  const effectiveTitle = metaTitle.trim() || defaultTitle || SITE_NAME;
   const effectiveDescription = metaDescription.trim() || defaultDescription || "Explore places, stories, food and landscapes across Chittagong's five districts.";
 
   const titleLen = metaTitle.length;
@@ -47,8 +48,7 @@ export default function SeoPanel({
       ? { text: `Too short (${descLen}/160 recommended)`, color: "text-amber-700" }
       : { text: `Too long (${descLen}/160 recommended)`, color: "text-red-700" };
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
-  const fullCanonicalUrl = `${origin}${canonicalPath}`;
+  const fullCanonicalUrl = isSiteUrlConfigured ? getSiteUrl(canonicalPath) : "";
 
   return (
     <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
@@ -102,7 +102,9 @@ export default function SeoPanel({
             <p className="text-[11px] font-semibold text-[#8D6E63] uppercase tracking-wide">Google Search Snippet Preview</p>
             <div className="bg-white p-2.5 rounded border border-[#D7C9B8] space-y-0.5">
               <p className="text-xs text-[#1a0dab] truncate font-medium">{effectiveTitle}</p>
-              <p className="text-[11px] text-[#006621] truncate">{fullCanonicalUrl}</p>
+              <p className="text-[11px] text-[#006621] truncate">
+                {fullCanonicalUrl || (canonicalPath ? "Site URL not configured" : "https://example.com/...")}
+              </p>
               <p className="text-xs text-[#545454] line-clamp-2">{effectiveDescription}</p>
             </div>
           </div>
@@ -122,7 +124,7 @@ export default function SeoPanel({
                 </div>
               )}
               <div className="p-2.5 flex flex-col justify-center min-w-0">
-                <p className="text-[10px] text-[#8D6E63] uppercase truncate">{new URL(fullCanonicalUrl).hostname}</p>
+                <p className="text-[10px] text-[#8D6E63] uppercase truncate">{isSiteUrlConfigured ? new URL(fullCanonicalUrl).hostname : "Site URL not configured"}</p>
                 <p className="text-xs font-semibold text-[#5D4037] truncate">{effectiveTitle}</p>
                 <p className="text-[11px] text-[#6d4c41] line-clamp-1">{effectiveDescription}</p>
               </div>

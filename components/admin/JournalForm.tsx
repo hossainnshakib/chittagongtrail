@@ -35,13 +35,12 @@ interface JournalFormProps {
     createdAt: string | Date;
     isFeatured: boolean;
     featuredOrder: number | null;
+    trailId: number | null;
     [key: string]: unknown;
   };
   trails: { id: number; name: string }[];
   mode: "create" | "edit";
   contentType: "STORY" | "FOOD";
-  createAction?: unknown;
-  updateAction?: unknown;
   initialCover?: MediaAssetData | null;
   initialOg?: MediaAssetData | null;
   initialGallery?: MediaAssetData[];
@@ -51,11 +50,9 @@ const initialState: JournalActionResult = { success: false };
 
 export default function JournalForm({
   post,
-  trails: _trails,
+  trails,
   mode,
   contentType,
-  createAction: _createAction,
-  updateAction: _updateAction,
   initialCover,
   initialOg,
   initialGallery,
@@ -89,6 +86,7 @@ export default function JournalForm({
   const [isFeatured, setIsFeatured] = useState(post?.isFeatured ?? false);
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
+  const [trailId, setTrailId] = useState<number | null>(post?.trailId ?? null);
 
   const handleSlugGenerate = () => {
     if (title) {
@@ -116,6 +114,7 @@ export default function JournalForm({
       <input type="hidden" name="coverMediaId" value={coverAsset?.id || ""} />
       <input type="hidden" name="ogMediaId" value={effectiveOgId} />
       <input type="hidden" name="galleryIds" value={galleryAssets.map((a) => a.id).join(",")} />
+      <input type="hidden" name="trailId" value={trailId || ""} />
 
       {state.error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm mb-4">
@@ -164,6 +163,21 @@ export default function JournalForm({
                     </button>
                   </div>
                   {state.errors?.slug && <p className="text-red-600 text-xs mt-0.5">{state.errors.slug}</p>}
+                </div>
+                <div>
+                  <label htmlFor="trailId" className="block text-xs font-medium text-[#5D4037] mb-1">Associated Trail</label>
+                  <select
+                    id="trailId"
+                    name="trailId"
+                    value={trailId || ""}
+                    onChange={(e) => setTrailId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
+                  >
+                    <option value="">No trail association</option>
+                    {trails.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="excerpt" className="block text-xs font-medium text-[#5D4037] mb-1">Excerpt</label>

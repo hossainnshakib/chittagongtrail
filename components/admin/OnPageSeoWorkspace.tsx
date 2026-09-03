@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
+import { isSiteUrlConfigured, getSiteUrl, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo-client";
 
 interface OnPageSeoWorkspaceProps {
   contentType: "trail" | "story" | "food";
@@ -33,8 +32,8 @@ export default function OnPageSeoWorkspace({
     ? `/${contentType === "trail" ? "trails" : contentType === "food" ? "food" : "journal"}/${contentSlug}`
     : "";
 
-  const effectiveTitle = metaTitle.trim() || contentTitle || "Chittagong Trail";
-  const effectiveDescription = metaDescription.trim() || contentExcerpt || "Explore places, stories, food and landscapes across Chittagong's five districts.";
+  const effectiveTitle = metaTitle.trim() || contentTitle || SITE_NAME;
+  const effectiveDescription = metaDescription.trim() || contentExcerpt || SITE_DESCRIPTION;
 
   const titleLen = metaTitle.length;
   const descLen = metaDescription.length;
@@ -57,7 +56,7 @@ export default function OnPageSeoWorkspace({
       ? { label: `Short (${descLen}/160)`, style: "text-amber-700" }
       : { label: `Long (${descLen}/160)`, style: "text-red-600" };
 
-  const canonicalUrl = slugPreview ? `${SITE_URL}${slugPreview}` : "";
+  const canonicalUrl = slugPreview && isSiteUrlConfigured ? getSiteUrl(slugPreview) : "";
 
   const seoChecks = useMemo(() => {
     const checks: { ok: boolean; label: string }[] = [];
@@ -113,9 +112,15 @@ export default function OnPageSeoWorkspace({
           <div>
             <label className="block text-xs font-medium text-[#5D4037] mb-1">Canonical URL</label>
             {slugPreview ? (
-              <p className="px-2.5 py-1.5 text-xs bg-[#FAF6F0] border border-[#D7C9B8] rounded text-[#5D4037] truncate">
-                {canonicalUrl}
-              </p>
+              isSiteUrlConfigured ? (
+                <p className="px-2.5 py-1.5 text-xs bg-[#FAF6F0] border border-[#D7C9B8] rounded text-[#5D4037] truncate">
+                  {canonicalUrl}
+                </p>
+              ) : (
+                <p className="px-2.5 py-1.5 text-xs bg-[#FAF6F0] border border-[#D7C9B8] rounded text-amber-700 italic">
+                  Site URL not configured
+                </p>
+              )
             ) : (
               <p className="px-2.5 py-1.5 text-xs bg-[#FAF6F0] border border-[#D7C9B8] rounded text-[#8D6E63] italic">
                 Enter a slug to preview the canonical URL
@@ -163,7 +168,9 @@ export default function OnPageSeoWorkspace({
             <p className="text-[10px] font-semibold text-[#8D6E63] uppercase tracking-wide">Google Search Preview</p>
             <div className="bg-white p-2.5 rounded border border-[#D7C9B8] space-y-0.5">
               <p className="text-sm text-[#1a0dab] truncate font-medium">{effectiveTitle}</p>
-              <p className="text-[11px] text-[#006621] truncate">{slugPreview || "https://example.com/..."}</p>
+              <p className="text-[11px] text-[#006621] truncate">
+                {canonicalUrl || (slugPreview ? "Site URL not configured" : "https://example.com/...")}
+              </p>
               <p className="text-xs text-[#545454] line-clamp-2">{effectiveDescription}</p>
             </div>
             <p className="text-[9px] text-[#8D6E63]">Search engines may rewrite title and snippet.</p>
@@ -184,7 +191,7 @@ export default function OnPageSeoWorkspace({
                 </div>
               )}
               <div className="p-2.5 flex flex-col justify-center min-w-0">
-                <p className="text-[10px] text-[#8D6E63] uppercase truncate">Chittagong Trail</p>
+                <p className="text-[10px] text-[#8D6E63] uppercase truncate">{SITE_NAME}</p>
                 <p className="text-xs font-semibold text-[#5D4037] truncate">{effectiveTitle}</p>
                 <p className="text-[11px] text-[#6d4c41] line-clamp-1">{effectiveDescription}</p>
               </div>
