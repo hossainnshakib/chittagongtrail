@@ -57,6 +57,10 @@ export const heroVideoProviderValues = Object.values(HeroVideoProvider);
 
 export const siteSettingsSchema = z.object({
   siteName: z.string().min(1, "Site name is required").max(100).transform((v) => v.trim()),
+  siteTagline: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  defaultMetaTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  defaultMetaDescription: z.string().optional().nullable().transform((v) => (v ? v.trim() : "")),
+  defaultOgMediaId: z.coerce.number().int().optional().nullable(),
   heroTitle: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroSubtitle: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroMediaId: z.coerce.number().int().optional().nullable(),
@@ -81,6 +85,33 @@ export const siteSettingsSchema = z.object({
     .refine((v) => v === "" || z.string().email().safeParse(v).success, {
       message: "Invalid contact email format",
     }),
+  contactPhone: z.string().max(50).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  whatsappUrl: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid WhatsApp URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
+  contactAddress: z.string().optional().nullable().transform((v) => (v ? v.trim() : "")),
+  mapUrl: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid Map URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
   socialFacebook: z
     .string()
     .optional()
@@ -115,6 +146,58 @@ export const siteSettingsSchema = z.object({
         v === "" ||
         (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
       { message: "Invalid YouTube URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
+  socialX: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid X/Twitter URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
+  socialThreads: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid Threads URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
+  socialLinkedIn: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid LinkedIn URL (must be valid http/https URL)" }
+    )
+    .transform((v) => (v === "" ? null : v)),
+  socialTikTok: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.trim() : ""))
+    .refine(
+      (v) =>
+        v === "" ||
+        (z.string().url().safeParse(v).success && (v.startsWith("http://") || v.startsWith("https://")) && !v.includes("javascript:") && !v.includes("data:")),
+      { message: "Invalid TikTok URL (must be valid http/https URL)" }
     )
     .transform((v) => (v === "" ? null : v)),
   footerText: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
@@ -159,13 +242,14 @@ export type SiteSettingsWithMedia = SiteSettings & {
   heroMedia?: MediaAsset | null;
   seasonalMedia?: MediaAsset | null;
   heroVideoMedia?: MediaAsset | null;
+  defaultOgMedia?: MediaAsset | null;
 };
 
 export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWithMedia> {
   try {
     let settings = await prisma.siteSettings.findUnique({
       where: { id: 1 },
-      include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true },
+      include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
     });
 
     if (!settings) {
@@ -176,7 +260,7 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
           id: 1,
           siteName: "Chittagong Trail",
         },
-        include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true },
+        include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
       });
     }
     return settings;
@@ -185,6 +269,10 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
     return {
       id: 1,
       siteName: "Chittagong Trail",
+      siteTagline: null,
+      defaultMetaTitle: null,
+      defaultMetaDescription: null,
+      defaultOgMediaId: null,
       heroTitle: "",
       heroSubtitle: "",
       heroMediaId: null,
@@ -202,14 +290,23 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
       aboutHeading: "",
       aboutContent: null,
       contactEmail: "",
+      contactPhone: null,
+      whatsappUrl: null,
+      contactAddress: null,
+      mapUrl: null,
       socialFacebook: null,
       socialInstagram: null,
       socialYouTube: null,
+      socialX: null,
+      socialThreads: null,
+      socialLinkedIn: null,
+      socialTikTok: null,
       footerText: "",
       updatedAt: new Date(),
       heroMedia: null,
       seasonalMedia: null,
       heroVideoMedia: null,
+      defaultOgMedia: null,
     };
   }
 }
@@ -222,7 +319,11 @@ export async function getAdminSiteSettings() {
   return initializeSiteSettingsIfMissing();
 }
 
-export async function validateSiteSettingsMedia(heroMediaId?: number | null, seasonalMediaId?: number | null) {
+export async function validateSiteSettingsMedia(
+  heroMediaId?: number | null,
+  seasonalMediaId?: number | null,
+  defaultOgMediaId?: number | null
+) {
   if (heroMediaId) {
     const heroAsset = await prisma.mediaAsset.findUnique({ where: { id: heroMediaId } });
     if (!heroAsset) {
@@ -233,6 +334,15 @@ export async function validateSiteSettingsMedia(heroMediaId?: number | null, sea
     const seasonalAsset = await prisma.mediaAsset.findUnique({ where: { id: seasonalMediaId } });
     if (!seasonalAsset) {
       throw new Error("Referenced seasonal media asset does not exist");
+    }
+  }
+  if (defaultOgMediaId) {
+    const ogAsset = await prisma.mediaAsset.findUnique({ where: { id: defaultOgMediaId } });
+    if (!ogAsset) {
+      throw new Error("Referenced default OG media asset does not exist");
+    }
+    if (ogAsset.resourceType !== "image") {
+      throw new Error("Default OG media asset must be an image");
     }
   }
 }
@@ -296,7 +406,7 @@ async function validateAndResolveHeroVideo(
 export async function updateSiteSettings(input: SiteSettingsInput) {
   const parsed = siteSettingsSchema.parse(input);
 
-  await validateSiteSettingsMedia(parsed.heroMediaId, parsed.seasonalMediaId);
+  await validateSiteSettingsMedia(parsed.heroMediaId, parsed.seasonalMediaId, parsed.defaultOgMediaId);
 
   const heroVideo = await validateAndResolveHeroVideo(
     parsed.heroVideoEnabled,
@@ -309,6 +419,10 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
     where: { id: 1 },
     data: {
       siteName: parsed.siteName,
+      siteTagline: parsed.siteTagline || null,
+      defaultMetaTitle: parsed.defaultMetaTitle || null,
+      defaultMetaDescription: parsed.defaultMetaDescription || null,
+      defaultOgMediaId: parsed.defaultOgMediaId || null,
       heroTitle: parsed.heroTitle,
       heroSubtitle: parsed.heroSubtitle,
       heroMediaId: parsed.heroMediaId || null,
@@ -326,12 +440,20 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
       aboutHeading: parsed.aboutHeading,
       aboutContent: parsed.aboutContent || null,
       contactEmail: parsed.contactEmail,
+      contactPhone: parsed.contactPhone || null,
+      whatsappUrl: parsed.whatsappUrl || null,
+      contactAddress: parsed.contactAddress || null,
+      mapUrl: parsed.mapUrl || null,
       socialFacebook: parsed.socialFacebook || null,
       socialInstagram: parsed.socialInstagram || null,
       socialYouTube: parsed.socialYouTube || null,
+      socialX: parsed.socialX || null,
+      socialThreads: parsed.socialThreads || null,
+      socialLinkedIn: parsed.socialLinkedIn || null,
+      socialTikTok: parsed.socialTikTok || null,
       footerText: parsed.footerText,
     },
-    include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true },
+    include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
   });
 
   revalidatePath("/");
@@ -384,6 +506,10 @@ export async function getPublicSiteSettings() {
   }
   return {
     siteName: settings.siteName || "Chittagong Trail",
+    siteTagline: settings.siteTagline || "",
+    defaultMetaTitle: settings.defaultMetaTitle || "",
+    defaultMetaDescription: settings.defaultMetaDescription || "",
+    defaultOgMedia: settings.defaultOgMedia || null,
     heroTitle: settings.heroTitle || "",
     heroSubtitle: settings.heroSubtitle || "",
     heroMedia: settings.heroMedia || null,
@@ -402,9 +528,17 @@ export async function getPublicSiteSettings() {
     aboutHeading: settings.aboutHeading || "",
     aboutContent: settings.aboutContent,
     contactEmail: settings.contactEmail || "",
+    contactPhone: settings.contactPhone || "",
+    whatsappUrl: settings.whatsappUrl || "",
+    contactAddress: settings.contactAddress || "",
+    mapUrl: settings.mapUrl || "",
     socialFacebook: settings.socialFacebook,
     socialInstagram: settings.socialInstagram,
     socialYouTube: settings.socialYouTube,
+    socialX: settings.socialX,
+    socialThreads: settings.socialThreads,
+    socialLinkedIn: settings.socialLinkedIn,
+    socialTikTok: settings.socialTikTok,
     footerText: settings.footerText || "",
   };
 }

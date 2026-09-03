@@ -2,131 +2,44 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import MediaPicker from "@/components/admin/media/MediaPicker";
+import type { MediaAssetData } from "@/components/admin/media/types";
+import { isSiteUrlConfigured } from "@/lib/seo-client";
 
-interface MediaAsset {
-  id: number;
-  publicId: string;
-  secureUrl: string;
-  altText: string | null;
-}
-
-interface SiteSettingsFormState {
-  siteName: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  heroMediaId: number | null;
-  heroVideoEnabled: boolean;
-  heroVideoProvider: "NONE" | "YOUTUBE" | "VIMEO" | "DIRECT";
-  heroVideoUrl: string;
-  heroVideoOverlay: number;
-  introductionHeading: string;
-  introductionContent: string;
-  seasonalEyebrow: string;
-  seasonalTitle: string;
-  seasonalContent: string;
-  seasonalMediaId: number | null;
-  aboutHeading: string;
-  aboutContent: string;
-  contactEmail: string;
-  socialFacebook: string;
-  socialInstagram: string;
-  socialYouTube: string;
-  footerText: string;
-}
-
-export default function AdminSettingsPage() {
-  const [formData, setFormData] = useState<SiteSettingsFormState>({
-    siteName: "Chittagong Trail",
-    heroTitle: "",
-    heroSubtitle: "",
-    heroMediaId: null,
-    heroVideoEnabled: false,
-    heroVideoProvider: "NONE",
-    heroVideoUrl: "",
-    heroVideoOverlay: 45,
-    introductionHeading: "",
-    introductionContent: "",
-    seasonalEyebrow: "",
-    seasonalTitle: "",
-    seasonalContent: "",
-    seasonalMediaId: null,
-    aboutHeading: "",
-    aboutContent: "",
-    contactEmail: "",
-    socialFacebook: "",
-    socialInstagram: "",
-    socialYouTube: "",
-    footerText: "",
-  });
-
-  const [heroMedia, setHeroMedia] = useState<MediaAsset | null>(null);
-  const [seasonalMedia, setSeasonalMedia] = useState<MediaAsset | null>(null);
+export default function AdminGeneralSettingsPage() {
+  const [siteName, setSiteName] = useState("Chittagong Trail");
+  const [siteTagline, setSiteTagline] = useState("");
+  const [defaultMetaTitle, setDefaultMetaTitle] = useState("");
+  const [defaultMetaDescription, setDefaultMetaDescription] = useState("");
+  const [defaultOgMedia, setDefaultOgMedia] = useState<MediaAssetData | null>(null);
+  const [defaultOgMediaId, setDefaultOgMediaId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
-  const [mediaPickerTarget, setMediaPickerTarget] = useState<"hero" | "seasonal" | null>(null);
-  const [availableMedia, setAvailableMedia] = useState<MediaAsset[]>([]);
-  const [mediaSearch, setMediaSearch] = useState("");
-  const [loadingMedia, setLoadingMedia] = useState(false);
 
   useEffect(() => {
-    async function fetchSettings() {
+    async function load() {
       try {
         const res = await fetch("/api/admin/settings");
         if (!res.ok) throw new Error("Failed to load settings");
         const data = await res.json();
-        setFormData({
-          siteName: data.siteName || "Chittagong Trail",
-          heroTitle: data.heroTitle || "",
-          heroSubtitle: data.heroSubtitle || "",
-          heroMediaId: data.heroMediaId || null,
-          heroVideoEnabled: data.heroVideoEnabled ?? false,
-          heroVideoProvider: data.heroVideoProvider || "NONE",
-          heroVideoUrl: data.heroVideoUrl || "",
-          heroVideoOverlay: data.heroVideoOverlay ?? 45,
-          introductionHeading: data.introductionHeading || "",
-          introductionContent: data.introductionContent || "",
-          seasonalEyebrow: data.seasonalEyebrow || "",
-          seasonalTitle: data.seasonalTitle || "",
-          seasonalContent: data.seasonalContent || "",
-          seasonalMediaId: data.seasonalMediaId || null,
-          aboutHeading: data.aboutHeading || "",
-          aboutContent: data.aboutContent || "",
-          contactEmail: data.contactEmail || "",
-          socialFacebook: data.socialFacebook || "",
-          socialInstagram: data.socialInstagram || "",
-          socialYouTube: data.socialYouTube || "",
-          footerText: data.footerText || "",
-        });
-        if (data.heroMedia) setHeroMedia(data.heroMedia);
-        if (data.seasonalMedia) setSeasonalMedia(data.seasonalMedia);
+        setSiteName(data.siteName || "Chittagong Trail");
+        setSiteTagline(data.siteTagline || "");
+        setDefaultMetaTitle(data.defaultMetaTitle || "");
+        setDefaultMetaDescription(data.defaultMetaDescription || "");
+        setDefaultOgMediaId(data.defaultOgMediaId || null);
+        if (data.defaultOgMedia) setDefaultOgMedia(data.defaultOgMedia);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error loading settings");
       } finally {
         setLoading(false);
       }
     }
-    fetchSettings();
+    load();
   }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: checked }));
-  };
-
-  const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: parseInt(value, 10) }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,18 +48,29 @@ export default function AdminSettingsPage() {
     setSuccess(null);
 
     try {
+      // Fetch current full settings first so we don't wipe out other sections (About, Contact, Footer, Hero)
+      const currentRes = await fetch("/api/admin/settings");
+      const currentData = await currentRes.json();
+
+      const payload = {
+        ...currentData,
+        siteName,
+        siteTagline,
+        defaultMetaTitle,
+        defaultMetaDescription,
+        defaultOgMediaId,
+      };
+
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to save settings");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to save settings");
 
-      setSuccess("Site settings updated successfully and routes revalidated.");
+      setSuccess("General identity and global SEO settings saved successfully.");
       setTimeout(() => setSuccess(null), 5000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
@@ -155,85 +79,31 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const openMediaPicker = async (target: "hero" | "seasonal") => {
-    setMediaPickerTarget(target);
-    setMediaPickerOpen(true);
-    await fetchAvailableMedia();
-  };
-
-  const fetchAvailableMedia = async (searchQuery = "") => {
-    setLoadingMedia(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("limit", "50");
-      if (searchQuery) params.set("search", searchQuery);
-      const res = await fetch(`/api/admin/media/list?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAvailableMedia(data.items || []);
-      }
-    } catch (err) {
-      console.error("Failed to load media assets", err);
-    } finally {
-      setLoadingMedia(false);
-    }
-  };
-
-  const selectMediaAsset = (asset: MediaAsset) => {
-    if (mediaPickerTarget === "hero") {
-      setFormData((prev) => ({ ...prev, heroMediaId: asset.id }));
-      setHeroMedia(asset);
-    } else if (mediaPickerTarget === "seasonal") {
-      setFormData((prev) => ({ ...prev, seasonalMediaId: asset.id }));
-      setSeasonalMedia(asset);
-    }
-    setMediaPickerOpen(false);
-  };
-
-  const unlinkMedia = (target: "hero" | "seasonal") => {
-    if (target === "hero") {
-      setFormData((prev) => ({ ...prev, heroMediaId: null }));
-      setHeroMedia(null);
-    } else {
-      setFormData((prev) => ({ ...prev, seasonalMediaId: null }));
-      setSeasonalMedia(null);
-    }
-  };
-
   if (loading) {
-    return <div className="p-8 text-center text-[#5D4037]">Loading site settings...</div>;
+    return <div className="p-8 text-center text-[#5D4037]">Loading general settings...</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-16" style={{ '--admin-content-max-width': '900px' } as React.CSSProperties}>
+    <div className="max-w-4xl mx-auto space-y-8 pb-16">
       <div className="flex items-center justify-between border-b border-[#E8DCC8] pb-4">
         <div>
           <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold text-[#5D4037]">
-            Site Settings Management
+            General Identity &amp; Global SEO
           </h1>
           <p className="text-sm text-[#5D4037]/70 mt-1">
-            Configure brand identity, hero section with video, editorial content, and footer settings.
+            Manage platform identity, canonical configuration, and default meta tags for Chittagong&apos;s five districts.
           </p>
         </div>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
-          {success}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">{error}</div>}
+      {success && <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">{success}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 1. General */}
+        {/* General Identity */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            1. General Identity
+            General Identity
           </h2>
           <div>
             <label htmlFor="siteName" className="block text-sm font-medium text-[#5D4037] mb-1">
@@ -242,409 +112,134 @@ export default function AdminSettingsPage() {
             <input
               type="text"
               id="siteName"
-              name="siteName"
-              value={formData.siteName}
-              onChange={handleChange}
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
               required
+              maxLength={100}
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
             />
-          </div>
-        </section>
-
-        {/* 2. Hero Section */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            2. Hero Section
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="heroTitle" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Hero Title (use *text* for italic)
-              </label>
-              <input
-                type="text"
-                id="heroTitle"
-                name="heroTitle"
-                value={formData.heroTitle}
-                onChange={handleChange}
-                placeholder="Five Districts. Hills to the Sea. *One Chittagong.*"
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
-            </div>
-            <div>
-              <label htmlFor="heroSubtitle" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Hero Supporting Paragraph
-              </label>
-              <textarea
-                id="heroSubtitle"
-                name="heroSubtitle"
-                rows={3}
-                value={formData.heroSubtitle}
-                onChange={handleChange}
-                placeholder="From the city and the Karnaphuli to the coast..."
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] text-sm"
-              />
-            </div>
+            <p className="text-xs text-[#5D4037]/60 mt-1">Appears in header, footer, page titles, and structured data.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#5D4037] mb-2">Hero Poster / Cover Image</label>
-            <div className="flex items-center gap-4">
-              {heroMedia ? (
-                <div className="relative w-32 h-20 rounded-md overflow-hidden border border-[#D7C9B8]">
-                  <Image src={heroMedia.secureUrl} alt={heroMedia.altText || "Hero Media"} fill className="object-cover" />
-                </div>
-              ) : (
-                <div className="w-32 h-20 rounded-md bg-[#FDF5E6] border border-dashed border-[#D7C9B8] flex items-center justify-center text-xs text-[#5D4037]/60">
-                  No media selected
-                </div>
-              )}
-              <div className="space-x-2">
-                <button
-                  type="button"
-                  onClick={() => openMediaPicker("hero")}
-                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
-                >
-                  {heroMedia ? "Change Media" : "Select Media"}
-                </button>
-                {heroMedia && (
-                  <button
-                    type="button"
-                    onClick={() => unlinkMedia("hero")}
-                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
-                  >
-                    Unlink
-                  </button>
-                )}
-              </div>
-            </div>
-            <p className="text-xs text-[#5D4037]/60 mt-1">The poster image displays while the video loads or when video is disabled.</p>
-          </div>
-        </section>
-
-        {/* 3. Hero Video */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            3. Hero Background Video
-          </h2>
-
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="heroVideoEnabled"
-              name="heroVideoEnabled"
-              checked={formData.heroVideoEnabled}
-              onChange={handleCheckboxChange}
-              className="w-4 h-4 rounded border-[#D7C9B8] text-[#C9A882] focus:ring-[#C9A882]"
-            />
-            <label htmlFor="heroVideoEnabled" className="text-sm font-medium text-[#5D4037]">
-              Enable background video
-            </label>
-          </div>
-
-          {formData.heroVideoEnabled && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="heroVideoProvider" className="block text-sm font-medium text-[#5D4037] mb-1">
-                    Video Provider
-                  </label>
-                  <select
-                    id="heroVideoProvider"
-                    name="heroVideoProvider"
-                    value={formData.heroVideoProvider}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-                  >
-                    <option value="NONE">No video</option>
-                    <option value="YOUTUBE">YouTube</option>
-                    <option value="VIMEO">Vimeo</option>
-                    <option value="DIRECT">Direct URL (MP4/WebM/Cloudinary)</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="heroVideoOverlay" className="block text-sm font-medium text-[#5D4037] mb-1">
-                    Overlay darkness: {formData.heroVideoOverlay}%
-                  </label>
-                  <input
-                    type="range"
-                    id="heroVideoOverlay"
-                    name="heroVideoOverlay"
-                    min="0"
-                    max="100"
-                    value={formData.heroVideoOverlay}
-                    onChange={handleRangeChange}
-                    className="w-full mt-2 accent-[#C9A882]"
-                  />
-                  <p className="text-xs text-[#5D4037]/60 mt-1">Higher = darker overlay for better text readability.</p>
-                </div>
-              </div>
-
-              {formData.heroVideoProvider !== "NONE" && (
-                <div>
-                  <label htmlFor="heroVideoUrl" className="block text-sm font-medium text-[#5D4037] mb-1">
-                    Video URL
-                  </label>
-                  <input
-                    type="url"
-                    id="heroVideoUrl"
-                    name="heroVideoUrl"
-                    value={formData.heroVideoUrl}
-                    onChange={handleChange}
-                    placeholder={
-                      formData.heroVideoProvider === "YOUTUBE"
-                        ? "https://www.youtube.com/watch?v=XXXXXXXXXXX"
-                        : formData.heroVideoProvider === "VIMEO"
-                        ? "https://vimeo.com/123456789"
-                        : "https://example.com/video.mp4"
-                    }
-                    className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-                  />
-                  <p className="text-xs text-[#5D4037]/60 mt-1">
-                    {formData.heroVideoProvider === "YOUTUBE" && "Accepts youtube.com/watch?v=, youtu.be/, or youtube.com/embed/ URLs."}
-                    {formData.heroVideoProvider === "VIMEO" && "Accepts vimeo.com or player.vimeo.com/video/ URLs."}
-                    {formData.heroVideoProvider === "DIRECT" && "Accepts HTTPS MP4, WebM, or Cloudinary video URLs. Must be HTTPS."}
-                  </p>
-                </div>
-              )}
-
-              {formData.heroVideoProvider !== "NONE" && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-700">
-                  <strong>Mobile fallback:</strong> On reduced-motion settings or unsupported browsers, the poster image is displayed instead of video. The video is always muted and autoplaying.
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* 4. Introduction */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            4. Introduction Section
-          </h2>
-          <div>
-            <label htmlFor="introductionHeading" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Introduction Heading (use *text* for italic)
+            <label htmlFor="siteTagline" className="block text-sm font-medium text-[#5D4037] mb-1">
+              Site Tagline / Short Description
             </label>
             <input
               type="text"
-              id="introductionHeading"
-              name="introductionHeading"
-              value={formData.introductionHeading}
-              onChange={handleChange}
+              id="siteTagline"
+              value={siteTagline}
+              onChange={(e) => setSiteTagline(e.target.value)}
+              maxLength={255}
+              placeholder="Places, stories, food and landscapes across Chittagong's five districts"
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
             />
+            <p className="text-xs text-[#5D4037]/60 mt-1">Concise platform summary used in metadata fallbacks.</p>
           </div>
-          <div>
-            <label htmlFor="introductionContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Introduction Content (HTML allowed &amp; sanitized)
-            </label>
-            <textarea
-              id="introductionContent"
-              name="introductionContent"
-              rows={5}
-              value={formData.introductionContent}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] font-mono text-sm"
-            />
+
+          <div className="p-4 bg-[#FAF6F0] rounded-md border border-[#E8DCC8] space-y-1">
+            <span className="text-xs font-semibold text-[#5D4037]">Canonical Site Origin Status:</span>
+            {isSiteUrlConfigured ? (
+              <p className="text-xs text-green-700">
+                Configured securely: <code>{process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com"}</code>
+              </p>
+            ) : (
+              <p className="text-xs text-amber-800">
+                Site URL not configured or evaluates to localhost/development origin. Production metadata will use safe fallback behavior.
+              </p>
+            )}
           </div>
         </section>
 
-        {/* 5. Seasonal / Mood */}
+        {/* Global SEO */}
         <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
           <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            5. Seasonal / Mood Section
+            Global SEO &amp; Social Sharing
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="seasonalEyebrow" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Eyebrow
-              </label>
-              <input
-                type="text"
-                id="seasonalEyebrow"
-                name="seasonalEyebrow"
-                value={formData.seasonalEyebrow}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
-            </div>
-            <div>
-              <label htmlFor="seasonalTitle" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Seasonal Title
-              </label>
-              <input
-                type="text"
-                id="seasonalTitle"
-                name="seasonalTitle"
-                value={formData.seasonalTitle}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="seasonalContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Seasonal Content (HTML allowed &amp; sanitized)
-            </label>
-            <textarea
-              id="seasonalContent"
-              name="seasonalContent"
-              rows={4}
-              value={formData.seasonalContent}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] font-mono text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#5D4037] mb-2">Seasonal Media Asset</label>
-            <div className="flex items-center gap-4">
-              {seasonalMedia ? (
-                <div className="relative w-32 h-20 rounded-md overflow-hidden border border-[#D7C9B8]">
-                  <Image src={seasonalMedia.secureUrl} alt={seasonalMedia.altText || "Seasonal Media"} fill className="object-cover" />
-                </div>
-              ) : (
-                <div className="w-32 h-20 rounded-md bg-[#FDF5E6] border border-dashed border-[#D7C9B8] flex items-center justify-center text-xs text-[#5D4037]/60">
-                  No media selected
-                </div>
-              )}
-              <div className="space-x-2">
-                <button
-                  type="button"
-                  onClick={() => openMediaPicker("seasonal")}
-                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
-                >
-                  {seasonalMedia ? "Change Media" : "Select Media"}
-                </button>
-                {seasonalMedia && (
-                  <button
-                    type="button"
-                    onClick={() => unlinkMedia("seasonal")}
-                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
-                  >
-                    Unlink
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* 6. About / Sign-off */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            6. About / Sign-off Section
-          </h2>
           <div>
-            <label htmlFor="aboutHeading" className="block text-sm font-medium text-[#5D4037] mb-1">
-              About Quote / Heading (use *text* for italic)
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="defaultMetaTitle" className="block text-sm font-medium text-[#5D4037]">
+                Default Meta Title
+              </label>
+              <span className={`text-xs ${defaultMetaTitle.length > 60 ? "text-amber-600 font-semibold" : "text-[#5D4037]/60"}`}>
+                {defaultMetaTitle.length}/60 chars {defaultMetaTitle.length > 60 && "(recommend ≤ 60)"}
+              </span>
+            </div>
             <input
               type="text"
-              id="aboutHeading"
-              name="aboutHeading"
-              value={formData.aboutHeading}
-              onChange={handleChange}
+              id="defaultMetaTitle"
+              value={defaultMetaTitle}
+              onChange={(e) => setDefaultMetaTitle(e.target.value)}
+              maxLength={255}
+              placeholder="Chittagong Trail — Places, Stories, Food & Journeys"
               className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
             />
           </div>
-          <div>
-            <label htmlFor="aboutContent" className="block text-sm font-medium text-[#5D4037] mb-1">
-              About Sign-off Content (HTML allowed &amp; sanitized)
-            </label>
-            <textarea
-              id="aboutContent"
-              name="aboutContent"
-              rows={4}
-              value={formData.aboutContent}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] font-mono text-sm"
-            />
-          </div>
-        </section>
 
-        {/* 7. Contact and Social */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            7. Contact and Social Links
-          </h2>
           <div>
-            <label htmlFor="contactEmail" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Contact Email
-            </label>
-            <input
-              type="email"
-              id="contactEmail"
-              name="contactEmail"
-              value={formData.contactEmail}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="socialFacebook" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Facebook URL
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="defaultMetaDescription" className="block text-sm font-medium text-[#5D4037]">
+                Default Meta Description
               </label>
-              <input
-                type="url"
-                id="socialFacebook"
-                name="socialFacebook"
-                value={formData.socialFacebook}
-                onChange={handleChange}
-                placeholder="https://facebook.com/..."
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
+              <span className={`text-xs ${defaultMetaDescription.length > 160 ? "text-amber-600 font-semibold" : "text-[#5D4037]/60"}`}>
+                {defaultMetaDescription.length}/160 chars {defaultMetaDescription.length > 160 && "(recommend ≤ 160)"}
+              </span>
             </div>
-            <div>
-              <label htmlFor="socialInstagram" className="block text-sm font-medium text-[#5D4037] mb-1">
-                Instagram URL
-              </label>
-              <input
-                type="url"
-                id="socialInstagram"
-                name="socialInstagram"
-                value={formData.socialInstagram}
-                onChange={handleChange}
-                placeholder="https://instagram.com/..."
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
-            </div>
-            <div>
-              <label htmlFor="socialYouTube" className="block text-sm font-medium text-[#5D4037] mb-1">
-                YouTube URL
-              </label>
-              <input
-                type="url"
-                id="socialYouTube"
-                name="socialYouTube"
-                value={formData.socialYouTube}
-                onChange={handleChange}
-                placeholder="https://youtube.com/..."
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* 8. Footer */}
-        <section className="bg-white rounded-lg border border-[#E8DCC8] p-6 shadow-sm space-y-4">
-          <h2 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037] border-b border-[#E8DCC8] pb-2">
-            8. Footer Section
-          </h2>
-          <div>
-            <label htmlFor="footerText" className="block text-sm font-medium text-[#5D4037] mb-1">
-              Footer Description / Bio Text
-            </label>
             <textarea
-              id="footerText"
-              name="footerText"
+              id="defaultMetaDescription"
               rows={3}
-              value={formData.footerText}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+              value={defaultMetaDescription}
+              onChange={(e) => setDefaultMetaDescription(e.target.value)}
+              placeholder="Explore places, stories, food and landscapes across Chittagong's five districts through genuine discovery."
+              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] text-sm"
             />
+            <p className="text-xs text-[#5D4037]/60 mt-1">
+              Fallback summary across Chittagong&apos;s five districts (Chittagong, Cox&apos;s Bazar, Rangamati, Bandarban, Khagrachari).
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#5D4037] mb-2">Default Social / Open Graph Image</label>
+            <div className="flex items-center gap-4">
+              {defaultOgMedia ? (
+                <div className="relative w-36 h-20 rounded-md overflow-hidden border border-[#D7C9B8]">
+                  <Image src={defaultOgMedia.secureUrl} alt={defaultOgMedia.altText || "Default OG Image"} fill className="object-cover" />
+                </div>
+              ) : (
+                <div className="w-36 h-20 rounded-md bg-[#FDF5E6] border border-dashed border-[#D7C9B8] flex items-center justify-center text-xs text-[#5D4037]/60">
+                  No OG image selected
+                </div>
+              )}
+              <div className="space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setMediaPickerOpen(true)}
+                  className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] transition-colors cursor-pointer"
+                >
+                  {defaultOgMedia ? "Change Image" : "Select Image"}
+                </button>
+                {defaultOgMedia && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDefaultOgMedia(null);
+                      setDefaultOgMediaId(null);
+                    }}
+                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+            {defaultOgMedia && (
+              <div className="text-xs text-[#5D4037]/70 mt-2 space-y-0.5">
+                <div>Dimensions: {defaultOgMedia.width ?? "—"} × {defaultOgMedia.height ?? "—"} (Recommended: 1200×630)</div>
+                <div>Format: {defaultOgMedia.format || "unknown"} · Alt text: {defaultOgMedia.altText ? `"${defaultOgMedia.altText}"` : <span className="text-amber-700">Missing alt text</span>}</div>
+              </div>
+            )}
+            <p className="text-xs text-[#5D4037]/60 mt-1">Image-only asset picker. Used when shared content lacks a dedicated cover or OG image.</p>
           </div>
         </section>
 
@@ -654,73 +249,29 @@ export default function AdminSettingsPage() {
             disabled={saving}
             className="px-6 py-3 bg-[#3E2723] text-[#FDF5E6] font-medium rounded-md hover:bg-[#5D4037] transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {saving ? "Saving Changes..." : "Save Site Settings"}
+            {saving ? "Saving Changes..." : "Save General & SEO Settings"}
           </button>
         </div>
       </form>
 
-      {/* Media Picker Modal */}
-      {mediaPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[80vh] flex flex-col p-6 border border-[#E8DCC8]">
-            <div className="flex items-center justify-between pb-4 border-b border-[#E8DCC8]">
-              <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#5D4037]">
-                Select Media Asset for {mediaPickerTarget === "hero" ? "Hero" : "Seasonal"} Section
-              </h3>
-              <button
-                onClick={() => setMediaPickerOpen(false)}
-                className="text-[#5D4037] hover:text-black font-bold text-lg cursor-pointer"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="py-4">
-              <input
-                type="text"
-                placeholder="Search media by public ID..."
-                value={mediaSearch}
-                onChange={(e) => {
-                  setMediaSearch(e.target.value);
-                  fetchAvailableMedia(e.target.value);
-                }}
-                className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md text-sm text-[#5D4037]"
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
-              {loadingMedia ? (
-                <div className="col-span-full py-8 text-center text-sm text-[#5D4037]/60">Loading media library...</div>
-              ) : availableMedia.length === 0 ? (
-                <div className="col-span-full py-8 text-center text-sm text-[#5D4037]/60">No media assets found.</div>
-              ) : (
-                availableMedia.map((asset) => (
-                  <div
-                    key={asset.id}
-                    onClick={() => selectMediaAsset(asset)}
-                    className="group relative aspect-square rounded-md overflow-hidden border border-[#D7C9B8] cursor-pointer hover:border-[#3E2723] transition-all bg-[#FDF5E6]"
-                  >
-                    <Image src={asset.secureUrl} alt={asset.altText || asset.publicId} fill className="object-cover group-hover:scale-105 transition-transform" />
-                    <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] p-1 truncate">
-                      {asset.publicId}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-[#E8DCC8] flex justify-end">
-              <button
-                type="button"
-                onClick={() => setMediaPickerOpen(false)}
-                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MediaPicker
+        open={mediaPickerOpen}
+        mode="image"
+        selected={defaultOgMedia}
+        onSelect={(asset) => {
+          setDefaultOgMedia(asset);
+          setDefaultOgMediaId(asset.id);
+          setMediaPickerOpen(false);
+        }}
+        onRemove={() => {
+          setDefaultOgMedia(null);
+          setDefaultOgMediaId(null);
+        }}
+        onClose={() => setMediaPickerOpen(false)}
+        title="Select Default OG / Social Sharing Image"
+        description="Recommended 1200×630px image-only."
+        folder="chittagong-trail/general"
+      />
     </div>
   );
 }

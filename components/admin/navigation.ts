@@ -48,9 +48,9 @@ export const adminNavigation: AdminNavGroup[] = [
     label: "Site Settings",
     items: [
       { label: "General", href: "/admin/settings", icon: "settings" },
-      { label: "Introduction / About", href: "/admin/settings/about", icon: "settings", disabled: true, tooltip: "Coming in A7R.7" },
-      { label: "Contact & Social", href: "/admin/settings/contact", icon: "settings", disabled: true, tooltip: "Coming in A7R.7" },
-      { label: "Footer", href: "/admin/settings/footer", icon: "settings", disabled: true, tooltip: "Coming in A7R.7" },
+      { label: "Introduction / About", href: "/admin/settings/about", icon: "settings" },
+      { label: "Contact & Social", href: "/admin/settings/contact", icon: "settings" },
+      { label: "Footer", href: "/admin/settings/footer", icon: "settings" },
     ],
   },
 ];

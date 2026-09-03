@@ -23,6 +23,7 @@ export interface MediaAssetReferenceSummary {
   siteHeroMedias: Array<{ id: number; siteName: string }>;
   siteSeasonalMedias: Array<{ id: number; siteName: string }>;
   siteHeroVideos: Array<{ id: number; siteName: string }>;
+  siteDefaultOgMedias: Array<{ id: number; siteName: string }>;
   inlineHtmlReferences: Array<{ type: string; id: number; title: string; slug?: string }>;
 }
 
@@ -117,6 +118,7 @@ export async function getAdminMediaAssetById(id: number) {
       siteHeroMedias: { select: { id: true, siteName: true } },
       siteSeasonalMedias: { select: { id: true, siteName: true } },
       siteHeroVideoMedias: { select: { id: true, siteName: true } },
+      siteDefaultOgMedias: { select: { id: true, siteName: true } },
     },
   });
 }
@@ -264,6 +266,7 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
       siteHeroMedias: { select: { id: true, siteName: true } },
       siteSeasonalMedias: { select: { id: true, siteName: true } },
       siteHeroVideoMedias: { select: { id: true, siteName: true } },
+      siteDefaultOgMedias: { select: { id: true, siteName: true } },
     },
   });
 
@@ -275,30 +278,12 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
 
   // Check hero video usage via durable FK relation (heroVideoMediaId)
   let siteHeroVideos: Array<{ id: number; siteName: string }> = [];
-  // Primary structured-reference check uses FK, not URL substring
   if (asset.siteHeroVideoMedias.length > 0) {
-    // Only report active/configured hero video: enabled + DIRECT provider
     const settings = await prisma.siteSettings.findUnique({ where: { id: 1 }, select: { id: true, siteName: true, heroVideoEnabled: true, heroVideoProvider: true, heroVideoMediaId: true } });
     if (settings && settings.heroVideoEnabled && settings.heroVideoProvider === "DIRECT" && settings.heroVideoMediaId === asset.id) {
       siteHeroVideos = [{ id: settings.id, siteName: settings.siteName }];
     } else if (asset.siteHeroVideoMedias.length > 0) {
-      // Fallback: if settings not active but FK still points, still report as structured reference to prevent deletion
       siteHeroVideos = asset.siteHeroVideoMedias.map((s) => ({ id: s.id, siteName: s.siteName }));
-    }
-  } else {
-    // Legacy URL fallback may remain temporarily only for unmatched pre-migration DIRECT records, with a clear compatibility comment.
-    // Do not rely on includes(publicId) as the primary structured-reference check; only exact secureUrl match for legacy.
-    const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-    if (
-      settings &&
-      settings.heroVideoEnabled &&
-      settings.heroVideoProvider === "DIRECT" &&
-      settings.heroVideoUrl &&
-      settings.heroVideoMediaId === null &&
-      settings.heroVideoUrl === asset.secureUrl
-    ) {
-      // Narrow legacy fallback: exact secureUrl match only, no publicId substring false-positive
-      siteHeroVideos = [{ id: settings.id, siteName: settings.siteName }];
     }
   }
 
@@ -319,6 +304,7 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
     siteHeroMedias: asset.siteHeroMedias,
     siteSeasonalMedias: asset.siteSeasonalMedias,
     siteHeroVideos,
+    siteDefaultOgMedias: asset.siteDefaultOgMedias,
     inlineHtmlReferences,
   };
 }
@@ -335,7 +321,8 @@ export async function canDeleteMediaAsset(id: number): Promise<{ canDelete: bool
     summary.homepageGalleries.length > 0 ||
     summary.siteHeroMedias.length > 0 ||
     summary.siteSeasonalMedias.length > 0 ||
-    summary.siteHeroVideos.length > 0;
+    summary.siteHeroVideos.length > 0 ||
+    summary.siteDefaultOgMedias.length > 0;
 
   const hasInline = summary.inlineHtmlReferences.length > 0;
 

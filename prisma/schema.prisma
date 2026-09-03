@@ -68,6 +68,7 @@ model MediaAsset {
   siteHeroMedias     SiteSettings[]    @relation("SiteHeroMedia")
   siteSeasonalMedias SiteSettings[]    @relation("SiteSeasonalMedia")
   siteHeroVideoMedias SiteSettings[]   @relation("SiteHeroVideoMedia")
+  siteDefaultOgMedias SiteSettings[]   @relation("SiteDefaultOgMedia")
 
   @@map("media_assets")
 }
@@ -158,33 +159,46 @@ model JournalPost {
 }
 
 model SiteSettings {
-  id                  Int               @id @default(1)
-  siteName            String            @default("Chittagong Trail")
-  heroTitle           String            @default("")
-  heroSubtitle        String            @default("")
-  heroMediaId         Int?
-  heroMedia           MediaAsset?       @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
-  heroVideoEnabled    Boolean           @default(false)
-  heroVideoProvider   HeroVideoProvider @default(NONE)
-  heroVideoUrl        String?           @db.Text
-  heroVideoOverlay    Int               @default(45)
-  heroVideoMediaId    Int?              @map("hero_video_media_id")
-  heroVideoMedia      MediaAsset?       @relation("SiteHeroVideoMedia", fields: [heroVideoMediaId], references: [id], onDelete: SetNull)
-  introductionHeading String            @default("")
-  introductionContent String?           @db.Text
-  seasonalEyebrow     String            @default("")
-  seasonalTitle       String            @default("")
-  seasonalContent     String?           @db.Text
-  seasonalMediaId     Int?
-  seasonalMedia       MediaAsset?       @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
-  aboutHeading        String            @default("")
-  aboutContent        String?           @db.Text
-  contactEmail        String            @default("")
-  socialFacebook      String?
-  socialInstagram     String?
-  socialYouTube       String?
-  footerText          String            @default("")
-  updatedAt           DateTime          @updatedAt
+  id                     Int               @id @default(1)
+  siteName               String            @default("Chittagong Trail")
+  siteTagline            String?           @db.VarChar(255)
+  defaultMetaTitle       String?           @db.VarChar(255)
+  defaultMetaDescription String?           @db.Text
+  defaultOgMediaId       Int?
+  defaultOgMedia         MediaAsset?       @relation("SiteDefaultOgMedia", fields: [defaultOgMediaId], references: [id], onDelete: SetNull)
+  heroTitle              String            @default("")
+  heroSubtitle           String            @default("")
+  heroMediaId            Int?
+  heroMedia              MediaAsset?       @relation("SiteHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  heroVideoEnabled       Boolean           @default(false)
+  heroVideoProvider      HeroVideoProvider @default(NONE)
+  heroVideoUrl           String?           @db.Text
+  heroVideoOverlay       Int               @default(45)
+  heroVideoMediaId       Int?              @map("hero_video_media_id")
+  heroVideoMedia         MediaAsset?       @relation("SiteHeroVideoMedia", fields: [heroVideoMediaId], references: [id], onDelete: SetNull)
+  introductionHeading    String            @default("")
+  introductionContent    String?           @db.Text
+  seasonalEyebrow        String            @default("")
+  seasonalTitle          String            @default("")
+  seasonalContent        String?           @db.Text
+  seasonalMediaId        Int?
+  seasonalMedia          MediaAsset?       @relation("SiteSeasonalMedia", fields: [seasonalMediaId], references: [id], onDelete: SetNull)
+  aboutHeading           String            @default("")
+  aboutContent           String?           @db.Text
+  contactEmail           String            @default("")
+  contactPhone           String?           @db.VarChar(50)
+  whatsappUrl            String?           @db.VarChar(500)
+  contactAddress         String?           @db.Text
+  mapUrl                 String?           @db.Text
+  socialFacebook         String?
+  socialInstagram        String?
+  socialYouTube          String?
+  socialX                String?           @db.VarChar(500)
+  socialThreads          String?           @db.VarChar(500)
+  socialLinkedIn         String?           @db.VarChar(500)
+  socialTikTok           String?           @db.VarChar(500)
+  footerText             String            @default("")
+  updatedAt              DateTime          @updatedAt
 
   @@map("site_settings")
 }

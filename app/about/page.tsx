@@ -24,6 +24,10 @@ export default async function AboutPage() {
     settings.socialFacebook && { name: "Facebook", href: settings.socialFacebook },
     settings.socialInstagram && { name: "Instagram", href: settings.socialInstagram },
     settings.socialYouTube && { name: "YouTube", href: settings.socialYouTube },
+    settings.socialX && { name: "X / Twitter", href: settings.socialX },
+    settings.socialThreads && { name: "Threads", href: settings.socialThreads },
+    settings.socialLinkedIn && { name: "LinkedIn", href: settings.socialLinkedIn },
+    settings.socialTikTok && { name: "TikTok", href: settings.socialTikTok },
   ].filter(Boolean) as Array<{ name: string; href: string }>;
 
   return (

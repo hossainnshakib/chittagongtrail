@@ -13,6 +13,11 @@ import {
 import { getPublicSiteSettings } from "@/lib/settings-service";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
+import { generateMetadata as generateHomeMetadata } from "@/lib/seo";
+
+export async function generateMetadata() {
+  return generateHomeMetadata();
+}
 
 export default async function Home() {
   const settings = await getPublicSiteSettings();

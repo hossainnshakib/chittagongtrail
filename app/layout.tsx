@@ -82,13 +82,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const organizationJsonLd = buildOrganizationJsonLd();
-  const webSiteJsonLd = buildWebSiteJsonLd();
+  const [organizationJsonLd, webSiteJsonLd] = await Promise.all([
+    buildOrganizationJsonLd(),
+    buildWebSiteJsonLd(),
+  ]);
 
   return (
     <html

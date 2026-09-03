@@ -16,6 +16,10 @@ export async function Footer() {
     settings.socialFacebook && { name: "Facebook", href: settings.socialFacebook },
     settings.socialInstagram && { name: "Instagram", href: settings.socialInstagram },
     settings.socialYouTube && { name: "YouTube", href: settings.socialYouTube },
+    settings.socialX && { name: "X / Twitter", href: settings.socialX },
+    settings.socialThreads && { name: "Threads", href: settings.socialThreads },
+    settings.socialLinkedIn && { name: "LinkedIn", href: settings.socialLinkedIn },
+    settings.socialTikTok && { name: "TikTok", href: settings.socialTikTok },
   ].filter(Boolean) as Array<{ name: string; href: string }>;
 
   const displayFooterText =
@@ -90,16 +94,48 @@ export async function Footer() {
             <h3 className="font-display text-lg font-semibold mb-4">
               Contact
             </h3>
-            {settings.contactEmail && settings.contactEmail.trim() !== "" ? (
-              <a
-                href={`mailto:${settings.contactEmail}`}
-                className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200"
-              >
-                {settings.contactEmail}
-              </a>
-            ) : (
-              <p className="text-dark-text/50 text-sm">Contact email not configured.</p>
-            )}
+            <div className="space-y-2">
+              {settings.contactEmail && settings.contactEmail.trim() !== "" ? (
+                <p>
+                  <a
+                    href={`mailto:${settings.contactEmail}`}
+                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                  >
+                    {settings.contactEmail}
+                  </a>
+                </p>
+              ) : null}
+              {settings.contactPhone && settings.contactPhone.trim() !== "" ? (
+                <p>
+                  <a
+                    href={`tel:${settings.contactPhone.replace(/\s+/g, "")}`}
+                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                  >
+                    {settings.contactPhone}
+                  </a>
+                </p>
+              ) : null}
+              {settings.whatsappUrl && settings.whatsappUrl.trim() !== "" ? (
+                <p>
+                  <a
+                    href={settings.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                  >
+                    WhatsApp Chat
+                  </a>
+                </p>
+              ) : null}
+              {settings.contactAddress && settings.contactAddress.trim() !== "" ? (
+                <p className="text-dark-text/70 text-sm whitespace-pre-line">
+                  {settings.contactAddress}
+                </p>
+              ) : null}
+              {!settings.contactEmail && !settings.contactPhone && !settings.whatsappUrl && !settings.contactAddress && (
+                <p className="text-dark-text/50 text-sm">Contact information not configured.</p>
+              )}
+            </div>
           </div>
         </div>
 

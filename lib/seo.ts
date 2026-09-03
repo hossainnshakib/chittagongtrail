@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getPublicSiteSettings } from "./settings-service";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
@@ -99,35 +100,73 @@ export function buildMetadata(options: BaseMetadataOptions): Metadata {
   };
 }
 
-export function buildHomepageMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSiteSettings();
+  const url = getSiteUrl();
+  const ogImageUrl = settings.defaultOgMedia ? settings.defaultOgMedia.secureUrl : DEFAULT_OG_IMAGE;
+  const ogWidth = settings.defaultOgMedia?.width || DEFAULT_OG_IMAGE_WIDTH;
+  const ogHeight = settings.defaultOgMedia?.height || DEFAULT_OG_IMAGE_HEIGHT;
+  const defaultTitle = settings.defaultMetaTitle || `${settings.siteName} — Places, Stories, Food & Journeys from Chittagong`;
+  const defaultDesc = settings.defaultMetaDescription || settings.siteTagline || SITE_DESCRIPTION;
+
   return {
+    metadataBase: new URL(url),
     title: {
-      default: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-      template: "%s | Chittagong Trail",
+      default: defaultTitle,
+      template: `%s | ${settings.siteName}`,
     },
-    description: SITE_DESCRIPTION,
-    metadataBase: new URL(SITE_URL),
+    description: defaultDesc,
+    keywords: [
+      "Chittagong",
+      "Chittagong travel",
+      "Chittagong journal",
+      "Bangladesh",
+      "exploration",
+      "places",
+      "stories",
+      "culture",
+      "history",
+      "food",
+      "trails",
+    ],
+    authors: [{ name: settings.siteName }],
+    creator: settings.siteName,
+    publisher: settings.siteName,
     openGraph: {
       type: "website",
       locale: SITE_LOCALE,
-      url: SITE_URL,
-      siteName: SITE_NAME,
-      title: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-      description: SITE_DESCRIPTION,
+      url,
+      siteName: settings.siteName,
+      title: defaultTitle,
+      description: defaultDesc,
       images: [
         {
-          url: DEFAULT_OG_IMAGE,
-          width: DEFAULT_OG_IMAGE_WIDTH,
-          height: DEFAULT_OG_IMAGE_HEIGHT,
-          alt: "Chittagong Trail — Exploring Chittagong",
+          url: ogImageUrl,
+          width: ogWidth,
+          height: ogHeight,
+          alt: settings.defaultOgMedia?.altText || `${settings.siteName} — Exploring Chittagong`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-      description: SITE_DESCRIPTION,
-      images: [DEFAULT_OG_IMAGE],
+      title: defaultTitle,
+      description: defaultDesc,
+      images: [ogImageUrl],
+    },
+    icons: {
+      icon: "/images/chittagongtrail-favicon.png",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
   };
 }
@@ -228,28 +267,38 @@ interface BreadcrumbJsonLd extends JsonLdBase {
   }>;
 }
 
-export function buildOrganizationJsonLd(): OrganizationJsonLd {
+export async function buildOrganizationJsonLd(): Promise<OrganizationJsonLd> {
+  const { getPublicSiteSettings } = await import("./settings-service");
+  const settings = await getPublicSiteSettings();
+  const sameAs = [
+    settings.socialFacebook,
+    settings.socialInstagram,
+    settings.socialYouTube,
+    settings.socialX,
+    settings.socialThreads,
+    settings.socialLinkedIn,
+    settings.socialTikTok,
+  ].filter(Boolean) as string[];
+
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE_NAME,
+    name: settings.siteName,
     url: SITE_URL,
-    logo: DEFAULT_OG_IMAGE,
-    sameAs: [
-      "https://facebook.com/chittagongtrail",
-      "https://instagram.com/chittagongtrail",
-      "https://youtube.com/@chittagongtrail",
-    ],
+    logo: settings.defaultOgMedia ? settings.defaultOgMedia.secureUrl : DEFAULT_OG_IMAGE,
+    sameAs: sameAs.length > 0 ? sameAs : undefined,
   };
 }
 
-export function buildWebSiteJsonLd(): WebSiteJsonLd {
+export async function buildWebSiteJsonLd(): Promise<WebSiteJsonLd> {
+  const { getPublicSiteSettings } = await import("./settings-service");
+  const settings = await getPublicSiteSettings();
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: SITE_NAME,
+    name: settings.siteName,
     url: SITE_URL,
-    description: SITE_DESCRIPTION,
+    description: settings.defaultMetaDescription || settings.siteTagline || SITE_DESCRIPTION,
   };
 }
 
