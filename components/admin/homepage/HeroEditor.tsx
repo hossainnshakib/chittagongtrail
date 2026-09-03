@@ -54,22 +54,34 @@ export default function HeroEditor() {
         setHeroMediaId(j.heroMediaId);
         setVideoEnabled(j.heroVideoEnabled);
         setVideoProvider(j.heroVideoProvider);
-        setVideoUrl(j.heroVideoUrl || "");
         setOverlay(j.heroVideoOverlay ?? 45);
-        if (j.heroVideoProvider === "DIRECT" && j.heroVideoAsset) {
-          setVideoMedia(j.heroVideoAsset);
-          setVideoUrl(j.heroVideoAsset.secureUrl);
-        } else if (j.heroVideoProvider === "DIRECT" && j.heroVideoMediaId) {
-          // fallback: fetch asset detail by id if asset not included
-          fetch(`/api/admin/media?id=${j.heroVideoMediaId}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then((asset: MediaAssetData | null) => {
-              if (asset && asset.resourceType === "video") {
-                setVideoMedia(asset);
-                setVideoUrl(asset.secureUrl);
-              }
-            })
-            .catch(() => {});
+        if (j.heroVideoProvider === "DIRECT") {
+          // Initialize selected video from heroVideoMedia relation (durable FK)
+          if (j.heroVideoAsset) {
+            setVideoMedia(j.heroVideoAsset);
+            setVideoUrl(j.heroVideoAsset.secureUrl);
+          } else if (j.heroVideoMediaId) {
+            // fallback: fetch asset detail by id if asset not included (e.g., legacy)
+            fetch(`/api/admin/media?id=${j.heroVideoMediaId}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((asset: MediaAssetData | null) => {
+                if (asset && asset.resourceType === "video") {
+                  setVideoMedia(asset);
+                  setVideoUrl(asset.secureUrl);
+                }
+              })
+              .catch(() => {});
+          } else {
+            setVideoMedia(null);
+            setVideoUrl("");
+          }
+          // DIRECT selection clears external URL (will be derived from asset)
+        } else if (j.heroVideoProvider === "YOUTUBE" || j.heroVideoProvider === "VIMEO") {
+          setVideoMedia(null);
+          setVideoUrl(j.heroVideoUrl || "");
+        } else {
+          setVideoMedia(null);
+          setVideoUrl("");
         }
       })
       .catch((e) => setError(e.message))
@@ -293,7 +305,21 @@ export default function HeroEditor() {
                 <select
                   id="videoProvider"
                   value={videoProvider}
-                  onChange={(e) => setVideoProvider(e.target.value as never)}
+                  onChange={(e) => {
+                    const next = e.target.value as typeof videoProvider;
+                    setVideoProvider(next);
+                    if (next === "DIRECT") {
+                      // DIRECT selection clears external URL; will be derived from selected MediaAsset
+                      setVideoUrl(videoMedia ? videoMedia.secureUrl : "");
+                    } else if (next === "YOUTUBE" || next === "VIMEO") {
+                      // external provider selection clears MediaAsset selection
+                      setVideoMedia(null);
+                    } else {
+                      // NONE: clear both
+                      setVideoMedia(null);
+                      setVideoUrl("");
+                    }
+                  }}
                   className="w-full px-3 py-2 border rounded text-sm"
                   style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)", minHeight: "44px" }}
                 >

@@ -67,6 +67,7 @@ model MediaAsset {
   homepageGalleries  HomepageGallery[]
   siteHeroMedias     SiteSettings[]    @relation("SiteHeroMedia")
   siteSeasonalMedias SiteSettings[]    @relation("SiteSeasonalMedia")
+  siteHeroVideoMedias SiteSettings[]   @relation("SiteHeroVideoMedia")
 
   @@map("media_assets")
 }
@@ -167,6 +168,8 @@ model SiteSettings {
   heroVideoProvider   HeroVideoProvider @default(NONE)
   heroVideoUrl        String?           @db.Text
   heroVideoOverlay    Int               @default(45)
+  heroVideoMediaId    Int?              @map("hero_video_media_id")
+  heroVideoMedia      MediaAsset?       @relation("SiteHeroVideoMedia", fields: [heroVideoMediaId], references: [id], onDelete: SetNull)
   introductionHeading String            @default("")
   introductionContent String?           @db.Text
   seasonalEyebrow     String            @default("")

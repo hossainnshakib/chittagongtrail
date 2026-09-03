@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { CLOUDINARY_CLOUD_NAME, ALLOWED_UPLOAD_FOLDERS } from "@/lib/cloudinary";
 
 function parseYouTubeId(url: string): string | null {
   const patterns = [/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/];
@@ -22,17 +23,54 @@ export async function GET(request: NextRequest) {
   try {
     const settings = await prisma.siteSettings.findUnique({
       where: { id: 1 },
-      include: { heroMedia: true },
+      include: { heroMedia: true, heroVideoMedia: true },
     });
     if (!settings) return NextResponse.json({ heroTitle: "", heroSubtitle: "", heroMedia: null, heroVideoEnabled: false, heroVideoProvider: "NONE", heroVideoUrl: null, heroVideoOverlay: 45, heroVideoMediaId: null, heroVideoAsset: null });
-    let heroVideoAsset = null as unknown as null | { id: number; secureUrl: string; format: string | null; resourceType: string };
+    let heroVideoAsset: { id: number; secureUrl: string; format: string | null; resourceType: string; publicId: string; width: number | null; height: number | null; duration?: number | null } | null = null;
     let heroVideoMediaId: number | null = null;
-    if (settings.heroVideoProvider === "DIRECT" && settings.heroVideoUrl) {
-      const asset = await prisma.mediaAsset.findFirst({ where: { secureUrl: settings.heroVideoUrl } });
-      if (asset && asset.resourceType === "video") {
-        heroVideoAsset = { id: asset.id, secureUrl: asset.secureUrl, format: asset.format, resourceType: asset.resourceType };
-        heroVideoMediaId = asset.id;
+    let heroVideoUrl: string | null = settings.heroVideoUrl || null;
+    if (settings.heroVideoProvider === "DIRECT" && settings.heroVideoMedia) {
+      // Durable FK relation is source of truth; derive URL/format from MediaAsset
+      if (settings.heroVideoMedia.resourceType === "video") {
+        heroVideoAsset = {
+          id: settings.heroVideoMedia.id,
+          secureUrl: settings.heroVideoMedia.secureUrl,
+          format: settings.heroVideoMedia.format,
+          resourceType: settings.heroVideoMedia.resourceType,
+          publicId: (settings.heroVideoMedia as unknown as { publicId: string }).publicId,
+          width: (settings.heroVideoMedia as unknown as { width: number | null }).width ?? null,
+          height: (settings.heroVideoMedia as unknown as { height: number | null }).height ?? null,
+        };
+        heroVideoMediaId = settings.heroVideoMedia.id;
+        heroVideoUrl = settings.heroVideoMedia.secureUrl;
+      } else {
+        heroVideoMediaId = null;
+        heroVideoAsset = null;
+        heroVideoUrl = null;
       }
+    } else if (settings.heroVideoProvider === "DIRECT" && settings.heroVideoMediaId) {
+      // Relation missing but FK present (should not happen after SetNull); fallback safely to poster only
+      heroVideoMediaId = null;
+      heroVideoAsset = null;
+      heroVideoUrl = null;
+    } else if (settings.heroVideoProvider === "DIRECT" && !settings.heroVideoMediaId) {
+      // No FK: legacy pre-migration DIRECT URL without FK — do not perform findFirst by secureUrl as primary; render poster only safely
+      // Compatibility comment: legacy URL fallback may remain temporarily only for unmatched pre-migration DIRECT records, but we prefer FK.
+      heroVideoMediaId = null;
+      heroVideoAsset = null;
+      heroVideoUrl = null;
+    } else if (settings.heroVideoProvider === "YOUTUBE" || settings.heroVideoProvider === "VIMEO") {
+      heroVideoMediaId = null;
+      heroVideoAsset = null;
+      heroVideoUrl = settings.heroVideoUrl || null;
+    } else {
+      heroVideoMediaId = null;
+      heroVideoAsset = null;
+      heroVideoUrl = null;
+    }
+    // Include heroVideoMediaId FK explicitly for editor initialization
+    if (settings.heroVideoMediaId && settings.heroVideoProvider === "DIRECT" && settings.heroVideoMedia) {
+      heroVideoMediaId = settings.heroVideoMediaId;
     }
     return NextResponse.json({
       heroTitle: settings.heroTitle || "",
@@ -41,7 +79,7 @@ export async function GET(request: NextRequest) {
       heroMedia: settings.heroMedia,
       heroVideoEnabled: settings.heroVideoEnabled,
       heroVideoProvider: settings.heroVideoProvider,
-      heroVideoUrl: settings.heroVideoUrl,
+      heroVideoUrl,
       heroVideoOverlay: settings.heroVideoOverlay,
       heroVideoMediaId,
       heroVideoAsset,
@@ -60,7 +98,7 @@ export async function POST(request: NextRequest) {
     const heroTitle = typeof body.heroTitle === "string" ? body.heroTitle.trim().slice(0, 200) : "";
     const heroSubtitle = typeof body.heroSubtitle === "string" ? body.heroSubtitle.trim().slice(0, 500) : "";
     const heroMediaId = body.heroMediaId === null || body.heroMediaId === undefined || body.heroMediaId === "" ? null : Number(body.heroMediaId);
-    const heroVideoEnabled = Boolean(body.heroVideoEnabled);
+    let heroVideoEnabled = Boolean(body.heroVideoEnabled);
     const heroVideoProvider = (body.heroVideoProvider as string) || "NONE";
     let heroVideoUrl: string | null = typeof body.heroVideoUrl === "string" && body.heroVideoUrl.trim() !== "" ? body.heroVideoUrl.trim() : null;
     const heroVideoMediaIdRaw = body.heroVideoMediaId === null || body.heroVideoMediaId === undefined || body.heroVideoMediaId === "" ? null : Number(body.heroVideoMediaId);
@@ -88,56 +126,70 @@ export async function POST(request: NextRequest) {
       if (asset.resourceType !== "image") return NextResponse.json({ error: "Poster must be an image" }, { status: 400 });
     }
 
-    // Video validation: video-only resource check when provider DIRECT corresponds to video asset
-    // For DIRECT, require stable numeric MediaAsset ID and derive URL server-side
+    // Video validation: server-authoritative FK relation
     const ALLOWED_VIDEO_FORMATS = ["mp4", "webm"];
-    if (heroVideoEnabled && heroVideoProvider !== "NONE") {
-      if (heroVideoProvider === "DIRECT") {
-        if (heroVideoMediaIdRaw === null || heroVideoMediaIdRaw === undefined) {
-          return NextResponse.json({ error: "DIRECT video requires a registered MediaAsset (heroVideoMediaId)" }, { status: 400 });
-        }
-        if (!Number.isInteger(heroVideoMediaIdRaw) || heroVideoMediaIdRaw <= 0) {
-          return NextResponse.json({ error: "Invalid heroVideoMediaId" }, { status: 400 });
-        }
-        const videoAsset = await prisma.mediaAsset.findUnique({ where: { id: heroVideoMediaIdRaw } });
-        if (!videoAsset) return NextResponse.json({ error: "Selected video asset not found" }, { status: 400 });
-        if (videoAsset.resourceType !== "video") return NextResponse.json({ error: "Selected video asset must be a video" }, { status: 400 });
-        if (!videoAsset.secureUrl || !videoAsset.secureUrl.startsWith("https://")) {
-          return NextResponse.json({ error: "Video asset has invalid secure URL" }, { status: 400 });
-        }
-        if (videoAsset.secureUrl.toLowerCase().includes("javascript:") || videoAsset.secureUrl.toLowerCase().includes("data:")) {
-          return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
-        }
-        const fmt = (videoAsset.format || "").toLowerCase();
-        if (!ALLOWED_VIDEO_FORMATS.includes(fmt)) {
-          return NextResponse.json({ error: `Unsupported video format: ${videoAsset.format || "unknown"}. Allowed: mp4, webm` }, { status: 400 });
-        }
-        // Server-derived URL - never trust client-supplied URL metadata for DIRECT
-        heroVideoUrl = videoAsset.secureUrl;
-      } else {
-        // YOUTUBE / VIMEO: validate HTTPS-like URL
-        if (!heroVideoUrl) return NextResponse.json({ error: "Video URL is required when video is enabled" }, { status: 400 });
-        if (heroVideoUrl.toLowerCase().includes("javascript:") || heroVideoUrl.toLowerCase().includes("data:")) {
-          return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
-        }
-        switch (heroVideoProvider) {
-          case "YOUTUBE":
-            if (!parseYouTubeId(heroVideoUrl)) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
-            break;
-          case "VIMEO":
-            if (!parseVimeoId(heroVideoUrl)) return NextResponse.json({ error: "Invalid Vimeo URL" }, { status: 400 });
-            break;
-          default:
-            break;
-        }
-        // Ensure arbitrary DIRECT URLs are not accepted under YOUTUBE/VIMEO path
-        if (heroVideoMediaIdRaw !== null && heroVideoMediaIdRaw !== undefined) {
-          // For non-DIRECT providers, mediaId should not be supplied; ignore but don't treat as video asset
-        }
-      }
-    } else if (!heroVideoEnabled || heroVideoProvider === "NONE") {
-      // When disabled or NONE, clear video URL regardless of input
+    let heroVideoMediaId: number | null = null;
+    // Normalize for NONE or disabled: clear both FK and URL, provider -> NONE
+    if (!heroVideoEnabled || heroVideoProvider === "NONE") {
+      heroVideoEnabled = false;
+      // heroVideoProvider will be normalized to NONE in persist
       heroVideoUrl = null;
+      heroVideoMediaId = null;
+    } else if (heroVideoProvider === "DIRECT") {
+      if (heroVideoMediaIdRaw === null || heroVideoMediaIdRaw === undefined) {
+        return NextResponse.json({ error: "DIRECT video requires a registered MediaAsset (heroVideoMediaId)" }, { status: 400 });
+      }
+      if (!Number.isInteger(heroVideoMediaIdRaw) || heroVideoMediaIdRaw <= 0) {
+        return NextResponse.json({ error: "Invalid heroVideoMediaId" }, { status: 400 });
+      }
+      const videoAsset = await prisma.mediaAsset.findUnique({ where: { id: heroVideoMediaIdRaw } });
+      if (!videoAsset) return NextResponse.json({ error: "Selected video asset not found" }, { status: 400 });
+      if (videoAsset.resourceType !== "video") return NextResponse.json({ error: "Selected video asset must be a video" }, { status: 400 });
+      if (!videoAsset.secureUrl || !videoAsset.secureUrl.startsWith("https://")) {
+        return NextResponse.json({ error: "Video asset has invalid secure URL" }, { status: 400 });
+      }
+      if (videoAsset.secureUrl.toLowerCase().includes("javascript:") || videoAsset.secureUrl.toLowerCase().includes("data:")) {
+        return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
+      }
+      try {
+        const u = new URL(videoAsset.secureUrl);
+        if (u.hostname !== "res.cloudinary.com") {
+          return NextResponse.json({ error: "DIRECT video must be a Cloudinary URL" }, { status: 400 });
+        }
+        if (CLOUDINARY_CLOUD_NAME && !u.pathname.includes(CLOUDINARY_CLOUD_NAME)) {
+          return NextResponse.json({ error: "Video asset does not belong to configured Cloudinary account" }, { status: 400 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Video asset has invalid secure URL" }, { status: 400 });
+      }
+      const hasValidNamespace = (ALLOWED_UPLOAD_FOLDERS as readonly string[]).some((ns) => videoAsset.publicId.startsWith(ns));
+      if (!hasValidNamespace) {
+        return NextResponse.json({ error: "Video asset does not belong to approved namespace" }, { status: 400 });
+      }
+      const fmt = (videoAsset.format || "").toLowerCase();
+      if (!ALLOWED_VIDEO_FORMATS.includes(fmt)) {
+        return NextResponse.json({ error: `Unsupported video format: ${videoAsset.format || "unknown"}. Allowed: mp4, webm` }, { status: 400 });
+      }
+      // Server-derived URL - never trust client-supplied secureUrl, format, publicId or resourceType for DIRECT
+      heroVideoUrl = videoAsset.secureUrl;
+      heroVideoMediaId = videoAsset.id;
+    } else if (heroVideoProvider === "YOUTUBE" || heroVideoProvider === "VIMEO") {
+      // For YOUTUBE/VIMEO, heroVideoMediaId must be null
+      heroVideoMediaId = null;
+      if (!heroVideoUrl) return NextResponse.json({ error: "Video URL is required when video is enabled" }, { status: 400 });
+      if (heroVideoUrl.toLowerCase().includes("javascript:") || heroVideoUrl.toLowerCase().includes("data:")) {
+        return NextResponse.json({ error: "Unsafe video URL" }, { status: 400 });
+      }
+      switch (heroVideoProvider) {
+        case "YOUTUBE":
+          if (!parseYouTubeId(heroVideoUrl)) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
+          break;
+        case "VIMEO":
+          if (!parseVimeoId(heroVideoUrl)) return NextResponse.json({ error: "Invalid Vimeo URL" }, { status: 400 });
+          break;
+        default:
+          break;
+      }
     }
 
     // Emphasis validation: allow lightweight *text* syntax, reject unsafe HTML
@@ -151,28 +203,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Hero subtitle must not contain HTML" }, { status: 400 });
     }
 
-    await prisma.siteSettings.upsert({
-      where: { id: 1 },
-      update: {
-        heroTitle,
-        heroSubtitle,
-        heroMediaId,
-        heroVideoEnabled: heroVideoProvider === "NONE" ? false : heroVideoEnabled,
-        heroVideoProvider: heroVideoProvider as unknown as import("@prisma/client").HeroVideoProvider,
-        heroVideoUrl: heroVideoProvider === "NONE" ? null : heroVideoUrl,
-        heroVideoOverlay,
-      },
-      create: {
-        id: 1,
-        siteName: "Chittagong Trail",
-        heroTitle,
-        heroSubtitle,
-        heroMediaId,
-        heroVideoEnabled: heroVideoProvider === "NONE" ? false : heroVideoEnabled,
-        heroVideoProvider: heroVideoProvider as unknown as import("@prisma/client").HeroVideoProvider,
-        heroVideoUrl: heroVideoProvider === "NONE" ? null : heroVideoUrl,
-        heroVideoOverlay,
-      },
+    // Determine normalized provider for persistence
+    const normalizedProvider = (!heroVideoEnabled || heroVideoProvider === "NONE") ? "NONE" : heroVideoProvider;
+    const normalizedEnabled = normalizedProvider === "NONE" ? false : heroVideoEnabled;
+    const persistedHeroVideoUrl = normalizedProvider === "NONE" ? null : heroVideoUrl;
+    const persistedHeroVideoMediaId = normalizedProvider === "DIRECT" ? heroVideoMediaId : null;
+
+    // Use transaction if multiple dependent writes are performed (FK + URL derivation is atomic via single upsert, but wrap for safety)
+    await prisma.$transaction(async (tx) => {
+      await tx.siteSettings.upsert({
+        where: { id: 1 },
+        update: {
+          heroTitle,
+          heroSubtitle,
+          heroMediaId,
+          heroVideoEnabled: normalizedEnabled,
+          heroVideoProvider: normalizedProvider as unknown as import("@prisma/client").HeroVideoProvider,
+          heroVideoUrl: persistedHeroVideoUrl,
+          heroVideoMediaId: persistedHeroVideoMediaId,
+          heroVideoOverlay,
+        },
+        create: {
+          id: 1,
+          siteName: "Chittagong Trail",
+          heroTitle,
+          heroSubtitle,
+          heroMediaId,
+          heroVideoEnabled: normalizedEnabled,
+          heroVideoProvider: normalizedProvider as unknown as import("@prisma/client").HeroVideoProvider,
+          heroVideoUrl: persistedHeroVideoUrl,
+          heroVideoMediaId: persistedHeroVideoMediaId,
+          heroVideoOverlay,
+        },
+      });
     });
 
     revalidatePath("/");

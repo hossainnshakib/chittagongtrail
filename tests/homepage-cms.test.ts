@@ -755,19 +755,35 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       assert.ok(schema.includes("@unique") || schema.includes("mediaAssetId"));
     });
 
-    it("Cloudinary video via heroVideoUrl + heroVideoProvider enum, no extra schema needed", () => {
+    it("Cloudinary video via heroVideoUrl + heroVideoProvider enum, with durable FK relation", () => {
       const schema = readFile("prisma/schema.prisma");
       assert.ok(schema.includes("heroVideoProvider"));
       assert.ok(schema.includes("heroVideoUrl"));
       assert.ok(schema.includes("HeroVideoProvider"));
+      // A7R.6.2 adds durable nullable FK for DIRECT video
+      assert.ok(schema.includes("heroVideoMediaId"), "should have heroVideoMediaId FK");
+      assert.ok(schema.includes("heroVideoMedia"), "should have heroVideoMedia relation");
+      assert.ok(schema.includes('SiteHeroVideoMedia'), "should use named relation SiteHeroVideoMedia");
+      assert.ok(schema.includes('@map("hero_video_media_id")'), "should map to hero_video_media_id");
+      assert.ok(schema.includes("onDelete: SetNull"), "FK should be SetNull");
     });
   });
 
-  describe("Data Model Preference — No Schema Migration Needed", () => {
-    it("prefers existing fields, no pending migration for A7R.6", () => {
+  describe("Data Model Preference — A7R.6.2 Migration Approved", () => {
+    it("hero video FK migration exists and is nullable backward compatible", () => {
       const schema = readFile("prisma/schema.prisma");
-      // Ensure we did not add heroVideoMediaId etc unnecessarily
-      assert.ok(!schema.includes("heroVideoMediaId"), "Should not add new video media field unnecessarily");
+      assert.ok(schema.includes("heroVideoMediaId"), "Should have new video media FK after A7R.6.2");
+      // heroVideoProvider remains, heroVideoUrl remains for external providers
+      assert.ok(schema.includes("heroVideoProvider"));
+      assert.ok(schema.includes("heroVideoUrl"));
+      // Migration file exists
+      const migPath = "prisma/migrations/20260903000000_add_hero_video_media_relation/migration.sql";
+      assert.ok(fs.existsSync(path.join(process.cwd(), migPath)), "migration SQL should exist");
+      const sql = readFile(migPath);
+      assert.ok(sql.includes("hero_video_media_id"), "migration should contain column");
+      assert.ok(sql.includes("site_settings_hero_video_media_id_fkey"), "migration should contain FK");
+      assert.ok(sql.includes("ADD COLUMN") && sql.includes("INTEGER NULL"), "FK should be nullable");
+      assert.ok(!sql.includes("heroVideoUrl") || sql.includes("hero_video_media_id"), "migration should not be destructive");
     });
   });
 });

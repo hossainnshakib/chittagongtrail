@@ -94,7 +94,6 @@ describe("A7R.6.1 — Hero Video Integrity, MIME Safety & Lifecycle", () => {
       assert.ok(hero.includes("videoFormat") || hero.includes("effectiveFormat"), "should accept videoFormat prop");
       assert.ok(hero.includes("<source") && hero.includes('type='), "should set type attribute");
       // Ensure no hardcoded video/mp4 for every DIRECT - should be dynamic
-      const directSourceBlock = hero.slice(hero.indexOf("<source"), hero.indexOf("<source") + 500);
       assert.ok(!hero.includes('type="video/mp4"') || hero.includes("mimeType"), "should not hardcode video/mp4");
     });
 
@@ -103,10 +102,11 @@ describe("A7R.6.1 — Hero Video Integrity, MIME Safety & Lifecycle", () => {
       assert.ok(page.includes("heroVideoFormat") || page.includes("videoFormat"), "should pass format to Hero");
     });
 
-    it("settings-service derives heroVideoFormat from MediaAsset", () => {
+    it("settings-service derives heroVideoFormat from MediaAsset via FK relation", () => {
       const svc = readFile("lib/settings-service.ts");
       assert.ok(svc.includes("heroVideoFormat"), "should provide heroVideoFormat");
-      assert.ok(svc.includes("findFirst") && svc.includes("heroVideoUrl"), "should lookup asset by URL");
+      assert.ok(svc.includes("heroVideoMedia") && svc.includes("heroVideoMedia.format"), "should derive format from relation");
+      assert.ok(!svc.includes("findFirst") || svc.includes("heroVideoMedia"), "should use relation not findFirst by secureUrl");
     });
 
     it("unsupported image/audio/raw assets are rejected server-side", () => {
