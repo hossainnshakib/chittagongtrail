@@ -2,43 +2,54 @@ import sanitizeHtml from "sanitize-html";
 import { z } from "zod";
 
 export const sanitizeContent = (dirty: string): string => {
-  return sanitizeHtml(dirty, {
+  if (!dirty || typeof dirty !== "string") return "";
+  const cleaned = sanitizeHtml(dirty, {
     allowedTags: [
       "p",
-      "h1",
       "h2",
       "h3",
-      "h4",
-      "h5",
-      "h6",
       "blockquote",
       "ul",
       "ol",
       "li",
       "strong",
       "em",
+      "u",
       "a",
       "img",
       "br",
       "hr",
-      "code",
-      "pre",
-      "table",
-      "thead",
-      "tbody",
-      "tr",
-      "th",
-      "td",
     ],
     allowedAttributes: {
       a: ["href", "name", "target", "rel"],
-      img: ["src", "alt", "width", "height", "loading"],
+      img: ["src", "alt", "title", "width", "height"],
     },
     transformTags: {
-      a: sanitizeHtml.simpleTransform("a", { target: "_blank", rel: "noopener noreferrer" }, true),
+      a: (tagName, attribs) => {
+        const href = attribs.href || "";
+        const isExternal = href.startsWith("http://") || href.startsWith("https://");
+        return {
+          tagName: "a",
+          attribs: {
+            ...attribs,
+            rel: isExternal ? "noopener noreferrer" : "",
+            ...(isExternal ? { target: "_blank" } : {}),
+          },
+        };
+      },
     },
     allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: {
+      img: ["http", "https"],
+    },
   });
+
+  // Check for visually empty HTML such as <p></p>, <p><br></p>, whitespace only
+  const stripped = cleaned.replace(/<[^>]*>/g, "").trim();
+  if (!stripped && !cleaned.includes("<img")) {
+    return "";
+  }
+  return cleaned;
 };
 
 export const slugSchema = z

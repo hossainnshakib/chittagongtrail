@@ -9,9 +9,11 @@ import {
   updateTrail,
   type TrailActionResult,
 } from "@/app/admin/(protected)/trails/actions";
-import DeleteButton from "@/components/admin/DeleteButton";
+import SeoPanel from "@/components/admin/SeoPanel";
 import MediaField from "@/components/admin/media/MediaField";
+import DeleteButton from "@/components/admin/DeleteButton";
 import GalleryManager from "@/components/admin/media/GalleryManager";
+import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import type { MediaAssetData } from "@/components/admin/media/types";
 
 interface TrailFormProps {
@@ -44,7 +46,6 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
     return initialOg || null;
   });
   const [galleryAssets, setGalleryAssets] = useState<MediaAssetData[]>(initialGallery || []);
-  const [seoExpanded, setSeoExpanded] = useState(false);
   const [status, setStatus] = useState<string>(trail?.status ?? "DRAFT");
   const [isFeatured, setIsFeatured] = useState(trail?.isFeatured ?? false);
 
@@ -132,14 +133,12 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                 />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="description" className="block text-xs font-medium text-[#5D4037] mb-1">Description * (HTML)</label>
-                <textarea
-                  id="description"
+                <AdminRichTextEditor
+                  initialContent={trail?.description ?? ""}
                   name="description"
-                  defaultValue={trail?.description}
+                  label="Description *"
+                  placeholder="Describe the place, experience, access and context..."
                   required
-                  rows={8}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] font-mono focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
                 />
                 {state.errors?.description && <p className="text-red-600 text-xs mt-0.5">{state.errors.description}</p>}
               </div>
@@ -382,42 +381,14 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
             )}
           </div>
 
-          <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <button
-              type="button"
-              onClick={() => setSeoExpanded(!seoExpanded)}
-              className="flex items-center justify-between w-full text-xs font-semibold text-[#5D4037] uppercase tracking-wide cursor-pointer"
-            >
-              <span>SEO</span>
-              <svg className={`w-3 h-3 transition-transform ${seoExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {seoExpanded && (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <label htmlFor="metaTitle" className="block text-xs font-medium text-[#5D4037] mb-1">Meta Title</label>
-                  <input
-                    type="text"
-                    id="metaTitle"
-                    name="metaTitle"
-                    defaultValue={trail?.metaTitle ?? ""}
-                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="metaDescription" className="block text-xs font-medium text-[#5D4037] mb-1">Meta Description</label>
-                  <textarea
-                    id="metaDescription"
-                    name="metaDescription"
-                    defaultValue={trail?.metaDescription ?? ""}
-                    rows={2}
-                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <SeoPanel
+            initialMetaTitle={trail?.metaTitle}
+            initialMetaDescription={trail?.metaDescription}
+            defaultTitle={trail?.name}
+            defaultDescription={trail?.excerpt ?? undefined}
+            canonicalPath={trail ? `/trails/${trail.slug}` : "/trails/new"}
+            coverUrl={coverAsset?.secureUrl}
+          />
         </div>
       </div>
     </form>

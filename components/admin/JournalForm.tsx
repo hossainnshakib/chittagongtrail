@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import type { JournalPost, TrailLocation } from "@prisma/client";
+import SeoPanel from "@/components/admin/SeoPanel";
 import DeleteButton from "@/components/admin/DeleteButton";
 import MediaField from "@/components/admin/media/MediaField";
+import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import type { MediaAssetData } from "@/components/admin/media/types";
 
 type FormActionResult = {
@@ -55,7 +57,6 @@ export default function JournalForm({
     if (initialOg && initialCover && initialOg.id === initialCover.id) return null;
     return initialOg || null;
   });
-  const [seoExpanded, setSeoExpanded] = useState(false);
   const [status, setStatus] = useState<string>(post?.status ?? "DRAFT");
   const [isFeatured, setIsFeatured] = useState(post?.isFeatured ?? false);
 
@@ -65,9 +66,6 @@ export default function JournalForm({
   const createLabel = isFood ? "Create Food Post" : "Create Story";
   const editLabel = "Save Changes";
   const creatingLabel = isFood ? "Creating..." : "Creating...";
-  const contentPlaceholder = isFood
-    ? "<p>Your food story content here...</p>"
-    : "<p>Your content here...</p>";
   const mediaFolder = isFood ? "chittagong-trail/food" : "chittagong-trail/journal";
 
   function handleSlugGenerate() {
@@ -153,15 +151,12 @@ export default function JournalForm({
                 />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor={`${idPrefix}content`} className="block text-xs font-medium text-[#5D4037] mb-1">Content * (HTML)</label>
-                <textarea
-                  id={`${idPrefix}content`}
+                <AdminRichTextEditor
+                  initialContent={post?.content ?? ""}
                   name="content"
-                  defaultValue={post?.content}
+                  label="Content *"
+                  placeholder={isFood ? "Describe the food, culture, place and experience..." : "Write your story..."}
                   required
-                  rows={12}
-                  className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] font-mono focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  placeholder={contentPlaceholder}
                 />
                 {state.errors?.content && <p className="text-red-600 text-xs mt-0.5">{state.errors.content}</p>}
               </div>
@@ -316,42 +311,14 @@ export default function JournalForm({
             )}
           </div>
 
-          <div className="bg-white rounded-lg border border-[#E8DCC8] p-4">
-            <button
-              type="button"
-              onClick={() => setSeoExpanded(!seoExpanded)}
-              className="flex items-center justify-between w-full text-xs font-semibold text-[#5D4037] uppercase tracking-wide cursor-pointer"
-            >
-              <span>SEO</span>
-              <svg className={`w-3 h-3 transition-transform ${seoExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {seoExpanded && (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <label htmlFor={`${idPrefix}metaTitle`} className="block text-xs font-medium text-[#5D4037] mb-1">Meta Title</label>
-                  <input
-                    type="text"
-                    id={`${idPrefix}metaTitle`}
-                    name="metaTitle"
-                    defaultValue={post?.metaTitle ?? ""}
-                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor={`${idPrefix}metaDescription`} className="block text-xs font-medium text-[#5D4037] mb-1">Meta Description</label>
-                  <textarea
-                    id={`${idPrefix}metaDescription`}
-                    name="metaDescription"
-                    defaultValue={post?.metaDescription ?? ""}
-                    rows={2}
-                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <SeoPanel
+            initialMetaTitle={post?.metaTitle}
+            initialMetaDescription={post?.metaDescription}
+            defaultTitle={post?.title}
+            defaultDescription={post?.excerpt ?? undefined}
+            canonicalPath={post ? (contentType === "FOOD" ? `/food/${post.slug}` : `/journal/${post.slug}`) : (contentType === "FOOD" ? "/food/new" : "/journal/new")}
+            coverUrl={coverAsset?.secureUrl}
+          />
         </div>
       </div>
     </form>
