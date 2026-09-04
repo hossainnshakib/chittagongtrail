@@ -59,6 +59,8 @@ export function Header() {
             className="ct-nav-burger"
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open menu"
+            aria-controls="public-mobile-menu"
+            aria-expanded={isMobileMenuOpen}
           >
             <span />
             <span />

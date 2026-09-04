@@ -3,6 +3,7 @@ interface SectionHeadingProps {
   subtitle?: string;
   className?: string;
   centered?: boolean;
+  as?: "h1" | "h2" | "h3";
 }
 
 export function SectionHeading({
@@ -10,16 +11,19 @@ export function SectionHeading({
   subtitle,
   className = "",
   centered = false,
+  as = "h2",
 }: SectionHeadingProps) {
+  const Heading = as;
+
   return (
     <div
-      className={`mb-8 ${centered ? "text-center" : ""} ${className}`}
+      className={`ct-section-heading ${centered ? "text-center" : ""} ${className}`}
     >
-      <h2 className="font-display text-3xl md:text-4xl font-semibold text-text mb-3">
+      <Heading className="ct-section-heading-title font-display text-3xl md:text-4xl font-semibold text-text mb-3">
         {title}
-      </h2>
+      </Heading>
       {subtitle && (
-        <p className="text-text-secondary text-lg max-w-2xl">
+        <p className={`ct-section-heading-subtitle text-text-secondary text-lg max-w-2xl ${centered ? "mx-auto" : ""}`}>
           {subtitle}
         </p>
       )}

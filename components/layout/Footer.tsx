@@ -28,9 +28,9 @@ export async function Footer() {
       : "An independent exploration and storytelling platform documenting Chittagong's places, people, food, and landscapes.";
 
   return (
-    <footer className="bg-dark-bg text-dark-text">
+    <footer className="ct-footer">
       <div className="ct-container py-16 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="ct-footer-grid">
           {/* Brand */}
           <div className="lg:col-span-1">
             <Image
@@ -38,16 +38,19 @@ export async function Footer() {
               alt={settings.siteName}
               width={240}
               height={64}
-              className="h-12 w-auto mb-4"
+              className="ct-footer-wordmark mb-4"
             />
-            <p className="text-dark-text/70 text-sm">
+            <div className="ct-footer-brand-lockup">
+              <span className="ct-footer-brand-name">{settings.siteName}</span>
+            </div>
+            <p className="ct-footer-copy mt-3 max-w-sm">
               {displayFooterText}
             </p>
           </div>
 
           {/* Explore */}
           <div>
-            <h3 className="font-display text-lg font-semibold mb-4">
+            <h3 className="ct-footer-heading">
               Explore
             </h3>
             <ul className="space-y-3">
@@ -55,7 +58,7 @@ export async function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200"
+                    className="ct-footer-link"
                   >
                     {item.name}
                   </Link>
@@ -66,7 +69,7 @@ export async function Footer() {
 
           {/* Follow */}
           <div>
-            <h3 className="font-display text-lg font-semibold mb-4">
+            <h3 className="ct-footer-heading">
               Follow
             </h3>
             {socialLinks.length > 0 ? (
@@ -77,7 +80,7 @@ export async function Footer() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200"
+                      className="ct-footer-link"
                     >
                       {item.name}
                     </a>
@@ -85,13 +88,13 @@ export async function Footer() {
                 ))}
               </ul>
             ) : (
-              <p className="text-dark-text/50 text-sm">No social links configured.</p>
+              <p className="ct-footer-empty">Social links are coming soon.</p>
             )}
           </div>
 
           {/* Contact */}
           <div>
-            <h3 className="font-display text-lg font-semibold mb-4">
+            <h3 className="ct-footer-heading">
               Contact
             </h3>
             <div className="space-y-2">
@@ -99,7 +102,7 @@ export async function Footer() {
                 <p>
                   <a
                     href={`mailto:${settings.contactEmail}`}
-                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                    className="ct-footer-link"
                   >
                     {settings.contactEmail}
                   </a>
@@ -109,7 +112,7 @@ export async function Footer() {
                 <p>
                   <a
                     href={`tel:${settings.contactPhone.replace(/\s+/g, "")}`}
-                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                    className="ct-footer-link"
                   >
                     {settings.contactPhone}
                   </a>
@@ -121,27 +124,26 @@ export async function Footer() {
                     href={settings.whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-dark-text/70 hover:text-dark-accent transition-colors duration-200 text-sm"
+                    className="ct-footer-link"
                   >
                     WhatsApp Chat
                   </a>
                 </p>
               ) : null}
               {settings.contactAddress && settings.contactAddress.trim() !== "" ? (
-                <p className="text-dark-text/70 text-sm whitespace-pre-line">
+                <p className="ct-footer-address whitespace-pre-line">
                   {settings.contactAddress}
                 </p>
               ) : null}
               {!settings.contactEmail && !settings.contactPhone && !settings.whatsappUrl && !settings.contactAddress && (
-                <p className="text-dark-text/50 text-sm">Contact information not configured.</p>
+                <p className="ct-footer-empty">Contact details are coming soon.</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-dark-text/20">
-          <p className="text-dark-text/50 text-sm text-center">
+        <div className="ct-footer-rule mt-12 pt-8">
+          <p className="ct-footer-copyright text-center">
             © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
           </p>
         </div>

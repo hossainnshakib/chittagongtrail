@@ -9,5 +9,9 @@ export function Container({
   className = "",
   as: Component = "div",
 }: ContainerProps) {
-  return <Component className={`container ${className}`}>{children}</Component>;
+  return (
+    <Component className={`ct-container ${className}`} data-public-container="true">
+      {children}
+    </Component>
+  );
 }

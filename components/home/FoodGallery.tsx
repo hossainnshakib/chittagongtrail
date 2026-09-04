@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionReveal } from "@/components/ui";
+import { PublicEmptyState, SectionReveal } from "@/components/ui";
 
 interface FoodItem {
   id: number;
@@ -37,9 +37,11 @@ export async function FoodGallery({ foodPosts }: FoodGalleryProps) {
       {stories.length === 0 ? (
         <div className="ct-container">
           <SectionReveal>
-            <p className="text-text-secondary text-base py-12 text-center">
-              Featured food stories will appear here once configured in Admin (Featured Food).
-            </p>
+            <PublicEmptyState
+              eyebrow="Food"
+              title="Food stories are on the way"
+              message="Chittagong's culinary notes will appear here as new food features are published."
+            />
           </SectionReveal>
         </div>
       ) : (

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { SectionReveal } from "@/components/ui";
+import { PublicEmptyState, SectionReveal } from "@/components/ui";
 
 interface GalleryItem {
   id: number;
@@ -34,9 +34,11 @@ export async function UneditedGallery({ galleryItems }: UneditedGalleryProps) {
       {gallery.length === 0 ? (
         <div className="ct-container">
           <SectionReveal>
-            <p className="text-text-secondary text-base py-12 text-center">
-              Gallery images will appear here once curated in Admin (Gallery).
-            </p>
+            <PublicEmptyState
+              eyebrow="Gallery"
+              title="Gallery coming into focus"
+              message="Real views from Chittagong will appear here as the visual archive grows."
+            />
           </SectionReveal>
         </div>
       ) : (

@@ -7,9 +7,9 @@ interface PublicLayoutProps {
 
 export function PublicLayout({ children }: PublicLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="ct-public-shell min-h-screen flex flex-col">
       <Header />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="ct-public-main flex-1">
         {children}
       </main>
       <Footer />

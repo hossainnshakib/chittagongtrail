@@ -33,9 +33,15 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div id="public-mobile-menu" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <div ref={menuRef} className="ct-mobile-menu">
+      <div
+        ref={menuRef}
+        className="ct-mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Main navigation"
+      >
         <div className="ct-mobile-menu-head">
           <Link href="/" onClick={onClose}>
             <Image src="/images/chittagongtrail_logo.png" alt="Chittagong Trail" width={36} height={36} className="h-9 w-auto" />

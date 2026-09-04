@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionReveal } from "@/components/ui";
+import { PublicEmptyState, SectionReveal } from "@/components/ui";
 import { getLatestJournalPosts } from "@/lib/data";
 
 export async function ExperiencesGrid() {
@@ -22,9 +22,11 @@ export async function ExperiencesGrid() {
       {stories.length === 0 ? (
         <div className="ct-container">
           <SectionReveal>
-            <p className="text-text-secondary text-base py-12 text-center">
-              Journal stories will appear here.
-            </p>
+            <PublicEmptyState
+              eyebrow="Journal"
+              title="Stories are on the way"
+              message="Field notes and local essays will fill this space as the journal grows."
+            />
           </SectionReveal>
         </div>
       ) : (

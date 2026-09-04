@@ -36,11 +36,11 @@ export default async function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      {/* Hero Section */}
-      <section className="section bg-background pt-32">
+      <section className="ct-page-header ct-cream">
         <Container>
-          <div className="max-w-3xl">
+          <div className="ct-page-heading">
             <SectionHeading
+              as="h1"
               title={`About ${settings.siteName}`}
               subtitle="An independent platform documenting Chittagong through genuine exploration and authentic editorial voice."
             />
@@ -48,8 +48,7 @@ export default async function AboutPage() {
         </Container>
       </section>
 
-      {/* Content */}
-      <section className="section bg-background-secondary pb-16">
+      <section className="ct-page-body ct-warm">
         <Container>
           <div className="max-w-3xl mx-auto">
             <div className="prose prose-lg prose-headings:font-display prose-headings:text-text prose-p:text-text-secondary">

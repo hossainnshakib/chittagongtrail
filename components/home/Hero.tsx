@@ -211,7 +211,7 @@ export function Hero({
 
   const showKenBurns = reducedMotion || !videoEnabled || resolved.provider === "NONE";
 
-  const gradientStrength = Math.max(0, Math.min(100, videoOverlay)) / 100;
+  const gradientStrength = Math.max(0.65, Math.min(100, videoOverlay) / 100);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -295,10 +295,10 @@ export function Hero({
 
       <div className="ct-hero-content" ref={heroRef}>
         <div className="mb-6 flex flex-wrap gap-3">
-          <span className="inline-block rounded-full border border-[color:var(--color-dark-text)]/20 bg-[color:var(--color-dark-text)]/5 px-4 py-1.5 font-[var(--font-body)] text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[color:var(--color-dark-text)]/70 backdrop-blur-sm">
+          <span className="inline-block rounded-full border border-[rgba(253,245,230,0.5)] bg-[rgba(44,26,18,0.42)] px-4 py-1.5 font-[var(--font-body)] text-[0.6875rem] font-bold uppercase tracking-[0.2em] text-[color:var(--color-dark-text)] backdrop-blur-sm">
             Chittagong, in every direction
           </span>
-          <span className="inline-block rounded-full border border-[color:var(--color-accent)]/30 bg-[color:var(--color-accent)]/10 px-4 py-1.5 font-[var(--font-body)] text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-[color:var(--color-accent)]">
+          <span className="inline-block rounded-full border border-[rgba(201,168,130,0.55)] bg-[rgba(44,26,18,0.42)] px-4 py-1.5 font-[var(--font-body)] text-[0.6875rem] font-bold uppercase tracking-[0.2em] text-[#E3C79F]">
             Five districts · One trail
           </span>
         </div>

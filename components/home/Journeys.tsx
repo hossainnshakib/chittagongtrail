@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionReveal } from "@/components/ui";
+import { PublicEmptyState, SectionReveal } from "@/components/ui";
 
 interface StoryItem {
   id: number;
@@ -42,9 +42,13 @@ export function Journeys({ stories }: JourneysProps) {
 
         {displayStories.length === 0 ? (
           <SectionReveal>
-            <p className="text-dark-text/60 text-base py-8">
-              Featured stories will appear here once configured in Admin (Featured Stories).
-            </p>
+            <PublicEmptyState
+              eyebrow="Stories"
+              title="Dispatches are being prepared"
+              message="Longer journeys and field stories will appear here as they are published."
+              tone="dark"
+              align="left"
+            />
           </SectionReveal>
         ) : (
           <SectionReveal>
@@ -53,7 +57,7 @@ export function Journeys({ stories }: JourneysProps) {
                 <Link
                   key={story.slug}
                   href={`/journal/${story.slug}`}
-                  className="group flex flex-col bg-dark-card rounded-lg overflow-hidden border border-dark-border hover:border-accent transition-colors"
+                  className="group flex flex-col rounded-lg overflow-hidden border border-[rgba(253,245,230,0.18)] bg-[rgba(253,245,230,0.08)] hover:border-accent transition-colors"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden">
                     {story.coverMedia?.secureUrl ? (

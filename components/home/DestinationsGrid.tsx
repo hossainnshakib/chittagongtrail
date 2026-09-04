@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionReveal } from "@/components/ui";
+import { PublicEmptyState, SectionReveal } from "@/components/ui";
 
 interface TrailItem {
   id: number;
@@ -33,9 +33,11 @@ export async function DestinationsGrid({ trails }: DestinationsGridProps) {
       {displayTrails.length === 0 ? (
         <div className="ct-container">
           <SectionReveal>
-            <p className="text-text-secondary text-base py-12 text-center">
-              Featured trails will appear here once configured in Admin (Featured Trails).
-            </p>
+            <PublicEmptyState
+              eyebrow="Trails"
+              title="Trails are being mapped"
+              message="Handpicked places will appear here as new Chittagong guides are published."
+            />
           </SectionReveal>
         </div>
       ) : (
