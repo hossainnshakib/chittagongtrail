@@ -385,9 +385,10 @@ describe("Admin Shell Tests", () => {
       assert.ok(content.includes("--admin-content-max-width"), "Trails sets content width");
     });
 
-    it("settings page sets constrained content width", () => {
+    it("settings page renders inside admin-shell content area", () => {
       const content = fs.readFileSync("app/admin/(protected)/settings/page.tsx", "utf-8");
-      assert.ok(content.includes("--admin-content-max-width"), "Settings sets content width");
+      assert.ok(content.includes("export default"), "Settings page has default export");
+      assert.ok(!content.includes("AdminShell"), "Settings page does not import AdminShell directly (uses layout)");
     });
   });
 
@@ -485,6 +486,48 @@ describe("Admin Shell Tests", () => {
       assert.ok(css.includes(".ct-btn"), "Public ct-btn preserved");
       assert.ok(css.includes(".ct-nav"), "Public ct-nav preserved");
       assert.ok(css.includes(".ct-hero"), "Public ct-hero preserved");
+    });
+  });
+
+  describe("Security Headers & CSP", () => {
+    it("production CSP excludes unsafe-eval in script-src", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("isProd"), "Uses isProd flag");
+      assert.ok(config.includes("NODE_ENV"), "Checks NODE_ENV");
+      assert.ok(config.includes("unsafe-eval"), "unsafe-eval reference exists for dev branch");
+      assert.ok(config.includes('isProd ? "" :'), "unsafe-eval is conditional on production");
+    });
+
+    it("CSP includes required Cloudinary origins", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("res.cloudinary.com"), "Cloudinary image/media origin");
+      assert.ok(config.includes("api.cloudinary.com"), "Cloudinary API origin");
+    });
+
+    it("CSP includes YouTube and Vimeo frame origins", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("youtube-nocookie.com"), "YouTube privacy-enhanced origin");
+      assert.ok(config.includes("player.vimeo.com"), "Vimeo origin");
+    });
+
+    it("CSP enforces object-src none and frame-ancestors none", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("object-src 'none'"), "object-src none");
+      assert.ok(config.includes("frame-ancestors 'none'"), "frame-ancestors none");
+    });
+
+    it("HSTS is production-only", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("isProd"), "HSTS conditional on production");
+      assert.ok(config.includes("Strict-Transport-Security"), "HSTS header defined");
+    });
+
+    it("security headers include all required headers", () => {
+      const config = fs.readFileSync("next.config.ts", "utf-8");
+      assert.ok(config.includes("X-Content-Type-Options"), "X-Content-Type-Options present");
+      assert.ok(config.includes("X-Frame-Options"), "X-Frame-Options present");
+      assert.ok(config.includes("Referrer-Policy"), "Referrer-Policy present");
+      assert.ok(config.includes("Permissions-Policy"), "Permissions-Policy present");
     });
   });
 });

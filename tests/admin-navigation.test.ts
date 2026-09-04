@@ -73,15 +73,20 @@ describe("Admin Navigation Tests", () => {
       });
     });
 
-    it("A7R.7 Site Settings sub-items remain Planned", () => {
+    it("Site Settings sub-items are all active and linked", () => {
       const settingsGroup = adminNavigation.find((g) => g.label === "Site Settings");
       assert.ok(settingsGroup);
-      const planned = ["Introduction / About", "Contact & Social", "Footer"];
-      planned.forEach((label) => {
+      const expectedItems = [
+        { label: "General", href: "/admin/settings" },
+        { label: "Introduction / About", href: "/admin/settings/about" },
+        { label: "Contact & Social", href: "/admin/settings/contact" },
+        { label: "Footer", href: "/admin/settings/footer" },
+      ];
+      expectedItems.forEach(({ label, href }) => {
         const item = settingsGroup.items.find((i) => i.label === label);
         assert.ok(item, `Should have item ${label}`);
-        assert.equal(item.disabled, true, `${label} should remain disabled for A7R.7`);
-        assert.ok(item.tooltip, `${label} should have Planned tooltip`);
+        assert.equal(item.href, href, `${label} should link to ${href}`);
+        assert.notEqual(item.disabled, true, `${label} should be enabled`);
       });
     });
 
@@ -92,15 +97,6 @@ describe("Admin Navigation Tests", () => {
       assert.ok(generalItem);
       assert.equal(generalItem.href, "/admin/settings");
       assert.notEqual(generalItem.disabled, true);
-    });
-
-    it("has future Site Settings sub-items disabled", () => {
-      const settingsGroup = adminNavigation.find((g) => g.label === "Site Settings");
-      assert.ok(settingsGroup);
-      const futureItems = settingsGroup.items.filter((i) => i.label !== "General");
-      futureItems.forEach((item) => {
-        assert.equal(item.disabled, true, `${item.label} should be disabled`);
-      });
     });
   });
 

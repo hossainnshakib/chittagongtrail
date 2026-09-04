@@ -16,7 +16,7 @@ export function validateSameOrigin(request: NextRequest): NextResponse | null {
     );
   }
 
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim() || "https://chittagongtrail.org";
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim() || "";
   const isProd = process.env.NODE_ENV === "production";
 
   let expectedOrigin = "";
@@ -29,6 +29,12 @@ export function validateSameOrigin(request: NextRequest): NextResponse | null {
   }
 
   if (!expectedOrigin) {
+    if (isProd) {
+      return NextResponse.json(
+        { error: "Forbidden - Site URL not configured" },
+        { status: 403 }
+      );
+    }
     const host = request.headers.get("host") || "";
     const proto = request.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
     if (host) {

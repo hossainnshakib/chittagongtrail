@@ -1,19 +1,21 @@
 import type { NextConfig } from "next";
 
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com https://cdn.pixabay.com;
-  media-src 'self' blob: data: https://res.cloudinary.com https://videos.unsplash.com;
-  font-src 'self' data:;
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com;
-  connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com;
-`.replace(/\s{2,}/g, " ").trim();
+const isProd = process.env.NODE_ENV === "production";
+
+const cspDirectives = [
+  "default-src 'self'",
+  `script-src 'self'${isProd ? "" : " 'unsafe-eval'"} 'unsafe-inline'`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com https://cdn.pixabay.com",
+  "media-src 'self' blob: data: https://res.cloudinary.com https://videos.unsplash.com",
+  "font-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+  "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com",
+].join("; ");
 
 const nextConfig: NextConfig = {
   images: {
@@ -43,7 +45,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: cspHeader,
+            value: cspDirectives,
           },
           {
             key: "X-Content-Type-Options",
@@ -61,7 +63,7 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
           },
-          ...(process.env.NODE_ENV === "production"
+          ...(isProd
             ? [
                 {
                   key: "Strict-Transport-Security",
