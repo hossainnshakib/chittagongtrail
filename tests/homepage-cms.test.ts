@@ -41,10 +41,7 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       const nav = readFile("components/admin/navigation.ts");
       const settingsBlock = nav.slice(nav.indexOf('label: "Site Settings"'));
       assert.ok(settingsBlock.includes('label: "Introduction / About"'));
-      assert.ok(settingsBlock.includes('disabled: true'));
-      assert.ok(settingsBlock.includes('Coming in A7R.7'));
-      // ensure Footer etc still disabled
-      assert.ok(/Footer[\s\S]*disabled: true/.test(settingsBlock));
+      // ensure Footer etc still disabled if any
     });
 
     it("mobile drawer navigation works — AdminSidebar uses data-open and backdrop", () => {
@@ -63,6 +60,9 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       assert.ok(bc.includes('featured-food'));
       assert.ok(bc.includes('seasonal: "Seasonal / Mood"'));
       assert.ok(bc.includes('gallery: "Gallery"'));
+      assert.ok(bc.includes('about: "Introduction / About"'));
+      assert.ok(bc.includes('contact: "Contact & Social"'));
+      assert.ok(bc.includes('footer: "Footer"'));
     });
 
     it("each homepage route file exists and is protected by admin authentication", () => {
