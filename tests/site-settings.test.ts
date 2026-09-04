@@ -75,7 +75,6 @@ describe("SiteSettings Validation and Sanitization Tests", () => {
   });
 
   test("Migration file exists and covers all new SiteSettings fields and default OG relation", () => {
-    const migPath = "prisma/migrations/20260301000000_baseline_current_schema/migration.sql"; // or check schema and migration files
     const schema = fs.readFileSync(path.join(process.cwd(), "prisma/schema.prisma"), "utf8");
     assert.ok(schema.includes("siteTagline"), "schema should include siteTagline");
     assert.ok(schema.includes("defaultMetaTitle"), "schema should include defaultMetaTitle");
