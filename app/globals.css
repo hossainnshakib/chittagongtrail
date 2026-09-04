@@ -565,10 +565,10 @@ img { max-width: 100%; height: auto; display: block; }
    ============================================ */
 .ct-hero {
   position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: max(100vh, 42rem);
+  min-height: max(100dvh, 42rem);
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   overflow: hidden;
   background-color: var(--color-dark-bg);
 }
@@ -600,29 +600,40 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .ct-hero-content {
+  --ct-hero-top-safe: calc(var(--ct-header-height) + env(safe-area-inset-top, 0px) + 1.25rem);
+
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: var(--ct-content-max-width);
+  min-height: max(100vh, 42rem);
+  min-height: max(100dvh, 42rem);
   margin-inline: auto;
-  padding: 0 var(--ct-container-padding) 4.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--ct-hero-top-safe) var(--ct-container-padding) 3.5rem;
 }
 @media (min-width: 768px) {
-  .ct-hero-content { padding-bottom: 6rem; }
+  .ct-hero-content {
+    --ct-hero-top-safe: calc(var(--ct-header-height) + env(safe-area-inset-top, 0px) + 1.75rem);
+
+    padding-bottom: 5rem;
+  }
 }
 @media (min-width: 1024px) {
-  .ct-hero-content { padding-bottom: 7rem; }
+  .ct-hero-content { padding-bottom: clamp(5rem, 8vh, 7rem); }
 }
 
 .hero-title {
   font-family: var(--font-body);
-  font-size: 3rem;
+  font-size: clamp(2.5rem, calc(1.75rem + 3.5vw), 6.25rem);
   font-weight: 700;
   color: var(--color-dark-text);
-  line-height: 0.95;
+  line-height: 1.02;
   letter-spacing: 0;
-  max-width: min(100%, 62rem);
-  margin-bottom: 2rem;
+  max-width: min(100%, 56rem);
+  margin-bottom: 1.75rem;
   overflow-wrap: anywhere;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
 }
@@ -630,17 +641,8 @@ img { max-width: 100%; height: auto; display: block; }
   font-style: italic;
   font-weight: 400;
 }
-@media (min-width: 640px) {
-  .hero-title { font-size: 4.5rem; }
-}
 @media (min-width: 768px) {
-  .hero-title { margin-bottom: 2.5rem; }
-}
-@media (min-width: 1024px) {
-  .hero-title { font-size: 7rem; }
-}
-@media (min-width: 1440px) {
-  .hero-title { font-size: 8.5rem; }
+  .hero-title { margin-bottom: 2.25rem; }
 }
 
 .hero-subtitle {

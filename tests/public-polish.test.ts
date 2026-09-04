@@ -116,11 +116,41 @@ describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
     assert.ok(hero.includes("<video"));
     assert.ok(hero.includes('resolved.provider === "DIRECT"'));
     assert.ok(hero.includes("posterSrc"));
+    assert.ok(hero.includes("poster={posterSrc}"));
+    assert.ok(hero.includes('transition: directReady ? "opacity 700ms ease" : "none"'));
     assert.ok(hero.includes("prefers-reduced-motion"));
+    assert.ok(hero.includes("showDirectVideo = !reducedMotion"));
+    assert.ok(hero.includes("showKenBurns = reducedMotion"));
     assert.ok(hero.includes("Math.max(0.65"));
     assert.ok(!hero.includes("youtube.com/embed") || hero.includes('resolved.provider === "YOUTUBE"'));
     assert.match(css, /\.hero-title\s*{[\s\S]*letter-spacing: 0/);
     assert.match(css, /\.hero-subtitle\s*{[\s\S]*color: #F7EBD8/);
+  });
+
+  it("keeps the hero h1 below the fixed header with safe-area spacing", () => {
+    const css = readFile("app/globals.css");
+
+    assert.match(css, /\.ct-hero\s*{[\s\S]*min-height: max\(100dvh, 42rem\)/);
+    assert.match(css, /\.ct-hero\s*{[\s\S]*align-items: stretch/);
+    assert.match(css, /\.ct-hero-content\s*{[\s\S]*--ct-hero-top-safe: calc\(var\(--ct-header-height\) \+ env\(safe-area-inset-top, 0px\) \+ 1\.25rem\)/);
+    assert.match(css, /\.ct-hero-content\s*{[\s\S]*min-height: max\(100dvh, 42rem\)/);
+    assert.match(css, /\.ct-hero-content\s*{[\s\S]*justify-content: flex-end/);
+    assert.match(css, /\.ct-hero-content\s*{[\s\S]*padding: var\(--ct-hero-top-safe\) var\(--ct-container-padding\) 3\.5rem/);
+  });
+
+  it("keeps the hero title responsive, bounded, and readable", () => {
+    const hero = readFile("components/home/Hero.tsx");
+    const css = readFile("app/globals.css");
+    const h1Count = (hero.match(/<h1/g) || []).length;
+
+    assert.equal(h1Count, 1);
+    assert.ok(hero.includes("*One Chittagong.*"));
+    assert.ok(hero.includes("<br />"));
+    assert.ok(hero.includes('<em class="italic font-normal">$1</em>'));
+    assert.match(css, /\.hero-title\s*{[\s\S]*font-size: clamp\(2\.5rem, calc\(1\.75rem \+ 3\.5vw\), 6\.25rem\)/);
+    assert.match(css, /\.hero-title\s*{[\s\S]*line-height: 1\.02/);
+    assert.match(css, /\.hero-title\s*{[\s\S]*max-width: min\(100%, 56rem\)/);
+    assert.equal(css.includes("font-size: 8.5rem"), false);
   });
 
   it("does not hide the Next.js development indicator in application UI", () => {
