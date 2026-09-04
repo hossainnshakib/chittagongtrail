@@ -1,3 +1,4 @@
+import { validateSameOrigin } from "@/lib/csrf";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +8,9 @@ const VALID_SCOPES = ["trail", "story", "food"] as const;
 type DeleteScope = (typeof VALID_SCOPES)[number];
 
 export async function POST(request: NextRequest) {
+  const csrfErr = validateSameOrigin(request);
+  if (csrfErr) return csrfErr;
+
   const session = await verifySession(
     request.cookies.get("ct_admin_session")?.value || ""
   );

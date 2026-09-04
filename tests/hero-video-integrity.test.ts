@@ -256,11 +256,9 @@ describe("A7R.6.1 — Hero Video Integrity, MIME Safety & Lifecycle", () => {
       assert.equal(matches, 7);
     });
 
-    it("A7R.7 routes remain Planned disabled", () => {
+    it("Introduction / About route is active", () => {
       const nav = readFile("components/admin/navigation.ts");
-      assert.ok(nav.includes('label: "Introduction / About"') && nav.includes("disabled: true"));
-      assert.ok(nav.includes('Coming in A7R.7'));
-      assert.ok(nav.includes('label: "Footer"') && nav.includes("disabled: true"));
+      assert.ok(nav.includes('label: "Introduction / About"') && nav.includes("href: \"/admin/settings/about\""));
     });
 
     it("Admin navigation utility items unchanged", () => {

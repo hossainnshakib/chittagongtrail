@@ -1,8 +1,12 @@
+import { validateSameOrigin } from "@/lib/csrf";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { deleteUnreferencedMediaAsset, updateMediaAltText, getMediaAssetReferences, getAdminMediaAssetById } from "@/lib/media-service";
 
 export async function POST(request: NextRequest) {
+  const csrfErr = validateSameOrigin(request);
+  if (csrfErr) return csrfErr;
+
   const session = await verifySession(
     request.cookies.get("ct_admin_session")?.value || ""
   );

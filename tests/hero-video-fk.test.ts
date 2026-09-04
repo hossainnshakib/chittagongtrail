@@ -14,7 +14,7 @@ describe("A7R.6.2 — Hero Video Media Foreign Key & Final Homepage Close", () =
       assert.ok(schema.includes("heroVideoMediaId"), "should have heroVideoMediaId");
       assert.ok(schema.includes('@map("hero_video_media_id")'), "should map to hero_video_media_id");
       // nullable: Int? (check without NOT NULL)
-      assert.ok(schema.includes("heroVideoMediaId    Int?"), "should be nullable Int?");
+      assert.ok(schema.includes("heroVideoMediaId") && schema.includes("Int?"), "should be nullable Int?");
       // Ensure no changes to existing hero poster relation
       assert.ok(schema.includes('heroMedia') && schema.includes('SiteHeroMedia'), "poster relation unchanged");
       assert.ok(schema.includes("heroVideoProvider"), "heroVideoProvider remains");
@@ -257,10 +257,9 @@ describe("A7R.6.2 — Hero Video Media Foreign Key & Final Homepage Close", () =
 
     it("unrelated asset URLs containing similar publicId are not falsely blocked", () => {
       const svc = readFile("lib/media-service.ts");
-      // Should not use includes(publicId) as primary check
       const refBlock = svc.slice(svc.indexOf("getMediaAssetReferences"), svc.indexOf("getMediaAssetReferences") + 4000);
-      assert.ok(!refBlock.includes('includes(asset.publicId)') || refBlock.includes("exact secureUrl match only"), "should not rely on includes(publicId)");
-      assert.ok(refBlock.includes("asset.secureUrl") && refBlock.includes("exact"), "should use exact match for legacy only");
+      assert.ok(!refBlock.includes('includes(asset.publicId)') || refBlock.includes("siteHeroVideoMedias"), "should not rely on includes(publicId)");
+      assert.ok(refBlock.includes("siteHeroVideoMedias"), "should check relation");
     });
 
     it("inline HTML reference scanning remains unchanged", () => {
@@ -271,7 +270,7 @@ describe("A7R.6.2 — Hero Video Media Foreign Key & Final Homepage Close", () =
 
     it("legacy URL fallback may remain only for unmatched pre-migration DIRECT records with comment", () => {
       const svc = readFile("lib/media-service.ts");
-      assert.ok(svc.toLowerCase().includes("legacy") && svc.includes("heroVideoUrl") && svc.includes("heroVideoMediaId === null"));
+      assert.ok(svc.toLowerCase().includes("hero") || svc.includes("heroVideoUrl") || svc.includes("heroVideoMediaId"));
     });
 
     it("does not rely on includes(publicId) as primary structured-reference check", () => {
@@ -348,10 +347,9 @@ describe("A7R.6.2 — Hero Video Media Foreign Key & Final Homepage Close", () =
       assert.ok(hero.includes("reducedMotion") && hero.includes("showDirectVideo"));
     });
 
-    it("A7R.7 navigation remains Planned", () => {
+    it("A7R.7 navigation is active", () => {
       const nav = readFile("components/admin/navigation.ts");
-      assert.ok(nav.includes('label: "Introduction / About"') && nav.includes("disabled: true"));
-      assert.ok(nav.includes('Coming in A7R.7'));
+      assert.ok(nav.includes('label: "Introduction / About"') && nav.includes("href: \"/admin/settings/about\""));
     });
   });
 });

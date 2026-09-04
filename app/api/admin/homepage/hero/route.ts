@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { validateSameOrigin } from "@/lib/csrf";
 import { CLOUDINARY_CLOUD_NAME, ALLOWED_UPLOAD_FOLDERS } from "@/lib/cloudinary";
 
 function parseYouTubeId(url: string): string | null {
@@ -90,6 +91,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const csrfErr = validateSameOrigin(request);
+  if (csrfErr) return csrfErr;
+
   const session = await verifySession(request.cookies.get("ct_admin_session")?.value || "");
   if (!session?.authenticated) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

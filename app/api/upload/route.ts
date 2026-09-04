@@ -1,3 +1,4 @@
+import { validateSameOrigin } from "@/lib/csrf";
 // @internal Legacy server-proxied upload route. Not called by any current Admin UI.
 // Active admin workflows use DirectUpload (sign -> Cloudinary -> register).
 // Retained for backward compatibility only. Do not use for new admin upload flows.
@@ -11,6 +12,9 @@ const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES];
 const MAX_SIZE = MAX_IMAGE_SIZE;
 
 export async function POST(request: NextRequest) {
+  const csrfErr = validateSameOrigin(request);
+  if (csrfErr) return csrfErr;
+
   const session = await verifySession(
     request.cookies.get("ct_admin_session")?.value || ""
   );

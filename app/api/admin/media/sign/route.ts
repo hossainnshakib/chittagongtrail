@@ -1,3 +1,4 @@
+import { validateSameOrigin } from "@/lib/csrf";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, CLOUDINARY_CLOUD_NAME } from "@/lib/cloudinary";
@@ -5,6 +6,9 @@ import { getCloudinaryClient, ALLOWED_UPLOAD_FOLDERS, CLOUDINARY_CLOUD_NAME } fr
 const VALID_RESOURCE_TYPES = ["image", "video"] as const;
 
 export async function POST(request: NextRequest) {
+  const csrfErr = validateSameOrigin(request);
+  if (csrfErr) return csrfErr;
+
   const session = await verifySession(
     request.cookies.get("ct_admin_session")?.value || ""
   );
