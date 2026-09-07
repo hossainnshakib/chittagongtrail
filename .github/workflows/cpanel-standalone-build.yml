@@ -1,0 +1,71 @@
+name: Build cPanel Standalone Artifact
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "prisma/**"
+      - "public/**"
+      - "server.js"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.ts"
+      - "tsconfig.json"
+      - "postcss.config.mjs"
+      - "proxy.ts"
+      - ".github/workflows/cpanel-standalone-build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: https://chittagongtrail.com
+      SITE_URL: https://chittagongtrail.com
+      DATABASE_URL: mysql://placeholder:placeholder@localhost:3306/placeholder
+      AUTH_SECRET: build-time-placeholder-secret
+      ADMIN_EMAIL: admin@chittagongtrail.com
+      ADMIN_PASSWORD_HASH: build-time-placeholder-hash
+      CLOUDINARY_CLOUD_NAME: build-placeholder
+      CLOUDINARY_API_KEY: build-placeholder
+      CLOUDINARY_API_SECRET: build-placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build standalone app
+        run: npx next build --webpack
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p cpanel-artifact/.next
+          cp -R .next/standalone/. cpanel-artifact/
+          cp -R .next/static cpanel-artifact/.next/static
+          cp -R public cpanel-artifact/public
+          cp -R prisma cpanel-artifact/prisma
+          cp server.js cpanel-artifact/server.js
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ctgtrail-cpanel-standalone
+          path: cpanel-artifact
+          retention-days: 3
