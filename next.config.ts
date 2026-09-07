@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -19,6 +20,10 @@ const cspDirectives = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  webpack(config) {
+    config.resolve.alias["@"] = path.resolve(__dirname);
+    return config;
+  },
   images: {
     remotePatterns: [
       {
