@@ -48,6 +48,8 @@ export const adminNavigation: AdminNavGroup[] = [
     label: "Site Settings",
     items: [
       { label: "General", href: "/admin/settings", icon: "settings" },
+      { label: "Public Pages", href: "/admin/settings/pages", icon: "settings" },
+      { label: "Homepage Sections", href: "/admin/settings/homepage-sections", icon: "settings" },
       { label: "Introduction / About", href: "/admin/settings/about", icon: "settings" },
       { label: "Contact & Social", href: "/admin/settings/contact", icon: "settings" },
       { label: "Footer", href: "/admin/settings/footer", icon: "settings" },

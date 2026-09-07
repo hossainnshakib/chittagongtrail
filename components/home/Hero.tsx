@@ -304,7 +304,7 @@ export function Hero({
         </div>
 
         <h1
-          className="hero-title opacity-0"
+          className="hero-title"
           dangerouslySetInnerHTML={{
             __html: displayTitle
               .replace(/\n/g, "<br />")
@@ -312,9 +312,9 @@ export function Hero({
           }}
         />
 
-        <p className="hero-subtitle opacity-0">{displaySubtitle}</p>
+        <p className="hero-subtitle">{displaySubtitle}</p>
 
-        <div ref={scrollRef} className="hero-cta opacity-0">
+        <div ref={scrollRef} className="hero-cta">
           <span className="ct-scroll-indicator">
             Scroll to explore Chittagong
           </span>

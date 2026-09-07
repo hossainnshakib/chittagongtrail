@@ -6,10 +6,11 @@ import { PublicLayout } from "@/components/layout";
 import { Container, Button } from "@/components/ui";
 import { getJournalPostBySlug, getJournalPosts } from "@/lib/data";
 import {
-  buildMetadata,
+  buildDynamicContentMetadata,
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
   getSiteUrl,
+  safeJsonLd,
 } from "@/lib/seo";
 
 interface JournalPageProps {
@@ -34,7 +35,7 @@ export async function generateMetadata({
   const coverUrl = story.coverMedia?.secureUrl || null;
   const ogUrl = story.ogMedia?.secureUrl || coverUrl;
 
-  return buildMetadata({
+  return buildDynamicContentMetadata({
     title,
     description,
     path: `/journal/${story.slug}`,
@@ -86,11 +87,11 @@ export default async function JournalDetailPage({ params }: JournalPageProps) {
     <PublicLayout>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(articleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] flex items-end">

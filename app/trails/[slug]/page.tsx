@@ -6,10 +6,11 @@ import { PublicLayout } from "@/components/layout";
 import { Container, Button } from "@/components/ui";
 import { getTrailBySlug, getTrails } from "@/lib/data";
 import {
-  buildMetadata,
+  buildDynamicContentMetadata,
   buildTouristAttractionJsonLd,
   buildBreadcrumbJsonLd,
   getSiteUrl,
+  safeJsonLd,
 } from "@/lib/seo";
 
 interface TrailPageProps {
@@ -34,7 +35,7 @@ export async function generateMetadata({
 
   const ogUrl = trail.ogMedia?.secureUrl || trail.coverMedia?.secureUrl || null;
 
-  return buildMetadata({
+  return buildDynamicContentMetadata({
     title,
     description,
     path: `/trails/${trail.slug}`,
@@ -80,11 +81,11 @@ export default async function TrailPage({ params }: TrailPageProps) {
     <PublicLayout>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(trailJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(trailJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] flex items-end">

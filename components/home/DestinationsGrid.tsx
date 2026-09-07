@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PublicEmptyState, SectionReveal } from "@/components/ui";
+import type { HomepageSectionCopy } from "@/lib/public-content";
 
 interface TrailItem {
   id: number;
@@ -12,9 +13,10 @@ interface TrailItem {
 
 interface DestinationsGridProps {
   trails?: TrailItem[];
+  section?: HomepageSectionCopy;
 }
 
-export async function DestinationsGrid({ trails }: DestinationsGridProps) {
+export async function DestinationsGrid({ trails, section }: DestinationsGridProps) {
   const displayTrails = trails && trails.length > 0 ? trails : [];
 
   return (
@@ -22,10 +24,10 @@ export async function DestinationsGrid({ trails }: DestinationsGridProps) {
       <div className="ct-container mb-8 md:mb-12">
         <SectionReveal>
           <p className="text-text-muted text-xs uppercase tracking-[0.2em] font-medium mb-3">
-            Explore Trails
+            {section?.eyebrow || "Explore Trails"}
           </p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
-            Pick one.
+            {section?.heading || "Pick one."}
           </h2>
         </SectionReveal>
       </div>

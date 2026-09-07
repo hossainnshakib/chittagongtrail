@@ -1,16 +1,21 @@
 import type { MetadataRoute } from "next";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
+import { getConfiguredSiteOrigin } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
+  const siteOrigin = getConfiguredSiteOrigin();
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        disallow: ["/admin", "/admin/", "/api", "/api/"],
-      },
-    ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: [
+        "/admin",
+        "/admin/",
+        "/api",
+        "/api/",
+        "/preview",
+        "/preview/",
+      ],
+    },
+    ...(siteOrigin ? { sitemap: `${siteOrigin}/sitemap.xml` } : {}),
   };
 }

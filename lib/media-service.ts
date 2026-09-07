@@ -24,6 +24,8 @@ export interface MediaAssetReferenceSummary {
   siteSeasonalMedias: Array<{ id: number; siteName: string }>;
   siteHeroVideos: Array<{ id: number; siteName: string }>;
   siteDefaultOgMedias: Array<{ id: number; siteName: string }>;
+  siteFooterLogoMedias: Array<{ id: number; siteName: string }>;
+  pageSeoOgMedias: Array<{ id: number; pageKey: string; routePath: string }>;
   inlineHtmlReferences: Array<{ type: string; id: number; title: string; slug?: string }>;
 }
 
@@ -86,6 +88,8 @@ export async function listAdminMediaAssets(options: MediaAssetListOptions = {}) 
             siteHeroMedias: true,
             siteSeasonalMedias: true,
             siteHeroVideoMedias: true,
+            siteFooterLogoMedias: true,
+            pageSeoOgMedias: true,
           },
         },
       },
@@ -119,6 +123,8 @@ export async function getAdminMediaAssetById(id: number) {
       siteSeasonalMedias: { select: { id: true, siteName: true } },
       siteHeroVideoMedias: { select: { id: true, siteName: true } },
       siteDefaultOgMedias: { select: { id: true, siteName: true } },
+      siteFooterLogoMedias: { select: { id: true, siteName: true } },
+      pageSeoOgMedias: { select: { id: true, pageKey: true, routePath: true } },
     },
   });
 }
@@ -267,6 +273,8 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
       siteSeasonalMedias: { select: { id: true, siteName: true } },
       siteHeroVideoMedias: { select: { id: true, siteName: true } },
       siteDefaultOgMedias: { select: { id: true, siteName: true } },
+      siteFooterLogoMedias: { select: { id: true, siteName: true } },
+      pageSeoOgMedias: { select: { id: true, pageKey: true, routePath: true } },
     },
   });
 
@@ -305,6 +313,8 @@ export async function getMediaAssetReferences(id: number): Promise<MediaAssetRef
     siteSeasonalMedias: asset.siteSeasonalMedias,
     siteHeroVideos,
     siteDefaultOgMedias: asset.siteDefaultOgMedias,
+    siteFooterLogoMedias: asset.siteFooterLogoMedias,
+    pageSeoOgMedias: asset.pageSeoOgMedias,
     inlineHtmlReferences,
   };
 }
@@ -322,7 +332,9 @@ export async function canDeleteMediaAsset(id: number): Promise<{ canDelete: bool
     summary.siteHeroMedias.length > 0 ||
     summary.siteSeasonalMedias.length > 0 ||
     summary.siteHeroVideos.length > 0 ||
-    summary.siteDefaultOgMedias.length > 0;
+    summary.siteDefaultOgMedias.length > 0 ||
+    summary.siteFooterLogoMedias.length > 0 ||
+    summary.pageSeoOgMedias.length > 0;
 
   const hasInline = summary.inlineHtmlReferences.length > 0;
 

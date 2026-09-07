@@ -26,22 +26,31 @@ export async function Footer() {
     settings.footerText && settings.footerText.trim() !== ""
       ? settings.footerText
       : "An independent exploration and storytelling platform documenting Chittagong's places, people, food, and landscapes.";
+  const footerLogoUrl = settings.footerLogoMedia?.secureUrl || "/images/chittagongtrail_logo.png";
+  const footerLogoAlt = settings.footerLogoDecorative
+    ? ""
+    : settings.footerLogoAltText || settings.siteName;
+  const footerLogoIncludesWordmark = settings.footerLogoMedia
+    ? settings.footerLogoIncludesWordmark
+    : false;
 
   return (
     <footer className="ct-footer">
-      <div className="ct-container py-16 md:py-20">
+      <div className="ct-container py-8 md:py-10">
         <div className="ct-footer-grid">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Image
-              src="/images/chittagongtrail-wordmark.png"
-              alt={settings.siteName}
-              width={240}
-              height={64}
-              className="ct-footer-wordmark mb-4"
-            />
             <div className="ct-footer-brand-lockup">
-              <span className="ct-footer-brand-name">{settings.siteName}</span>
+              <Image
+                src={footerLogoUrl}
+                alt={footerLogoAlt}
+                width={footerLogoIncludesWordmark ? 192 : 44}
+                height={44}
+                className={footerLogoIncludesWordmark ? "ct-footer-wordmark" : "ct-footer-mark"}
+              />
+              {!footerLogoIncludesWordmark && (
+                <span className="ct-footer-brand-name">{settings.siteName}</span>
+              )}
             </div>
             <p className="ct-footer-copy mt-3 max-w-sm">
               {displayFooterText}
@@ -53,7 +62,7 @@ export async function Footer() {
             <h3 className="ct-footer-heading">
               Explore
             </h3>
-            <ul className="space-y-3">
+            <ul>
               {exploreNav.map((item) => (
                 <li key={item.name}>
                   <Link
@@ -73,7 +82,7 @@ export async function Footer() {
               Follow
             </h3>
             {socialLinks.length > 0 ? (
-              <ul className="space-y-3">
+              <ul>
                 {socialLinks.map((item) => (
                   <li key={item.name}>
                     <a
@@ -142,7 +151,7 @@ export async function Footer() {
           </div>
         </div>
 
-        <div className="ct-footer-rule mt-12 pt-8">
+        <div className="ct-footer-rule mt-6 pt-4">
           <p className="ct-footer-copyright text-center">
             © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
           </p>

@@ -3,16 +3,15 @@ import { PublicLayout } from "@/components/layout";
 import { Container, PublicEmptyState, SectionHeading } from "@/components/ui";
 import { JournalCard } from "@/components/journal/JournalCard";
 import { getFoodPosts } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildPublicPageMetadata, getSiteUrl, buildBreadcrumbJsonLd, safeJsonLd } from "@/lib/seo";
+import { getPublicPageSeo } from "@/lib/public-content";
 
-export const metadata: Metadata = buildPageMetadata(
-  "Food — Chittagong's Culinary Traditions",
-  "Exploring Chittagong's culinary traditions, street food, regional flavors, and the food culture that defines this extraordinary city.",
-  "/food"
-);
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPublicPageMetadata("food");
+}
 
 export default async function FoodPage() {
-  const stories = await getFoodPosts();
+  const [stories, page] = await Promise.all([getFoodPosts(), getPublicPageSeo("food")]);
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: getSiteUrl("/") },
@@ -23,15 +22,15 @@ export default async function FoodPage() {
     <PublicLayout>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       <section className="ct-page-header ct-cream">
         <Container>
           <div className="ct-page-heading">
             <SectionHeading
               as="h1"
-              title="Chittagong Food"
-              subtitle="Exploring the culinary traditions, street food, regional flavors, and food culture that define Chittagong's extraordinary gastronomic landscape."
+              title={page.visibleTitle}
+              subtitle={page.visibleDescription}
             />
           </div>
         </Container>

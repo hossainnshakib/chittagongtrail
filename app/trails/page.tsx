@@ -3,16 +3,15 @@ import { PublicLayout } from "@/components/layout";
 import { Container, PublicEmptyState, SectionHeading } from "@/components/ui";
 import { TrailCard } from "@/components/trails/TrailCard";
 import { getTrails } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildPublicPageMetadata, getSiteUrl, buildBreadcrumbJsonLd, safeJsonLd } from "@/lib/seo";
+import { getPublicPageSeo } from "@/lib/public-content";
 
-export const metadata: Metadata = buildPageMetadata(
-  "Trails — Explore Places in Chittagong",
-  "Discover the places that make Chittagong extraordinary — coastal shores, misty hills, ancient temples, bustling markets, and hidden gems across the region.",
-  "/trails"
-);
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPublicPageMetadata("trails");
+}
 
 export default async function TrailsPage() {
-  const trails = await getTrails();
+  const [trails, page] = await Promise.all([getTrails(), getPublicPageSeo("trails")]);
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: getSiteUrl("/") },
@@ -23,15 +22,15 @@ export default async function TrailsPage() {
     <PublicLayout>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       <section className="ct-page-header ct-cream">
         <Container>
           <div className="ct-page-heading">
             <SectionHeading
               as="h1"
-              title="Trails"
-              subtitle="Every place has a story. These are the trails documented through genuine exploration — the locations, the history, the culture, and the moments that make each destination extraordinary."
+              title={page.visibleTitle}
+              subtitle={page.visibleDescription}
             />
           </div>
         </Container>

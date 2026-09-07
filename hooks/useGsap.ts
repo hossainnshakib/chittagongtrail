@@ -104,18 +104,18 @@ export function useHeroReveal() {
     tl.fromTo(
       ref.current.querySelector(".hero-title"),
       { y: 60, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
+      { y: 0, opacity: 1, duration: 1, ease: "power3.out", immediateRender: false }
     )
       .fromTo(
         ref.current.querySelector(".hero-subtitle"),
         { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power2.out", immediateRender: false },
         "-=0.4"
       )
       .fromTo(
         ref.current.querySelector(".hero-cta"),
         { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false },
         "-=0.3"
       );
 

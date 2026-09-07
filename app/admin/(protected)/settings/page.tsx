@@ -4,13 +4,19 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import MediaPicker from "@/components/admin/media/MediaPicker";
 import type { MediaAssetData } from "@/components/admin/media/types";
-import { isSiteUrlConfigured } from "@/lib/seo-client";
 
 export default function AdminGeneralSettingsPage() {
   const [siteName, setSiteName] = useState("Chittagong Trail");
   const [siteTagline, setSiteTagline] = useState("");
   const [defaultMetaTitle, setDefaultMetaTitle] = useState("");
   const [defaultMetaDescription, setDefaultMetaDescription] = useState("");
+  const [defaultOgTitle, setDefaultOgTitle] = useState("");
+  const [defaultOgDescription, setDefaultOgDescription] = useState("");
+  const [publisherName, setPublisherName] = useState("");
+  const [googleSiteVerification, setGoogleSiteVerification] = useState("");
+  const [bingSiteVerification, setBingSiteVerification] = useState("");
+  const [allowIndexing, setAllowIndexing] = useState(true);
+  const [siteOrigin, setSiteOrigin] = useState("");
   const [defaultOgMedia, setDefaultOgMedia] = useState<MediaAssetData | null>(null);
   const [defaultOgMediaId, setDefaultOgMediaId] = useState<number | null>(null);
 
@@ -30,6 +36,13 @@ export default function AdminGeneralSettingsPage() {
         setSiteTagline(data.siteTagline || "");
         setDefaultMetaTitle(data.defaultMetaTitle || "");
         setDefaultMetaDescription(data.defaultMetaDescription || "");
+        setDefaultOgTitle(data.defaultOgTitle || "");
+        setDefaultOgDescription(data.defaultOgDescription || "");
+        setPublisherName(data.publisherName || "");
+        setGoogleSiteVerification(data.googleSiteVerification || "");
+        setBingSiteVerification(data.bingSiteVerification || "");
+        setAllowIndexing(data.allowIndexing !== false);
+        setSiteOrigin(data.siteOrigin || "");
         setDefaultOgMediaId(data.defaultOgMediaId || null);
         if (data.defaultOgMedia) setDefaultOgMedia(data.defaultOgMedia);
       } catch (err: unknown) {
@@ -58,6 +71,12 @@ export default function AdminGeneralSettingsPage() {
         siteTagline,
         defaultMetaTitle,
         defaultMetaDescription,
+        defaultOgTitle,
+        defaultOgDescription,
+        publisherName,
+        googleSiteVerification,
+        bingSiteVerification,
+        allowIndexing,
         defaultOgMediaId,
       };
 
@@ -139,9 +158,9 @@ export default function AdminGeneralSettingsPage() {
 
           <div className="p-4 bg-[#FAF6F0] rounded-md border border-[#E8DCC8] space-y-1">
             <span className="text-xs font-semibold text-[#5D4037]">Canonical Site Origin Status:</span>
-            {isSiteUrlConfigured ? (
+            {siteOrigin ? (
               <p className="text-xs text-green-700">
-                Configured securely: <code>{process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com"}</code>
+                Configured securely: <code>{siteOrigin}</code>
               </p>
             ) : (
               <p className="text-xs text-amber-800">
@@ -189,6 +208,7 @@ export default function AdminGeneralSettingsPage() {
             <textarea
               id="defaultMetaDescription"
               rows={3}
+              maxLength={500}
               value={defaultMetaDescription}
               onChange={(e) => setDefaultMetaDescription(e.target.value)}
               placeholder="Explore places, stories, food and landscapes across Chittagong's five districts through genuine discovery."
@@ -198,6 +218,43 @@ export default function AdminGeneralSettingsPage() {
               Fallback summary across Chittagong&apos;s five districts (Chittagong, Cox&apos;s Bazar, Rangamati, Bandarban, Khagrachari).
             </p>
           </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="defaultOgTitle" className="block text-sm font-medium text-[#5D4037]">Default OG Title</label>
+              <span className="text-xs text-[#5D4037]/60">{defaultOgTitle.length}/255</span>
+            </div>
+            <input id="defaultOgTitle" type="text" maxLength={255} value={defaultOgTitle} onChange={(e) => setDefaultOgTitle(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="defaultOgDescription" className="block text-sm font-medium text-[#5D4037]">Default OG Description</label>
+              <span className="text-xs text-[#5D4037]/60">{defaultOgDescription.length}/500</span>
+            </div>
+            <textarea id="defaultOgDescription" rows={3} maxLength={500} value={defaultOgDescription} onChange={(e) => setDefaultOgDescription(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+          </div>
+
+          <div>
+            <label htmlFor="publisherName" className="block text-sm font-medium text-[#5D4037] mb-1">Publisher / organization name</label>
+            <input id="publisherName" type="text" maxLength={100} value={publisherName} onChange={(e) => setPublisherName(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="googleSiteVerification" className="block text-sm font-medium text-[#5D4037] mb-1">Google site verification</label>
+              <input id="googleSiteVerification" type="text" maxLength={255} value={googleSiteVerification} onChange={(e) => setGoogleSiteVerification(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+            </div>
+            <div>
+              <label htmlFor="bingSiteVerification" className="block text-sm font-medium text-[#5D4037] mb-1">Bing verification</label>
+              <input id="bingSiteVerification" type="text" maxLength={255} value={bingSiteVerification} onChange={(e) => setBingSiteVerification(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-2 text-sm text-[#5D4037]">
+            <input type="checkbox" checked={allowIndexing} onChange={(e) => setAllowIndexing(e.target.checked)} className="mt-1" />
+            <span>Allow public pages to be indexed. Page-level noindex controls still apply.</span>
+          </label>
 
           <div>
             <label className="block text-sm font-medium text-[#5D4037] mb-2">Default Social / Open Graph Image</label>

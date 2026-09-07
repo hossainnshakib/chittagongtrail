@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { PublicEmptyState, SectionReveal } from "@/components/ui";
+import type { HomepageSectionCopy } from "@/lib/public-content";
 
 interface GalleryItem {
   id: number;
@@ -13,9 +14,10 @@ interface GalleryItem {
 
 interface UneditedGalleryProps {
   galleryItems?: GalleryItem[];
+  section?: HomepageSectionCopy;
 }
 
-export async function UneditedGallery({ galleryItems }: UneditedGalleryProps) {
+export async function UneditedGallery({ galleryItems, section }: UneditedGalleryProps) {
   const gallery = galleryItems && galleryItems.length > 0 ? galleryItems : [];
 
   return (
@@ -23,10 +25,10 @@ export async function UneditedGallery({ galleryItems }: UneditedGalleryProps) {
       <div className="ct-container mb-8 md:mb-10">
         <SectionReveal>
           <p className="text-text-muted text-xs uppercase tracking-[0.2em] font-medium mb-3">
-            Gallery
+            {section?.eyebrow || "Gallery"}
           </p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
-            What it actually looks like
+            {section?.heading || "What it actually looks like"}
           </h2>
         </SectionReveal>
       </div>

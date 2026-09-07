@@ -1,14 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import MediaPicker from "@/components/admin/media/MediaPicker";
+import type { MediaAssetData } from "@/components/admin/media/types";
 
 export default function AdminFooterSettingsPage() {
   const [footerText, setFooterText] = useState("");
+  const [footerLogoMedia, setFooterLogoMedia] = useState<MediaAssetData | null>(null);
+  const [footerLogoMediaId, setFooterLogoMediaId] = useState<number | null>(null);
+  const [footerLogoAltText, setFooterLogoAltText] = useState("");
+  const [footerLogoDecorative, setFooterLogoDecorative] = useState(false);
+  const [footerLogoIncludesWordmark, setFooterLogoIncludesWordmark] = useState(true);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -17,6 +26,11 @@ export default function AdminFooterSettingsPage() {
         if (!res.ok) throw new Error("Failed to load settings");
         const data = await res.json();
         setFooterText(data.footerText || "");
+        setFooterLogoMedia(data.footerLogoMedia || null);
+        setFooterLogoMediaId(data.footerLogoMediaId || null);
+        setFooterLogoAltText(data.footerLogoAltText || "");
+        setFooterLogoDecorative(Boolean(data.footerLogoDecorative));
+        setFooterLogoIncludesWordmark(data.footerLogoIncludesWordmark !== false);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error loading footer settings");
       } finally {
@@ -39,6 +53,10 @@ export default function AdminFooterSettingsPage() {
       const payload = {
         ...currentData,
         footerText,
+        footerLogoMediaId,
+        footerLogoAltText,
+        footerLogoDecorative,
+        footerLogoIncludesWordmark,
       };
 
       const res = await fetch("/api/admin/settings", {
@@ -85,6 +103,48 @@ export default function AdminFooterSettingsPage() {
             Footer Content &amp; Copyright
           </h2>
 
+          <div className="space-y-3 border-b border-[#E8DCC8] pb-5">
+            <div>
+              <h3 className="text-sm font-semibold text-[#5D4037]">Footer logo</h3>
+              <p className="text-xs text-[#5D4037]/60 mt-1">
+                Select an official image-only logo from the Media Library. A transparent light wordmark is best on the dark footer.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {footerLogoMedia ? (
+                <div className="relative w-48 h-16 border border-[#D7C9B8] rounded overflow-hidden bg-[#2C1A12]">
+                  <Image src={footerLogoMedia.secureUrl} alt={footerLogoMedia.altText || "Selected footer logo"} fill className="object-contain p-2" />
+                </div>
+              ) : (
+                <div className="relative w-48 h-16 border border-dashed border-[#D7C9B8] rounded overflow-hidden bg-[#2C1A12]">
+                  <Image src="/images/chittagongtrail-wordmark.png" alt="Current footer wordmark" fill className="object-contain p-2" />
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setMediaPickerOpen(true)} className="px-3 py-2 text-sm bg-[#3E2723] text-[#FDF5E6] rounded-md hover:bg-[#5D4037] cursor-pointer">
+                  {footerLogoMedia ? "Change logo" : "Select logo"}
+                </button>
+                {footerLogoMedia && (
+                  <button type="button" onClick={() => { setFooterLogoMedia(null); setFooterLogoMediaId(null); }} className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 cursor-pointer">
+                    Use built-in wordmark
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label htmlFor="footerLogoAltText" className="block text-sm font-medium text-[#5D4037] mb-1">Logo alt text</label>
+              <input id="footerLogoAltText" type="text" maxLength={191} value={footerLogoAltText} onChange={(e) => setFooterLogoAltText(e.target.value)} className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037]" />
+            </div>
+            <label className="flex items-start gap-2 text-sm text-[#5D4037]">
+              <input type="checkbox" checked={footerLogoIncludesWordmark} onChange={(e) => setFooterLogoIncludesWordmark(e.target.checked)} className="mt-1" />
+              <span>Selected asset already includes the Chittagong Trail wordmark</span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-[#5D4037]">
+              <input type="checkbox" checked={footerLogoDecorative} onChange={(e) => setFooterLogoDecorative(e.target.checked)} className="mt-1" />
+              <span>Decorative logo: use an empty alt attribute</span>
+            </label>
+          </div>
+
           <div>
             <label htmlFor="footerText" className="block text-sm font-medium text-[#5D4037] mb-1">
               Footer Description / Bio Text
@@ -121,6 +181,18 @@ export default function AdminFooterSettingsPage() {
           </button>
         </div>
       </form>
+
+      <MediaPicker
+        open={mediaPickerOpen}
+        mode="image"
+        folder="chittagong-trail/general"
+        selected={footerLogoMedia}
+        onSelect={(asset) => { setFooterLogoMedia(asset); setFooterLogoMediaId(asset.id); setMediaPickerOpen(false); }}
+        onRemove={() => { setFooterLogoMedia(null); setFooterLogoMediaId(null); }}
+        onClose={() => setMediaPickerOpen(false)}
+        title="Select footer logo"
+        description="Image-only official logo or wordmark"
+      />
     </div>
   );
 }

@@ -69,6 +69,8 @@ model MediaAsset {
   siteSeasonalMedias SiteSettings[]    @relation("SiteSeasonalMedia")
   siteHeroVideoMedias SiteSettings[]   @relation("SiteHeroVideoMedia")
   siteDefaultOgMedias SiteSettings[]   @relation("SiteDefaultOgMedia")
+  siteFooterLogoMedias SiteSettings[]  @relation("SiteFooterLogoMedia")
+  pageSeoOgMedias     PageSeoSetting[] @relation("PageSeoOgMedia")
 
   @@map("media_assets")
 }
@@ -164,8 +166,14 @@ model SiteSettings {
   siteTagline            String?           @db.VarChar(255)
   defaultMetaTitle       String?           @db.VarChar(255)
   defaultMetaDescription String?           @db.Text
+  defaultOgTitle         String?           @db.VarChar(255)
+  defaultOgDescription   String?           @db.Text
   defaultOgMediaId       Int?
   defaultOgMedia         MediaAsset?       @relation("SiteDefaultOgMedia", fields: [defaultOgMediaId], references: [id], onDelete: SetNull)
+  publisherName          String?           @db.VarChar(100)
+  googleSiteVerification String?           @db.VarChar(255)
+  bingSiteVerification   String?           @db.VarChar(255)
+  allowIndexing          Boolean           @default(true)
   heroTitle              String            @default("")
   heroSubtitle           String            @default("")
   heroMediaId            Int?
@@ -198,7 +206,54 @@ model SiteSettings {
   socialLinkedIn         String?           @db.VarChar(500)
   socialTikTok           String?           @db.VarChar(500)
   footerText             String            @default("")
+  footerLogoMediaId      Int?
+  footerLogoMedia        MediaAsset?       @relation("SiteFooterLogoMedia", fields: [footerLogoMediaId], references: [id], onDelete: SetNull)
+  footerLogoAltText      String?           @db.VarChar(191)
+  footerLogoDecorative   Boolean           @default(false)
+  footerLogoIncludesWordmark Boolean        @default(true)
   updatedAt              DateTime          @updatedAt
 
   @@map("site_settings")
+}
+
+model PageSeoSetting {
+  id                          Int        @id @default(autoincrement())
+  pageKey                     String     @unique @db.VarChar(50)
+  routePath                   String     @unique @db.VarChar(100)
+  adminLabel                  String     @db.VarChar(100)
+  visibleTitle                String     @db.VarChar(200)
+  visibleDescription          String     @db.Text
+  metaTitle                   String?    @db.VarChar(255)
+  metaDescription             String?    @db.Text
+  useVisibleTitleAsMetaTitle  Boolean    @default(true)
+  useVisibleDescriptionAsMetaDescription Boolean @default(true)
+  ogTitle                     String?    @db.VarChar(255)
+  ogDescription               String?    @db.Text
+  ogMediaId                   Int?
+  ogMedia                     MediaAsset? @relation("PageSeoOgMedia", fields: [ogMediaId], references: [id], onDelete: SetNull)
+  robotsIndex                 Boolean    @default(true)
+  robotsFollow                Boolean    @default(true)
+  includeInSitemap            Boolean    @default(true)
+  createdAt                   DateTime   @default(now())
+  updatedAt                   DateTime   @updatedAt
+
+  @@index([robotsIndex, includeInSitemap])
+  @@map("page_seo_settings")
+}
+
+model HomepageSectionSetting {
+  id            Int      @id @default(autoincrement())
+  sectionKey    String   @unique @db.VarChar(50)
+  eyebrow       String   @db.VarChar(100)
+  heading       String   @db.VarChar(200)
+  description   String?  @db.Text
+  ctaLabel      String?  @db.VarChar(100)
+  ctaHref       String?  @db.VarChar(200)
+  enabled       Boolean  @default(true)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([enabled, displayOrder])
+  @@map("homepage_section_settings")
 }

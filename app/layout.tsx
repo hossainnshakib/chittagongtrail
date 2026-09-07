@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
-const ogImage = `${siteUrl}/images/chittagongtrail_logo.png`;
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+  generateMetadata as generateRootMetadata,
+  safeJsonLd,
+} from "@/lib/seo";
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
@@ -18,69 +20,9 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-    template: "%s | Chittagong Trail",
-  },
-  description:
-    "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people through genuine discovery.",
-  keywords: [
-    "Chittagong",
-    "Chittagong travel",
-    "Chittagong journal",
-    "Bangladesh",
-    "exploration",
-    "places",
-    "stories",
-    "culture",
-    "history",
-    "food",
-    "trails",
-  ],
-  authors: [{ name: "Chittagong Trail" }],
-  creator: "Chittagong Trail",
-  publisher: "Chittagong Trail",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: siteUrl,
-    siteName: "Chittagong Trail",
-    title: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-    description:
-      "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people.",
-    images: [
-      {
-        url: ogImage,
-        width: 792,
-        height: 800,
-        alt: "Chittagong Trail — Exploring Chittagong",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Chittagong Trail — Places, Stories, Food & Journeys from Chittagong",
-    description:
-      "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people.",
-    images: [ogImage],
-  },
-  icons: {
-    icon: "/images/chittagongtrail-favicon.png",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return generateRootMetadata();
+}
 
 export default async function RootLayout({
   children,
@@ -100,11 +42,11 @@ export default async function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteJsonLd) }}
         />
       </head>
       <body className="min-h-full flex flex-col">

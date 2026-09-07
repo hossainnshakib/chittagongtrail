@@ -11,16 +11,21 @@ import {
   ClosingInvitation,
 } from "@/components/home";
 import { getPublicSiteSettings } from "@/lib/settings-service";
+import { getHomepageSectionSettings } from "@/lib/public-content";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
-import { generateMetadata as generateHomeMetadata } from "@/lib/seo";
+import { buildPublicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
-  return generateHomeMetadata();
+  return buildPublicPageMetadata("home");
 }
 
 export default async function Home() {
-  const settings = await getPublicSiteSettings();
+  const [settings, homepageSections] = await Promise.all([
+    getPublicSiteSettings(),
+    getHomepageSectionSettings(),
+  ]);
+  const section = (sectionKey: string) => homepageSections.find((item) => item.sectionKey === sectionKey);
 
   // Fetch verified public curated data server-side
   const [featuredTrails, featuredStories, featuredFood, homepageGallery] = await Promise.all([
@@ -64,17 +69,19 @@ export default async function Home() {
         heading={settings.introductionHeading}
         content={settings.introductionContent}
       />
-      <DestinationsGrid trails={featuredTrails} />
+      {section("destinations")?.enabled !== false && (
+        <DestinationsGrid trails={featuredTrails} section={section("destinations")} />
+      )}
       <EditorialQuote
         eyebrow={settings.seasonalEyebrow}
         title={settings.seasonalTitle}
         content={settings.seasonalContent}
         media={settings.seasonalMedia}
       />
-      <ExperiencesGrid />
-      <FoodGallery foodPosts={featuredFood} />
-      <Journeys stories={featuredStories} />
-      <UneditedGallery galleryItems={homepageGallery} />
+      {section("experiences")?.enabled !== false && <ExperiencesGrid section={section("experiences")} />}
+      {section("food")?.enabled !== false && <FoodGallery foodPosts={featuredFood} section={section("food")} />}
+      {section("stories")?.enabled !== false && <Journeys stories={featuredStories} section={section("stories")} />}
+      {section("gallery")?.enabled !== false && <UneditedGallery galleryItems={homepageGallery} section={section("gallery")} />}
       <ClosingInvitation
         heading={settings.aboutHeading}
         content={settings.aboutContent}

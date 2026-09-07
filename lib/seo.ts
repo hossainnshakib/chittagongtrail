@@ -1,22 +1,21 @@
 import type { Metadata } from "next";
 import { getPublicSiteSettings } from "./settings-service";
+import { getPublicPageSeo, type PublicPageKey } from "./public-content";
+import { getConfiguredSiteOrigin, getConfiguredSiteUrl } from "./site-url";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
+const SITE_URL = getConfiguredSiteOrigin();
 
 const SITE_NAME = "Chittagong Trail";
 const SITE_DESCRIPTION =
   "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people through genuine discovery.";
 const SITE_LOCALE = "en_US";
 
-const DEFAULT_OG_IMAGE = `${SITE_URL}/images/chittagongtrail_logo.png`;
+const DEFAULT_OG_IMAGE = "/images/chittagongtrail_logo.png";
 const DEFAULT_OG_IMAGE_WIDTH = 792;
 const DEFAULT_OG_IMAGE_HEIGHT = 800;
 
 export function getSiteUrl(path?: string): string {
-  if (!path) return SITE_URL;
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${SITE_URL}${cleanPath}`;
+  return getConfiguredSiteUrl(path);
 }
 
 export function getAbsoluteImageUrl(imagePath?: string | null): string {
@@ -24,6 +23,7 @@ export function getAbsoluteImageUrl(imagePath?: string | null): string {
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
     return imagePath;
   }
+  if (!SITE_URL) return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   return `${SITE_URL}${cleanPath}`;
 }
@@ -40,6 +40,11 @@ interface BaseMetadataOptions {
   modifiedTime?: string;
   authors?: string[];
   noindex?: boolean;
+  nofollow?: boolean;
+  siteName?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImageAlt?: string;
 }
 
 export function buildMetadata(options: BaseMetadataOptions): Metadata {
@@ -55,46 +60,52 @@ export function buildMetadata(options: BaseMetadataOptions): Metadata {
     modifiedTime,
     authors,
     noindex = false,
+    nofollow = false,
+    siteName = SITE_NAME,
+    ogTitle = title,
+    ogDescription = description,
+    ogImageAlt = title,
   } = options;
 
   const url = getSiteUrl(path);
   const imageUrl = getAbsoluteImageUrl(image);
+  const shareImage = imageUrl.startsWith("http://") || imageUrl.startsWith("https://")
+    ? [{ url: imageUrl, width: imageWidth, height: imageHeight, alt: ogImageAlt }]
+    : undefined;
 
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
-    },
+    ...(url ? { alternates: { canonical: url } } : {}),
     openGraph: {
-      title,
-      description,
-      url,
-      siteName: SITE_NAME,
+      title: ogTitle,
+      description: ogDescription,
+      ...(url ? { url } : {}),
+      siteName,
       locale: SITE_LOCALE,
       type,
-      images: [
-        {
-          url: imageUrl,
-          width: imageWidth,
-          height: imageHeight,
-          alt: title,
-        },
-      ],
+      ...(shareImage ? { images: shareImage } : {}),
       ...(publishedTime && { publishedTime }),
       ...(modifiedTime && { modifiedTime }),
       ...(authors && { authors }),
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
-      images: [imageUrl],
+      title: ogTitle,
+      description: ogDescription,
+      ...(shareImage ? { images: shareImage.map((item) => item.url) } : {}),
     },
-    ...(noindex && {
+    ...((noindex || nofollow) && {
       robots: {
-        index: false,
-        follow: false,
+        index: !noindex,
+        follow: !nofollow,
+        googleBot: {
+          index: !noindex,
+          follow: !nofollow,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
       },
     }),
   };
@@ -103,14 +114,17 @@ export function buildMetadata(options: BaseMetadataOptions): Metadata {
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSiteSettings();
   const url = getSiteUrl();
-  const ogImageUrl = settings.defaultOgMedia ? settings.defaultOgMedia.secureUrl : DEFAULT_OG_IMAGE;
+  const ogImageUrl = settings.defaultOgMedia?.secureUrl || (SITE_URL ? DEFAULT_OG_IMAGE : "");
   const ogWidth = settings.defaultOgMedia?.width || DEFAULT_OG_IMAGE_WIDTH;
   const ogHeight = settings.defaultOgMedia?.height || DEFAULT_OG_IMAGE_HEIGHT;
   const defaultTitle = settings.defaultMetaTitle || `${settings.siteName} — Places, Stories, Food & Journeys from Chittagong`;
   const defaultDesc = settings.defaultMetaDescription || settings.siteTagline || SITE_DESCRIPTION;
+  const defaultOgTitle = settings.defaultOgTitle || defaultTitle;
+  const defaultOgDescription = settings.defaultOgDescription || defaultDesc;
+  const publisher = settings.publisherName || settings.siteName;
 
   return {
-    metadataBase: new URL(url),
+    ...(url ? { metadataBase: new URL(url) } : {}),
     title: {
       default: defaultTitle,
       template: `%s | ${settings.siteName}`,
@@ -129,46 +143,93 @@ export async function generateMetadata(): Promise<Metadata> {
       "food",
       "trails",
     ],
-    authors: [{ name: settings.siteName }],
+    authors: [{ name: publisher }],
     creator: settings.siteName,
-    publisher: settings.siteName,
+    publisher,
     openGraph: {
       type: "website",
       locale: SITE_LOCALE,
-      url,
+      ...(url ? { url } : {}),
       siteName: settings.siteName,
-      title: defaultTitle,
-      description: defaultDesc,
-      images: [
+      title: defaultOgTitle,
+      description: defaultOgDescription,
+      ...(ogImageUrl ? { images: [
         {
           url: ogImageUrl,
           width: ogWidth,
           height: ogHeight,
           alt: settings.defaultOgMedia?.altText || `${settings.siteName} — Exploring Chittagong`,
         },
-      ],
+      ] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: defaultTitle,
-      description: defaultDesc,
-      images: [ogImageUrl],
+      title: defaultOgTitle,
+      description: defaultOgDescription,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
     icons: {
       icon: "/images/chittagongtrail-favicon.png",
     },
     robots: {
-      index: true,
-      follow: true,
+      index: settings.allowIndexing,
+      follow: settings.allowIndexing,
       googleBot: {
-        index: true,
-        follow: true,
+        index: settings.allowIndexing,
+        follow: settings.allowIndexing,
         "max-video-preview": -1,
         "max-image-preview": "large",
         "max-snippet": -1,
       },
     },
+    ...(settings.googleSiteVerification || settings.bingSiteVerification
+      ? {
+          verification: {
+            ...(settings.googleSiteVerification ? { google: settings.googleSiteVerification } : {}),
+            ...(settings.bingSiteVerification ? { other: { "msvalidate.01": settings.bingSiteVerification } } : {}),
+          },
+        }
+      : {}),
   };
+}
+
+export async function buildPublicPageMetadata(pageKey: PublicPageKey): Promise<Metadata> {
+  const [page, settings] = await Promise.all([
+    getPublicPageSeo(pageKey),
+    getPublicSiteSettings(),
+  ]);
+  const title = page.metaTitle || settings.defaultMetaTitle || page.visibleTitle;
+  const description = page.metaDescription || settings.defaultMetaDescription || page.visibleDescription;
+  const ogImage = page.ogMedia || settings.defaultOgMedia;
+
+  return buildMetadata({
+    title,
+    description,
+    path: page.routePath,
+    image: ogImage?.secureUrl || null,
+    imageWidth: ogImage?.width || DEFAULT_OG_IMAGE_WIDTH,
+    imageHeight: ogImage?.height || DEFAULT_OG_IMAGE_HEIGHT,
+    siteName: settings.siteName,
+    ogTitle: page.ogTitle || settings.defaultOgTitle || title,
+    ogDescription: page.ogDescription || settings.defaultOgDescription || description,
+    ogImageAlt: ogImage?.altText || title,
+    noindex: !settings.allowIndexing || !page.robotsIndex,
+    nofollow: !settings.allowIndexing || !page.robotsFollow,
+  });
+}
+
+export async function buildDynamicContentMetadata(options: BaseMetadataOptions): Promise<Metadata> {
+  const settings = await getPublicSiteSettings();
+  const ogImage = options.image || settings.defaultOgMedia?.secureUrl || null;
+  return buildMetadata({
+    ...options,
+    image: ogImage,
+    siteName: settings.siteName,
+    ogTitle: options.ogTitle || options.title,
+    ogDescription: options.ogDescription || options.description,
+    noindex: options.noindex || !settings.allowIndexing,
+    nofollow: options.nofollow || !settings.allowIndexing,
+  });
 }
 
 export function buildPageMetadata(
@@ -393,6 +454,15 @@ export function buildBreadcrumbJsonLd(
       item: item.url,
     })),
   };
+}
+
+export function safeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 export { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE };

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PublicEmptyState, SectionReveal } from "@/components/ui";
+import type { HomepageSectionCopy } from "@/lib/public-content";
 
 interface FoodItem {
   id: number;
@@ -13,23 +14,26 @@ interface FoodItem {
 
 interface FoodGalleryProps {
   foodPosts?: FoodItem[];
+  section?: HomepageSectionCopy;
 }
 
-export async function FoodGallery({ foodPosts }: FoodGalleryProps) {
+export async function FoodGallery({ foodPosts, section }: FoodGalleryProps) {
   const stories = foodPosts && foodPosts.length > 0 ? foodPosts : [];
+  const ctaHref = section?.ctaHref || "/food";
+  const ctaLabel = section?.ctaLabel || "Explore all food";
 
   return (
     <section className="ct-section ct-warm">
       <div className="ct-container mb-8 md:mb-10">
         <SectionReveal>
           <p className="text-text-muted text-xs uppercase tracking-[0.2em] font-medium mb-3">
-            Food
+            {section?.eyebrow || "Food"}
           </p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
-            Taste of Chittagong
+            {section?.heading || "Taste of Chittagong"}
           </h2>
           <p className="text-text-secondary text-base mt-2 max-w-xl">
-            Dishes worth building a trip around. Rice, river fish, slow beef, and a sweet course the city takes seriously.
+            {section?.description || "Dishes worth building a trip around. Rice, river fish, slow beef, and a sweet course the city takes seriously."}
           </p>
         </SectionReveal>
       </div>
@@ -86,8 +90,8 @@ export async function FoodGallery({ foodPosts }: FoodGalleryProps) {
 
       <div className="ct-container mt-6">
         <SectionReveal>
-          <Link href="/food" className="ct-btn-ghost text-sm">
-            Explore all food →
+          <Link href={ctaHref} className="ct-btn-ghost text-sm">
+            {ctaLabel} -&gt;
           </Link>
         </SectionReveal>
       </div>

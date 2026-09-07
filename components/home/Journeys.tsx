@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PublicEmptyState, SectionReveal } from "@/components/ui";
+import type { HomepageSectionCopy } from "@/lib/public-content";
 
 interface StoryItem {
   id: number;
@@ -13,10 +14,13 @@ interface StoryItem {
 
 interface JourneysProps {
   stories?: StoryItem[];
+  section?: HomepageSectionCopy;
 }
 
-export function Journeys({ stories }: JourneysProps) {
+export function Journeys({ stories, section }: JourneysProps) {
   const displayStories = stories && stories.length > 0 ? stories : [];
+  const ctaHref = section?.ctaHref || "/journal";
+  const ctaLabel = section?.ctaLabel || "View all stories";
 
   return (
     <section className="ct-section ct-dark">
@@ -25,17 +29,17 @@ export function Journeys({ stories }: JourneysProps) {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-8 mb-8 md:mb-12">
             <div>
               <p className="text-accent text-xs uppercase tracking-[0.2em] font-medium mb-2">
-                Stories & Journeys
+                {section?.eyebrow || "Stories & Journeys"}
               </p>
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-dark-text">
-                Journeys and Dispatches
+                {section?.heading || "Journeys and Dispatches"}
               </h2>
             </div>
             <Link
-              href="/journal"
+              href={ctaHref}
               className="ct-btn-ghost text-sm shrink-0"
             >
-              View all stories →
+              {ctaLabel} -&gt;
             </Link>
           </div>
         </SectionReveal>

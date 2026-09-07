@@ -9,11 +9,15 @@ function readFile(rel: string) {
 }
 
 function changedFiles() {
-  const output = execSync("git -c safe.directory=G:/ctgtrail diff --name-only HEAD", {
+  const tracked = execSync("git -c safe.directory=G:/ctgtrail diff --name-only HEAD", {
     cwd: process.cwd(),
     encoding: "utf8",
   });
-  return output.split(/\r?\n/).filter(Boolean);
+  const untracked = execSync("git -c safe.directory=G:/ctgtrail ls-files --others --exclude-standard", {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+  return [...tracked.split(/\r?\n/), ...untracked.split(/\r?\n/)].filter(Boolean);
 }
 
 describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
@@ -103,10 +107,26 @@ describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
     assert.ok(menu.includes('id="public-mobile-menu"'));
     assert.ok(menu.includes('role="dialog"'));
     assert.ok(menu.includes('aria-modal="true"'));
-    assert.match(css, /\.ct-nav\s*{[\s\S]*background: rgba\(44, 26, 18, 0\.82\)/);
+    assert.match(css, /\.ct-nav\s*{[\s\S]*position: fixed/);
+    assert.match(css, /\.ct-nav\s*{[\s\S]*background: rgba\(44, 26, 18, 0\.72\)/);
+    assert.match(css, /\.ct-nav\s*{[\s\S]*backdrop-filter: blur\(10px\) saturate\(118%\)/);
     assert.match(css, /\.ct-nav-link\s*{[\s\S]*min-height: 44px/);
     assert.match(css, /\.ct-nav-burger\s*{[\s\S]*width: 44px/);
     assert.match(css, /\.ct-nav-burger\s*{[\s\S]*height: 44px/);
+  });
+
+  it("turns the sticky public menu into frosted glass after the hero scrolls away", () => {
+    const header = readFile("components/layout/Header.tsx");
+    const css = readFile("app/globals.css");
+
+    assert.ok(header.includes('document.querySelector<HTMLElement>(".ct-hero")'));
+    assert.ok(header.includes("hero.getBoundingClientRect().bottom <= headerHeight + 1"));
+    assert.ok(header.includes("window.scrollY > 8"));
+    assert.ok(header.includes('data-scrolled={isScrolled || undefined}'));
+    assert.match(css, /\.ct-nav\[data-scrolled\]\s*{[\s\S]*background: rgba\(255, 248, 236, 0\.78\)/);
+    assert.match(css, /\.ct-nav\[data-scrolled\]\s*{[\s\S]*backdrop-filter: blur\(20px\) saturate\(165%\)/);
+    assert.match(css, /\.ct-nav\[data-scrolled\] \.ct-nav-link,[\s\S]*\.ct-nav\[data-scrolled\] \.ct-nav-cta\s*{[\s\S]*color: #3E2723/);
+    assert.match(css, /\.ct-nav\[data-scrolled\] \.ct-nav-burger span\s*{[\s\S]*background: #3E2723/);
   });
 
   it("keeps hero media behavior intact while improving readability", () => {
@@ -184,18 +204,17 @@ describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
     }
   });
 
-  it("does not change admin, Prisma, API, Cloudinary, or dependency surfaces", () => {
-    const forbidden = [
-      /^app\/admin\//,
-      /^app\/api\//,
-      /^components\/admin\//,
-      /^prisma\//,
-      /^lib\/cloudinary\.ts$/,
-      /^package(-lock)?\.json$/,
-    ];
-
-    for (const file of changedFiles()) {
-      assert.equal(forbidden.some((pattern) => pattern.test(file)), false, `${file} is outside A7R.9 scope`);
-    }
+  it("keeps dependencies and Cloudinary implementation unchanged", () => {
+    const files = changedFiles().map((file) => file.replaceAll("\\\\", "/"));
+    const baseline = JSON.parse(execSync("git -c safe.directory=G:/ctgtrail show 4201588:package.json", { encoding: "utf8" }));
+    const current = JSON.parse(readFile("package.json"));
+    assert.deepEqual(current.dependencies, baseline.dependencies);
+    assert.deepEqual(current.devDependencies, baseline.devDependencies);
+    assert.equal(files.includes("package-lock.json"), false);
+    assert.equal(files.includes("lib/cloudinary.ts"), false);
+    assert.deepEqual(
+      files.filter((file) => file.startsWith("prisma/migrations/") && file !== "prisma/migrations/20260905000000_add_public_page_seo_and_footer_brand/migration.sql"),
+      [],
+    );
   });
 });

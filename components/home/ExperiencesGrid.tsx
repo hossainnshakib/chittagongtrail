@@ -2,19 +2,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { PublicEmptyState, SectionReveal } from "@/components/ui";
 import { getLatestJournalPosts } from "@/lib/data";
+import type { HomepageSectionCopy } from "@/lib/public-content";
 
-export async function ExperiencesGrid() {
+export async function ExperiencesGrid({ section }: { section?: HomepageSectionCopy }) {
   const stories = await getLatestJournalPosts(3);
+  const ctaHref = section?.ctaHref || "/journal";
+  const ctaLabel = section?.ctaLabel || "Read all stories";
 
   return (
     <section className="ct-section ct-cream">
       <div className="ct-container mb-8 md:mb-12">
         <SectionReveal>
           <p className="text-text-muted text-xs uppercase tracking-[0.2em] font-medium mb-3">
-            Journal
+            {section?.eyebrow || "Journal"}
           </p>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
-            Stories from the trail
+            {section?.heading || "Stories from the trail"}
           </h2>
         </SectionReveal>
       </div>
@@ -124,8 +127,8 @@ export async function ExperiencesGrid() {
 
       <div className="ct-container mt-6">
         <SectionReveal>
-          <Link href="/journal" className="ct-btn-ghost text-sm">
-            Read all stories →
+          <Link href={ctaHref} className="ct-btn-ghost text-sm">
+            {ctaLabel} -&gt;
           </Link>
         </SectionReveal>
       </div>

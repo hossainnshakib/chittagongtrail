@@ -17,11 +17,24 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 80);
+    const updateScrolledState = () => {
+      const hero = document.querySelector<HTMLElement>(".ct-hero");
+      const header = document.querySelector<HTMLElement>(".ct-nav");
+      const headerHeight = header?.offsetHeight ?? 0;
+      const isPastHero = hero
+        ? hero.getBoundingClientRect().bottom <= headerHeight + 1
+        : window.scrollY > 8;
+
+      setIsScrolled((current) => (current === isPastHero ? current : isPastHero));
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    updateScrolledState();
+    window.addEventListener("scroll", updateScrolledState, { passive: true });
+    window.addEventListener("resize", updateScrolledState);
+    return () => {
+      window.removeEventListener("scroll", updateScrolledState);
+      window.removeEventListener("resize", updateScrolledState);
+    };
   }, []);
 
   return (

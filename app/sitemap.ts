@@ -1,118 +1,71 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chittagongtrail.com";
+import { getConfiguredSiteOrigin } from "@/lib/site-url";
+import { PUBLIC_PAGE_DEFINITIONS } from "@/lib/public-content";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  const siteOrigin = getConfiguredSiteOrigin();
+  if (!siteOrigin) return [];
 
-  const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: SITE_URL,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1.0,
-    },
-    {
-      url: `${SITE_URL}/trails`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/journal`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/food`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/about`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-  ];
+  const settings = await prisma.siteSettings.findUnique({
+    where: { id: 1 },
+    select: { allowIndexing: true, updatedAt: true },
+  });
+  if (settings?.allowIndexing === false) return [];
 
-  let dynamicPages: MetadataRoute.Sitemap = [];
+  const pageSettings = await prisma.pageSeoSetting.findMany({
+    select: { pageKey: true, updatedAt: true, robotsIndex: true, robotsFollow: true, includeInSitemap: true },
+  });
+  const pageSettingsByKey = new Map(pageSettings.map((page) => [page.pageKey, page]));
 
-  try {
-    const trails = await prisma.trailLocation.findMany({
+  const staticPages: MetadataRoute.Sitemap = PUBLIC_PAGE_DEFINITIONS.flatMap((page) => {
+    const setting = pageSettingsByKey.get(page.pageKey);
+    if (setting && (!setting.robotsIndex || !setting.robotsFollow || !setting.includeInSitemap)) return [];
+    return [{
+      url: `${siteOrigin}${page.routePath}`,
+      lastModified: setting?.updatedAt || settings?.updatedAt || new Date(),
+      changeFrequency: page.pageKey === "about" ? "monthly" as const : "weekly" as const,
+      priority: page.pageKey === "home" ? 1 : page.pageKey === "about" ? 0.6 : 0.9,
+    }];
+  });
+
+  const [trails, stories, foodPosts] = await Promise.all([
+    prisma.trailLocation.findMany({
       where: { status: ContentStatus.PUBLISHED },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.journalPost.findMany({
+      where: { status: ContentStatus.PUBLISHED, type: JournalType.STORY },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.journalPost.findMany({
+      where: { status: ContentStatus.PUBLISHED, type: JournalType.FOOD },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
 
-    const trailPages: MetadataRoute.Sitemap = trails.map((trail) => ({
-      url: `${SITE_URL}/trails/${trail.slug}`,
-      lastModified: trail.updatedAt,
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    }));
+  const trailPages = trails.map((trail) => ({
+    url: `${siteOrigin}/trails/${trail.slug}`,
+    lastModified: trail.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+  const storyPages = stories.map((story) => ({
+    url: `${siteOrigin}/journal/${story.slug}`,
+    lastModified: story.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+  const foodPages = foodPosts.map((post) => ({
+    url: `${siteOrigin}/food/${post.slug}`,
+    lastModified: post.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
-    dynamicPages = [...dynamicPages, ...trailPages];
-  } catch (error) {
-    console.error("[sitemap] Failed to fetch trails:", error);
-  }
-
-  try {
-    const journalPosts = await prisma.journalPost.findMany({
-      where: {
-        status: ContentStatus.PUBLISHED,
-        type: JournalType.STORY,
-      },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-      orderBy: { publishedAt: "desc" },
-    });
-
-    const journalPages: MetadataRoute.Sitemap = journalPosts.map((post) => ({
-      url: `${SITE_URL}/journal/${post.slug}`,
-      lastModified: post.updatedAt,
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    }));
-
-    dynamicPages = [...dynamicPages, ...journalPages];
-  } catch (error) {
-    console.error("[sitemap] Failed to fetch journal posts:", error);
-  }
-
-  try {
-    const foodPosts = await prisma.journalPost.findMany({
-      where: {
-        status: ContentStatus.PUBLISHED,
-        type: JournalType.FOOD,
-      },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-      orderBy: { publishedAt: "desc" },
-    });
-
-    const foodPages: MetadataRoute.Sitemap = foodPosts.map((post) => ({
-      url: `${SITE_URL}/food/${post.slug}`,
-      lastModified: post.updatedAt,
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    }));
-
-    dynamicPages = [...dynamicPages, ...foodPages];
-  } catch (error) {
-    console.error("[sitemap] Failed to fetch food posts:", error);
-  }
-
-  return [...staticPages, ...dynamicPages];
+  return [...staticPages, ...trailPages, ...storyPages, ...foodPages];
 }

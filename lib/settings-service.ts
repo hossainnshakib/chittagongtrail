@@ -5,6 +5,7 @@ import { z } from "zod";
 import { sanitizeContent } from "./validation";
 import { revalidatePath } from "next/cache";
 import { CLOUDINARY_CLOUD_NAME, ALLOWED_UPLOAD_FOLDERS } from "./cloudinary";
+import { getConfiguredSiteOrigin } from "./site-url";
 
 const LOG_PREFIX = "[chittagongtrail:settings-service]";
 
@@ -59,8 +60,14 @@ export const siteSettingsSchema = z.object({
   siteName: z.string().min(1, "Site name is required").max(100).transform((v) => v.trim()),
   siteTagline: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
   defaultMetaTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  defaultMetaDescription: z.string().optional().nullable().transform((v) => (v ? v.trim() : "")),
+  defaultMetaDescription: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in meta descriptions"),
+  defaultOgTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG titles"),
+  defaultOgDescription: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG descriptions"),
   defaultOgMediaId: z.coerce.number().int().optional().nullable(),
+  publisherName: z.string().max(100).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  googleSiteVerification: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in verification tokens"),
+  bingSiteVerification: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in verification tokens"),
+  allowIndexing: z.coerce.boolean().default(true),
   heroTitle: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroSubtitle: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
   heroMediaId: z.coerce.number().int().optional().nullable(),
@@ -201,6 +208,10 @@ export const siteSettingsSchema = z.object({
     )
     .transform((v) => (v === "" ? null : v)),
   footerText: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  footerLogoMediaId: z.coerce.number().int().optional().nullable(),
+  footerLogoAltText: z.string().max(191).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  footerLogoDecorative: z.coerce.boolean().default(false),
+  footerLogoIncludesWordmark: z.coerce.boolean().default(true),
 }).refine(
   (data) => {
     if (data.heroVideoEnabled && data.heroVideoProvider !== "NONE") {
@@ -243,13 +254,14 @@ export type SiteSettingsWithMedia = SiteSettings & {
   seasonalMedia?: MediaAsset | null;
   heroVideoMedia?: MediaAsset | null;
   defaultOgMedia?: MediaAsset | null;
+  footerLogoMedia?: MediaAsset | null;
 };
 
 export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWithMedia> {
   try {
     let settings = await prisma.siteSettings.findUnique({
       where: { id: 1 },
-      include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
+      include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true, footerLogoMedia: true },
     });
 
     if (!settings) {
@@ -260,7 +272,7 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
           id: 1,
           siteName: "Chittagong Trail",
         },
-        include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
+        include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true, footerLogoMedia: true },
       });
     }
     return settings;
@@ -272,7 +284,13 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
       siteTagline: null,
       defaultMetaTitle: null,
       defaultMetaDescription: null,
+      defaultOgTitle: null,
+      defaultOgDescription: null,
       defaultOgMediaId: null,
+      publisherName: null,
+      googleSiteVerification: null,
+      bingSiteVerification: null,
+      allowIndexing: true,
       heroTitle: "",
       heroSubtitle: "",
       heroMediaId: null,
@@ -302,11 +320,16 @@ export async function initializeSiteSettingsIfMissing(): Promise<SiteSettingsWit
       socialLinkedIn: null,
       socialTikTok: null,
       footerText: "",
+      footerLogoMediaId: null,
+      footerLogoAltText: null,
+      footerLogoDecorative: false,
+      footerLogoIncludesWordmark: true,
       updatedAt: new Date(),
       heroMedia: null,
       seasonalMedia: null,
       heroVideoMedia: null,
       defaultOgMedia: null,
+      footerLogoMedia: null,
     };
   }
 }
@@ -316,13 +339,17 @@ export async function getSiteSettings() {
 }
 
 export async function getAdminSiteSettings() {
-  return initializeSiteSettingsIfMissing();
+  return {
+    ...(await initializeSiteSettingsIfMissing()),
+    siteOrigin: getConfiguredSiteOrigin(),
+  };
 }
 
 export async function validateSiteSettingsMedia(
   heroMediaId?: number | null,
   seasonalMediaId?: number | null,
-  defaultOgMediaId?: number | null
+  defaultOgMediaId?: number | null,
+  footerLogoMediaId?: number | null
 ) {
   if (heroMediaId) {
     const heroAsset = await prisma.mediaAsset.findUnique({ where: { id: heroMediaId } });
@@ -344,6 +371,12 @@ export async function validateSiteSettingsMedia(
     if (ogAsset.resourceType !== "image") {
       throw new Error("Default OG media asset must be an image");
     }
+  }
+  if (footerLogoMediaId) {
+    const footerAsset = await prisma.mediaAsset.findUnique({ where: { id: footerLogoMediaId } });
+    if (!footerAsset) throw new Error("Referenced footer logo media asset does not exist");
+    if (footerAsset.resourceType !== "image") throw new Error("Footer logo media asset must be an image");
+    if (!footerAsset.secureUrl.startsWith("https://")) throw new Error("Footer logo media asset must use HTTPS");
   }
 }
 
@@ -406,7 +439,7 @@ async function validateAndResolveHeroVideo(
 export async function updateSiteSettings(input: SiteSettingsInput) {
   const parsed = siteSettingsSchema.parse(input);
 
-  await validateSiteSettingsMedia(parsed.heroMediaId, parsed.seasonalMediaId, parsed.defaultOgMediaId);
+  await validateSiteSettingsMedia(parsed.heroMediaId, parsed.seasonalMediaId, parsed.defaultOgMediaId, parsed.footerLogoMediaId);
 
   const heroVideo = await validateAndResolveHeroVideo(
     parsed.heroVideoEnabled,
@@ -422,7 +455,13 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
       siteTagline: parsed.siteTagline || null,
       defaultMetaTitle: parsed.defaultMetaTitle || null,
       defaultMetaDescription: parsed.defaultMetaDescription || null,
+      defaultOgTitle: parsed.defaultOgTitle || null,
+      defaultOgDescription: parsed.defaultOgDescription || null,
       defaultOgMediaId: parsed.defaultOgMediaId || null,
+      publisherName: parsed.publisherName || null,
+      googleSiteVerification: parsed.googleSiteVerification || null,
+      bingSiteVerification: parsed.bingSiteVerification || null,
+      allowIndexing: parsed.allowIndexing,
       heroTitle: parsed.heroTitle,
       heroSubtitle: parsed.heroSubtitle,
       heroMediaId: parsed.heroMediaId || null,
@@ -452,8 +491,12 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
       socialLinkedIn: parsed.socialLinkedIn || null,
       socialTikTok: parsed.socialTikTok || null,
       footerText: parsed.footerText,
+      footerLogoMediaId: parsed.footerLogoMediaId || null,
+      footerLogoAltText: parsed.footerLogoAltText || null,
+      footerLogoDecorative: parsed.footerLogoDecorative,
+      footerLogoIncludesWordmark: parsed.footerLogoIncludesWordmark,
     },
-    include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true },
+    include: { heroMedia: true, seasonalMedia: true, heroVideoMedia: true, defaultOgMedia: true, footerLogoMedia: true },
   });
 
   revalidatePath("/");
@@ -509,7 +552,13 @@ export async function getPublicSiteSettings() {
     siteTagline: settings.siteTagline || "",
     defaultMetaTitle: settings.defaultMetaTitle || "",
     defaultMetaDescription: settings.defaultMetaDescription || "",
+    defaultOgTitle: settings.defaultOgTitle || "",
+    defaultOgDescription: settings.defaultOgDescription || "",
     defaultOgMedia: settings.defaultOgMedia || null,
+    publisherName: settings.publisherName || "",
+    googleSiteVerification: settings.googleSiteVerification || "",
+    bingSiteVerification: settings.bingSiteVerification || "",
+    allowIndexing: settings.allowIndexing,
     heroTitle: settings.heroTitle || "",
     heroSubtitle: settings.heroSubtitle || "",
     heroMedia: settings.heroMedia || null,
@@ -540,5 +589,10 @@ export async function getPublicSiteSettings() {
     socialLinkedIn: settings.socialLinkedIn,
     socialTikTok: settings.socialTikTok,
     footerText: settings.footerText || "",
+    footerLogoMediaId: settings.footerLogoMediaId || null,
+    footerLogoMedia: settings.footerLogoMedia || null,
+    footerLogoAltText: settings.footerLogoAltText || "",
+    footerLogoDecorative: settings.footerLogoDecorative,
+    footerLogoIncludesWordmark: settings.footerLogoIncludesWordmark,
   };
 }
