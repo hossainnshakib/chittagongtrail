@@ -1,7 +1,26 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { getPublicSiteSettings } from "./settings-service";
 import { getPublicPageSeo, type PublicPageKey } from "./public-content";
 import { getConfiguredSiteOrigin, getConfiguredSiteUrl } from "./site-url";
+
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
+export async function getEffectiveSiteOrigin(): Promise<string> {
+  const configured = getConfiguredSiteOrigin();
+  if (configured) return configured;
+  try {
+    const h = await headers();
+    const forwarded = h.get("x-forwarded-host");
+    const host = forwarded || h.get("host");
+    if (!host) return "";
+    const hostname = host.split(":")[0];
+    if (LOCAL_HOSTS.has(hostname)) return "";
+    return `https://${hostname}`;
+  } catch {
+    return "";
+  }
+}
 
 const SITE_URL = getConfiguredSiteOrigin();
 
@@ -345,7 +364,7 @@ export async function buildOrganizationJsonLd(): Promise<OrganizationJsonLd> {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: settings.siteName,
-    url: SITE_URL,
+    url: await getEffectiveSiteOrigin(),
     logo: settings.defaultOgMedia ? settings.defaultOgMedia.secureUrl : DEFAULT_OG_IMAGE,
     sameAs: sameAs.length > 0 ? sameAs : undefined,
   };
@@ -358,7 +377,7 @@ export async function buildWebSiteJsonLd(): Promise<WebSiteJsonLd> {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: settings.siteName,
-    url: SITE_URL,
+    url: await getEffectiveSiteOrigin(),
     description: settings.defaultMetaDescription || settings.siteTagline || SITE_DESCRIPTION,
   };
 }

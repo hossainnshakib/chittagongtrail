@@ -1,17 +1,41 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
 import { getConfiguredSiteOrigin } from "@/lib/site-url";
 import { PUBLIC_PAGE_DEFINITIONS } from "@/lib/public-content";
 
 const LOG_PREFIX = "[sitemap]";
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 function isValidSlug(slug: string): boolean {
   return typeof slug === "string" && slug.length > 0 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 }
 
+async function deriveOriginFromHeaders(): Promise<string> {
+  try {
+    const h = await headers();
+    const forwarded = h.get("x-forwarded-host");
+    const host = forwarded || h.get("host");
+    if (!host) return "";
+    const hostname = host.split(":")[0];
+    if (LOCAL_HOSTS.has(hostname)) return "";
+    return `https://${hostname}`;
+  } catch {
+    return "";
+  }
+}
+
+async function resolveSiteOrigin(): Promise<string> {
+  const configured = getConfiguredSiteOrigin();
+  if (configured) return configured;
+  const fromHeaders = deriveOriginFromHeaders();
+  if (fromHeaders) return fromHeaders;
+  return "";
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteOrigin = getConfiguredSiteOrigin();
+  const siteOrigin = await resolveSiteOrigin();
 
   if (!siteOrigin) {
     try {

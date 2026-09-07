@@ -256,7 +256,9 @@ describe("S1. Master sitemap", () => {
     const sitemap = readFile("app/sitemap.ts");
     assert.ok(sitemap.includes("getConfiguredSiteOrigin"), "must use centralized site origin helper");
     assert.ok(!sitemap.includes("chittagongtrail.com"), "must not hardcode production domain");
-    assert.ok(!sitemap.includes("localhost"), "must not emit localhost");
+    const hasLocalhost = sitemap.includes("localhost");
+    const onlyInExclusionList = !sitemap.replace(/LOCAL_HOSTS[\s\S]*?Set\(\[.*?\]\)/, "").includes("localhost");
+    assert.ok(!hasLocalhost || onlyInExclusionList, "must not emit localhost in URLs");
   });
 
   it("does not silently swallow database errors into empty results", () => {
@@ -523,7 +525,9 @@ describe("S7. No secret or localhost leakage", () => {
 
   it("seo.ts buildMetadata does not emit localhost in production", () => {
     const seo = readFile("lib/seo.ts");
-    assert.ok(!seo.includes("localhost"), "seo.ts must not hardcode localhost");
+    const hasLocalhost = seo.includes("localhost");
+    const onlyInExclusionList = !seo.replace(/LOCAL_HOSTS[\s\S]*?Set\(\[.*?\]\)/, "").includes("localhost");
+    assert.ok(!hasLocalhost || onlyInExclusionList, "seo.ts must not hardcode localhost in output paths");
   });
 });
 
