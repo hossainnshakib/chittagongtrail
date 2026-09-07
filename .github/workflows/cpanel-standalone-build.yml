@@ -23,11 +23,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: ctgtrail_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpass"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     env:
       NODE_ENV: production
       NEXT_PUBLIC_SITE_URL: https://chittagongtrail.com
       SITE_URL: https://chittagongtrail.com
-      DATABASE_URL: mysql://placeholder:placeholder@localhost:3306/placeholder
+      DATABASE_URL: mysql://root:rootpass@127.0.0.1:3306/ctgtrail_ci
       AUTH_SECRET: build-time-placeholder-secret
       ADMIN_EMAIL: admin@chittagongtrail.com
       ADMIN_PASSWORD_HASH: build-time-placeholder-hash
@@ -50,6 +65,9 @@ jobs:
 
       - name: Generate Prisma client
         run: npx prisma generate
+
+      - name: Apply CI migrations
+        run: npx prisma migrate deploy
 
       - name: Build standalone app
         run: npx next build --webpack
