@@ -30,6 +30,11 @@ export async function UneditedGallery({ galleryItems, section }: UneditedGallery
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
             {section?.heading || "What it actually looks like"}
           </h2>
+          {section?.description && (
+            <p className="text-text-secondary text-base mt-2 max-w-xl">
+              {section.description}
+            </p>
+          )}
         </SectionReveal>
       </div>
 

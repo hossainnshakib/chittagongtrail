@@ -34,6 +34,11 @@ export function Journeys({ stories, section }: JourneysProps) {
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-dark-text">
                 {section?.heading || "Journeys and Dispatches"}
               </h2>
+              {section?.description && (
+                <p className="text-dark-text/70 text-base mt-2 max-w-xl">
+                  {section.description}
+                </p>
+              )}
             </div>
             <Link
               href={ctaHref}

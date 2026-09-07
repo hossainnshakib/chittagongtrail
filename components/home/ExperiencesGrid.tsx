@@ -19,6 +19,11 @@ export async function ExperiencesGrid({ section }: { section?: HomepageSectionCo
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-text">
             {section?.heading || "Stories from the trail"}
           </h2>
+          {section?.description && (
+            <p className="text-text-secondary text-base mt-2 max-w-xl">
+              {section.description}
+            </p>
+          )}
         </SectionReveal>
       </div>
 
