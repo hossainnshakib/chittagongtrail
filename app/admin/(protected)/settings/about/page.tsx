@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
+import AdminRichTextEditor from "../../../../../components/admin/AdminRichTextEditor";
 
 export default function AdminAboutSettingsPage() {
   const [introductionHeading, setIntroductionHeading] = useState("");
@@ -176,3 +176,4 @@ export default function AdminAboutSettingsPage() {
     </div>
   );
 }
+

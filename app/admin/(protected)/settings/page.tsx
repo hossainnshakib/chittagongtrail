@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import MediaPicker from "@/components/admin/media/MediaPicker";
-import type { MediaAssetData } from "@/components/admin/media/types";
+import MediaPicker from "../../../../components/admin/media/MediaPicker";
+import type { MediaAssetData } from "../../../../components/admin/media/types";
 
 export default function AdminGeneralSettingsPage() {
   const [siteName, setSiteName] = useState("Chittagong Trail");
@@ -332,3 +332,4 @@ export default function AdminGeneralSettingsPage() {
     </div>
   );
 }
+
