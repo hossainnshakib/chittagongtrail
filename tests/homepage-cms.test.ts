@@ -495,6 +495,51 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
     });
   });
 
+  describe("CMS Rich Text Paragraph Spacing", () => {
+    it("EditorialQuote uses cms-rich-text class on content div", () => {
+      const comp = readFile("components/home/EditorialQuote.tsx");
+      assert.ok(comp.includes("cms-rich-text"), "EditorialQuote content div must have cms-rich-text class");
+    });
+
+    it("ChittagongStatement uses cms-rich-text class on content div", () => {
+      const comp = readFile("components/home/ChittagongStatement.tsx");
+      assert.ok(comp.includes("cms-rich-text"), "ChittagongStatement content div must have cms-rich-text class");
+    });
+
+    it("ClosingInvitation uses cms-rich-text class on content div", () => {
+      const comp = readFile("components/home/ClosingInvitation.tsx");
+      assert.ok(comp.includes("cms-rich-text"), "ClosingInvitation content div must have cms-rich-text class");
+    });
+
+    it("SeasonalEditor admin preview uses cms-rich-text class", () => {
+      const comp = readFile("components/admin/homepage/SeasonalEditor.tsx");
+      assert.ok(comp.includes("cms-rich-text"), "SeasonalEditor preview must use cms-rich-text class");
+    });
+
+    it("globals.css defines .cms-rich-text paragraph spacing rules", () => {
+      const css = readFile("app/globals.css");
+      assert.ok(css.includes(".cms-rich-text p + p"), "Must define .cms-rich-text p + p margin rule");
+      assert.ok(css.includes(".cms-rich-text blockquote"), "Must define blockquote spacing");
+      assert.ok(css.includes(".cms-rich-text ul"), "Must define list spacing");
+    });
+
+    it("homepage section descriptions use plain text rendering (not dangerouslySetInnerHTML)", () => {
+      const dest = readFile("components/home/DestinationsGrid.tsx");
+      const exp = readFile("components/home/ExperiencesGrid.tsx");
+      const food = readFile("components/home/FoodGallery.tsx");
+      const journ = readFile("components/home/Journeys.tsx");
+      const uned = readFile("components/home/UneditedGallery.tsx");
+      // Section descriptions must be rendered as React text expressions, not HTML
+      assert.ok(dest.includes("{section.description}"), "DestinationsGrid uses plain text for description");
+      assert.ok(exp.includes("{section.description}"), "ExperiencesGrid uses plain text for description");
+      assert.ok(food.includes("{section?.description"), "FoodGallery uses plain text for description");
+      assert.ok(journ.includes("{section.description}"), "Journeys uses plain text for description");
+      assert.ok(uned.includes("{section.description}"), "UneditedGallery uses plain text for description");
+      // None should use dangerouslySetInnerHTML for section descriptions
+      assert.ok(!dest.includes("description") || !dest.includes("dangerouslySetInnerHTML"), "DestinationsGrid does not use dangerouslySetInnerHTML for description");
+    });
+  });
+
   describe("Homepage Gallery Workspace (Spec 13)", () => {
     it("image-only, duplicate rejected, hard max 12, recommended 6-8 warning", () => {
       const svc = readFile("lib/homepage-service.ts");

@@ -50,7 +50,7 @@ export function EditorialQuote({ eyebrow, title, content, media }: EditorialQuot
                   )}
                   {displayContent && (
                     <div
-                      className="text-dark-text/60 text-base md:text-lg leading-relaxed mt-4 md:mt-6 max-w-2xl"
+                      className="cms-rich-text text-dark-text/60 text-base md:text-lg leading-relaxed mt-4 md:mt-6 max-w-2xl"
                       dangerouslySetInnerHTML={{ __html: displayContent }}
                     />
                   )}
@@ -83,7 +83,7 @@ export function EditorialQuote({ eyebrow, title, content, media }: EditorialQuot
               )}
               {displayContent && (
                 <div
-                  className="text-dark-text/60 text-base md:text-lg leading-relaxed mt-4 md:mt-6 max-w-2xl"
+                  className="cms-rich-text text-dark-text/60 text-base md:text-lg leading-relaxed mt-4 md:mt-6 max-w-2xl"
                   dangerouslySetInnerHTML={{ __html: displayContent }}
                 />
               )}

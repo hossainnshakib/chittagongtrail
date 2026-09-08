@@ -28,12 +28,12 @@ export function ClosingInvitation({ heading, content }: ClosingInvitationProps) 
                 }}
               />
             )}
-            {displayContent && (
-              <div
-                className="text-dark-text/50 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto"
-                dangerouslySetInnerHTML={{ __html: displayContent }}
-              />
-            )}
+              {displayContent && (
+                <div
+                  className="cms-rich-text text-dark-text/50 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto"
+                  dangerouslySetInnerHTML={{ __html: displayContent }}
+                />
+              )}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/trails" className="ct-btn ct-btn-outline">
                 Explore all trails

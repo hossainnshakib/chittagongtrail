@@ -88,7 +88,7 @@ export default function SeasonalEditor() {
               <div className="space-y-2">
                 {eyebrow.trim() && <p className="text-xs uppercase tracking-[0.2em] font-medium" style={{ color: "#A1887F" }}>{eyebrow}</p>}
                 {title.trim() && <h3 className="text-2xl font-semibold" style={{ color: "#5D4037", fontFamily: "var(--font-display)" }}>{title}</h3>}
-                {content.trim() && <div className="text-sm" style={{ color: "#8D6E63" }} dangerouslySetInnerHTML={{ __html: content }} />}
+                {content.trim() && <div className="cms-rich-text text-sm" style={{ color: "#8D6E63" }} dangerouslySetInnerHTML={{ __html: content }} />}
                 {media && <div className="relative w-full h-48 rounded overflow-hidden mt-3"><Image src={media.secureUrl} alt={media.altText || title} fill className="object-cover" /></div>}
               </div>
             ) : <p className="text-sm" style={{ color: "var(--admin-text-muted)" }}>Seasonal section hidden when both eyebrow and title are empty — add content to publish.</p>}

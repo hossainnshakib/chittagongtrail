@@ -1134,6 +1134,65 @@ img { max-width: 100%; height: auto; display: block; }
   box-shadow: var(--shadow-sm);
 }
 
+/* ============================================
+   CMS Rich Text — paragraph spacing for
+   sanitized HTML rendered via dangerouslySetInnerHTML.
+   Scoped to .cms-rich-text containers only.
+   ============================================ */
+.cms-rich-text p + p {
+  margin-top: 1rem;
+}
+
+.cms-rich-text h2,
+.cms-rich-text h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cms-rich-text h2:first-child,
+.cms-rich-text h3:first-child {
+  margin-top: 0;
+}
+
+.cms-rich-text ul,
+.cms-rich-text ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.cms-rich-text ul {
+  list-style-type: disc;
+}
+
+.cms-rich-text ol {
+  list-style-type: decimal;
+}
+
+.cms-rich-text li {
+  margin-top: 0.25rem;
+}
+
+.cms-rich-text blockquote {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-border-default, #d1d5db);
+  font-style: italic;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.cms-rich-text a {
+  color: var(--color-accent-secondary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.cms-rich-text br + br::before {
+  content: "\A";
+  white-space: pre-line;
+}
+
 .prose {
   color: var(--color-text-secondary);
 }

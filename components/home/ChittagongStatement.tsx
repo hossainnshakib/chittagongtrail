@@ -44,7 +44,7 @@ export function ChittagongStatement({ heading, content }: ChittagongStatementPro
             <div className="lg:col-span-6 lg:pt-12">
               {displayContent && (
                 <div
-                  className="text-text-secondary text-base md:text-lg leading-relaxed max-w-xl"
+                  className="cms-rich-text text-text-secondary text-base md:text-lg leading-relaxed max-w-xl"
                   dangerouslySetInnerHTML={{ __html: displayContent }}
                 />
               )}

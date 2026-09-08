@@ -54,6 +54,18 @@ describe("Tiptap Rich Text Editor & On-Page SEO Polish Tests", () => {
     assert.strictEqual(sanitizeContent("   \n  "), "");
   });
 
+  test("sanitizeContent preserves multi-paragraph content with <p> and <br> tags", () => {
+    const multiParagraph = "<p>First paragraph.</p><p>Second paragraph.</p><p>Third paragraph.</p>";
+    const clean = sanitizeContent(multiParagraph);
+    assert.strictEqual(clean.includes("<p>First paragraph.</p>"), true, "First paragraph preserved");
+    assert.strictEqual(clean.includes("<p>Second paragraph.</p>"), true, "Second paragraph preserved");
+    assert.strictEqual(clean.includes("<p>Third paragraph.</p>"), true, "Third paragraph preserved");
+
+    const withBreaks = "<p>Line one.<br/>Line two.</p>";
+    const cleanBreaks = sanitizeContent(withBreaks);
+    assert.strictEqual(cleanBreaks.includes("<br"), true, "Line breaks preserved");
+  });
+
   test("trailSchema and journalSchema validate rich content correctly", () => {
     const validTrail = {
       name: "Boga Lake Trail",
