@@ -91,7 +91,9 @@ describe("Master Login Routing Tests", () => {
 
     it("logout button navigates to /master", () => {
       const content = readFile("components/admin/AdminLogoutButton.tsx");
-      assert.ok(content.includes('router.push("/master")'), "Logout button goes to /master");
+      assert.ok(content.includes('action={logout}'), "Logout button uses server action form");
+      assert.ok(!content.includes('use client'), "Not a client component");
+      assert.ok(!content.includes('router.push'), "No client-side router.push");
       assert.ok(!content.includes('/admin/login'), "No /admin/login reference");
     });
   });

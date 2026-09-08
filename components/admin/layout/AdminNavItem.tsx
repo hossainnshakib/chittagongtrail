@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/admin/(auth)/login/actions";
 
 interface AdminNavItemProps {
   label: string;
@@ -154,6 +155,25 @@ export default function AdminNavItem({ label, href, icon, disabled, tooltip, onC
         <span className="admin-nav-item-label">{label}</span>
         <span className="admin-nav-planned" aria-label="Planned feature">Planned</span>
       </span>
+    );
+  }
+
+  if (label === "Logout" && !href) {
+    return (
+      <form action={logout}>
+        <button
+          type="submit"
+          className="admin-nav-item admin-focus-ring"
+          onClick={onClick}
+        >
+          {icon && (
+            <span className="admin-nav-item-icon">
+              <NavIcon icon={icon} />
+            </span>
+          )}
+          <span className="admin-nav-item-label">{label}</span>
+        </button>
+      </form>
     );
   }
 

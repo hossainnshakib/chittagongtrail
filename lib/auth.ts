@@ -88,8 +88,8 @@ export async function requireAdmin(): Promise<AdminSession> {
 }
 
 export function getAdminCredentials() {
-  const email = process.env.ADMIN_EMAIL;
-  const passwordHash = process.env.ADMIN_PASSWORD_HASH;
+  const email = Reflect.get(process.env, "ADMIN_EMAIL") as string | undefined;
+  const passwordHash = Reflect.get(process.env, "ADMIN_PASSWORD_HASH") as string | undefined;
   if (!email || !passwordHash) {
     throw new Error("Admin credentials not configured");
   }
