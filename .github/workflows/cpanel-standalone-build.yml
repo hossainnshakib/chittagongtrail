@@ -79,7 +79,6 @@ jobs:
           cp -R .next/static cpanel-artifact/.next/static
           cp -R public cpanel-artifact/public
           cp -R prisma cpanel-artifact/prisma
-          cp server.js cpanel-artifact/server.js
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
