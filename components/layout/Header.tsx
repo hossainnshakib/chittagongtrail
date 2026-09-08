@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MobileMenu } from "./MobileMenu";
@@ -15,24 +15,32 @@ const navigation = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const tickingRef = useRef(false);
 
   useEffect(() => {
     const updateScrolledState = () => {
       const hero = document.querySelector<HTMLElement>(".ct-hero");
-      const header = document.querySelector<HTMLElement>(".ct-nav");
-      const headerHeight = header?.offsetHeight ?? 0;
+      const headerHeight = 64;
       const isPastHero = hero
         ? hero.getBoundingClientRect().bottom <= headerHeight + 1
         : window.scrollY > 8;
 
       setIsScrolled((current) => (current === isPastHero ? current : isPastHero));
+      tickingRef.current = false;
+    };
+
+    const onScroll = () => {
+      if (!tickingRef.current) {
+        tickingRef.current = true;
+        requestAnimationFrame(updateScrolledState);
+      }
     };
 
     updateScrolledState();
-    window.addEventListener("scroll", updateScrolledState, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", updateScrolledState);
     return () => {
-      window.removeEventListener("scroll", updateScrolledState);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", updateScrolledState);
     };
   }, []);

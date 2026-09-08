@@ -79,7 +79,7 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       // protected layout checks getSession
       const layout = readFile("app/admin/(protected)/layout.tsx");
       assert.ok(layout.includes("getSession"));
-      assert.ok(layout.includes('redirect("/admin/login")'));
+      assert.ok(layout.includes('redirect("/")'));
     });
 
     it("retain 44px minimum interactive targets in editors", () => {

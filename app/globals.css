@@ -978,6 +978,37 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 /* ============================================
+   SCROLL REVEAL — CSS-driven, no JS library
+   ============================================ */
+@keyframes ctRevealFadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ct-scroll-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+}
+.ct-scroll-reveal[data-revealed="true"] {
+  animation: ctRevealFadeUp 0.7s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-scroll-reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ============================================
+   HERO LCP — ensure heading paints immediately
+   ============================================ */
+.hero-title,
+.hero-subtitle,
+.hero-cta {
+  opacity: 1;
+}
+
+/* ============================================
    PUBLIC FOOTER
    ============================================ */
 .ct-footer {

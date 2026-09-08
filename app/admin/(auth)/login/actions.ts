@@ -60,4 +60,5 @@ export async function login(
 
 export async function logout(): Promise<void> {
   await deleteSessionCookie();
+  redirect("/master");
 }

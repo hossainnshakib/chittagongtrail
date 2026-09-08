@@ -8,7 +8,7 @@ export default function AdminLogoutButton() {
 
   async function handleLogout() {
     await logout();
-    router.push("/admin/login");
+    router.push("/master");
   }
 
   return (

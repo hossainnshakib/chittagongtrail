@@ -10,7 +10,7 @@ export default async function AdminProtectedLayout({
   const session = await getSession();
 
   if (!session?.authenticated) {
-    redirect("/admin/login");
+    redirect("/");
   }
 
   return <AdminShell>{children}</AdminShell>;

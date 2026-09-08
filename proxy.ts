@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const ADMIN_SESSION_COOKIE = "ct_admin_session";
-const LOGIN_PATH = "/admin/login";
 
 function getAuthSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -27,8 +26,7 @@ async function verifyToken(token: string): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isAdminPage =
-    pathname.startsWith("/admin") && pathname !== LOGIN_PATH;
+  const isAdminPage = pathname.startsWith("/admin");
   const isAdminApi =
     pathname.startsWith("/api/admin") || pathname.startsWith("/api/upload");
 
@@ -41,9 +39,7 @@ export async function proxy(request: NextRequest) {
 
   if (isAdminPage) {
     if (!isAuthenticated) {
-      const loginUrl = new URL(LOGIN_PATH, request.url);
-      loginUrl.searchParams.set("from", pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 

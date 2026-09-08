@@ -59,16 +59,12 @@ describe("Admin Login Regression Tests", () => {
 
   describe("Proxy Route Protection", () => {
     const isProtectedAdmin = (pathname: string): boolean =>
-      pathname.startsWith("/admin") && pathname !== "/admin/login";
+      pathname.startsWith("/admin");
 
     const isProtectedApi = (pathname: string): boolean =>
       pathname.startsWith("/api/admin") || pathname.startsWith("/api/upload");
 
-    it("proxy excludes /admin/login from redirect", () => {
-      assert.equal(isProtectedAdmin("/admin/login"), false);
-    });
-
-    it("proxy protects /admin/dashboard", () => {
+    it("proxy protects all /admin routes", () => {
       assert.equal(isProtectedAdmin("/admin"), true);
     });
 
@@ -90,6 +86,10 @@ describe("Admin Login Regression Tests", () => {
 
     it("proxy allows /trails", () => {
       assert.equal(isProtectedAdmin("/trails") || isProtectedApi("/trails"), false);
+    });
+
+    it("proxy allows /master", () => {
+      assert.equal(isProtectedAdmin("/master"), false);
     });
   });
 

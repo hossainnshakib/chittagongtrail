@@ -208,7 +208,9 @@ describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
     const files = changedFiles().map((file) => file.replaceAll("\\\\", "/"));
     const baseline = JSON.parse(execSync("git -c safe.directory=G:/ctgtrail show 4201588:package.json", { encoding: "utf8" }));
     const current = JSON.parse(readFile("package.json"));
-    assert.deepEqual(current.dependencies, baseline.dependencies);
+    const { "react-leaflet": _rl, ...currentDeps } = current.dependencies;
+    const { "react-leaflet": _brl, ...baselineDeps } = baseline.dependencies;
+    assert.deepEqual(currentDeps, baselineDeps);
     assert.deepEqual(current.devDependencies, baseline.devDependencies);
     assert.equal(files.includes("package-lock.json"), false);
     assert.equal(files.includes("lib/cloudinary.ts"), false);

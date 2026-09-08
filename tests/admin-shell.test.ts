@@ -62,22 +62,18 @@ describe("Admin Shell Tests", () => {
   });
 
   describe("Login Route Exclusion", () => {
-    it("/admin/login is excluded from protected admin check", () => {
+    it("all /admin routes are protected", () => {
       const isAdminPage = (pathname: string) =>
-        pathname.startsWith("/admin") && pathname !== "/admin/login";
-      assert.equal(isAdminPage("/admin/login"), false);
-    });
-
-    it("/admin is protected", () => {
-      const isAdminPage = (pathname: string) =>
-        pathname.startsWith("/admin") && pathname !== "/admin/login";
+        pathname.startsWith("/admin");
       assert.equal(isAdminPage("/admin"), true);
+      assert.equal(isAdminPage("/admin/trails"), true);
+      assert.equal(isAdminPage("/admin/settings"), true);
     });
 
-    it("/admin/trails is protected", () => {
+    it("/master is not a protected admin route", () => {
       const isAdminPage = (pathname: string) =>
-        pathname.startsWith("/admin") && pathname !== "/admin/login";
-      assert.equal(isAdminPage("/admin/trails"), true);
+        pathname.startsWith("/admin");
+      assert.equal(isAdminPage("/master"), false);
     });
   });
 
@@ -314,19 +310,16 @@ describe("Admin Shell Tests", () => {
     });
   });
 
-  describe("Login Page Unaffected", () => {
-    it("login page still exists with correct structure", () => {
-
+  describe("Login Page Returns 404", () => {
+    it("/admin/login returns not found", () => {
       const content = fs.readFileSync("app/admin/(auth)/login/page.tsx", "utf-8");
-      assert.ok(content.includes("Sign In"), "Login page has Sign In text");
-      assert.ok(content.includes("Chittagong Trail"), "Login page has brand name");
-      assert.ok(content.includes("use client"), "Login page is client component");
+      assert.ok(content.includes("notFound"), "Login page calls notFound()");
     });
 
-    it("login page does not use AdminShell", () => {
-
+    it("/admin/login does not render login form", () => {
       const content = fs.readFileSync("app/admin/(auth)/login/page.tsx", "utf-8");
-      assert.ok(!content.includes("AdminShell"), "Login page does not use AdminShell");
+      assert.ok(!content.includes("Sign In"), "Login page has no Sign In form");
+      assert.ok(!content.includes("use client"), "Login page is not a client component");
     });
   });
 

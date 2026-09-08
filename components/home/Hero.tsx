@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 import Image from "next/image";
-import { useHeroReveal } from "@/hooks/useGsap";
 import { resolveVideoUrl, getVideoMimeType, type VideoProvider } from "@/lib/video";
 
 interface HeroProps {
@@ -17,7 +16,7 @@ interface HeroProps {
 }
 
 const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80";
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1280&q=80";
 
 function usePrefersReducedMotion() {
   const subscribe = useCallback((cb: () => void) => {
@@ -183,7 +182,7 @@ export function Hero({
   videoFormat,
   videoOverlay = 45,
 }: HeroProps) {
-  const heroRef = useHeroReveal();
+  const heroRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const heroSectionRef = useRef<HTMLElement>(null);
 
@@ -231,6 +230,32 @@ export function Hero({
     return () => anim.cancel();
   }, [reducedMotion]);
 
+  useEffect(() => {
+    if (reducedMotion || !heroRef.current) return;
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      import("gsap").then(({ default: gsap }) => {
+        if (cancelled || !heroRef.current) return;
+        const titleEl = heroRef.current.querySelector(".hero-title");
+        const subtitleEl = heroRef.current.querySelector(".hero-subtitle");
+        const ctaEl = heroRef.current.querySelector(".hero-cta");
+        if (!titleEl || !subtitleEl || !ctaEl) return;
+
+        const tl = gsap.timeline({ delay: 0.3 });
+        tl.fromTo(titleEl, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", immediateRender: false })
+          .fromTo(subtitleEl, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out", immediateRender: false }, "-=0.4")
+          .fromTo(ctaEl, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, "-=0.3");
+      });
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(run, { timeout: 2000 });
+    } else {
+      setTimeout(run, 0);
+    }
+    return () => { cancelled = true; };
+  }, [reducedMotion]);
+
   const displayTitle =
     title?.trim() || "Five Districts.\nHills to the Sea.\n*One Chittagong.*";
   const displaySubtitle =
@@ -254,7 +279,7 @@ export function Hero({
           fill
           className={showKenBurns ? "ken-burns" : ""}
           priority
-          sizes="100vw"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1280px"
           style={{
             objectFit: "cover",
             objectPosition: "center",

@@ -50,7 +50,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
             Close
           </button>
         </div>
-        <nav className="ct-mobile-menu-nav">
+        <nav className="ct-mobile-menu-nav" aria-label="Main navigation">
           {navigation.map((item) => (
             <Link key={item.name} href={item.href} onClick={onClose} className="ct-mobile-menu-link">
               {item.name}
