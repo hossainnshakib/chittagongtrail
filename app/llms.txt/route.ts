@@ -7,52 +7,25 @@ export async function GET() {
   const siteOrigin = getConfiguredSiteOrigin();
   const siteName = "Chittagong Trail";
   const siteDescription =
-    "An independent exploration and storytelling platform documenting Chittagong's places, culture, history, food, and people across five districts: Chittagong, Cox's Bazar, Rangamati, Bandarban, and Khagrachari.";
-
-  const sections = [
-    {
-      title: "Trails",
-      url: `${siteOrigin}/trails`,
-      description:
-        "Discover coastal shores, misty hills, heritage sites, markets, and hidden places across Chittagong's five districts. Each trail includes location details, district information, terrain type, and related stories.",
-    },
-    {
-      title: "Journal",
-      url: `${siteOrigin}/journal`,
-      description:
-        "Stories, observations, and discoveries from across Chittagong's five districts, shaped by place, culture, history, food, and people.",
-    },
-    {
-      title: "Food",
-      url: `${siteOrigin}/food`,
-      description:
-        "Explore Chittagong's culinary traditions, street food, regional flavors, and food culture across five districts. Covers shared tables, coastal lunches, tea stops, and regional dishes.",
-    },
-    {
-      title: "About",
-      url: `${siteOrigin}/about`,
-      description:
-        "Learn about Chittagong Trail, an independent platform documenting the places, culture, history, food, and people of Chittagong.",
-    },
-  ];
+    "An editorial and discovery platform covering places, trails, stories, food, culture, and travel across the five districts of greater Chittagong.";
 
   const lines = [
     `# ${siteName}`,
     "",
     siteDescription,
     "",
-    "## Public Sections",
+    "## Main sections",
     "",
-    ...sections.flatMap((section) => [
-      `### ${section.title}`,
-      `URL: ${section.url}`,
-      section.description,
-      "",
-    ]),
-    "## Sitemap",
+    `- [Home](${siteOrigin}/)`,
+    `- [Trails](${siteOrigin}/trails)`,
+    `- [Journal](${siteOrigin}/journal)`,
+    `- [Food](${siteOrigin}/food)`,
+    `- [About](${siteOrigin}/about)`,
     "",
-    `${siteOrigin}/sitemap.xml`,
+    "## Machine-readable resources",
     "",
+    `- [Sitemap](${siteOrigin}/sitemap.xml)`,
+    `- [Robots](${siteOrigin}/robots.txt)`,
   ];
 
   return new NextResponse(lines.join("\n"), {

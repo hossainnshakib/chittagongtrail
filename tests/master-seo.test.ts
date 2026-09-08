@@ -474,13 +474,30 @@ describe("S6. llms.txt", () => {
     assert.ok(route.includes("text/plain"), "must return text/plain content type");
   });
 
-  it("includes sitemap link and public sections", () => {
+  it("includes Markdown H1 heading", () => {
     const route = readFile("app/llms.txt/route.ts");
-    assert.ok(route.includes("sitemap.xml"), "must reference sitemap");
-    assert.ok(route.includes("/trails"), "must include trails section");
-    assert.ok(route.includes("/journal"), "must include journal section");
-    assert.ok(route.includes("/food"), "must include food section");
-    assert.ok(route.includes("/about"), "must include about section");
+    assert.ok(route.includes("# "), "must contain Markdown H1 heading");
+  });
+
+  it("contains Markdown links using [text](url) syntax", () => {
+    const route = readFile("app/llms.txt/route.ts");
+    const hasMarkdownLink = /\[.*?\]\(.*?\)/.test(route);
+    assert.ok(hasMarkdownLink, "must contain at least one Markdown link");
+  });
+
+  it("includes Home, Trails, Journal, Food, About as Markdown links", () => {
+    const route = readFile("app/llms.txt/route.ts");
+    assert.ok(/\[Home\]/.test(route), "must have Home link");
+    assert.ok(/\[Trails\]/.test(route), "must have Trails link");
+    assert.ok(/\[Journal\]/.test(route), "must have Journal link");
+    assert.ok(/\[Food\]/.test(route), "must have Food link");
+    assert.ok(/\[About\]/.test(route), "must have About link");
+  });
+
+  it("includes sitemap and robots as Markdown links", () => {
+    const route = readFile("app/llms.txt/route.ts");
+    assert.ok(/\[Sitemap\]/.test(route), "must have Sitemap link");
+    assert.ok(/\[Robots\]/.test(route), "must have Robots link");
   });
 
   it("does not expose admin, API, or preview URLs", () => {
@@ -488,6 +505,11 @@ describe("S6. llms.txt", () => {
     assert.ok(!route.includes("/admin"), "must not expose admin URLs");
     assert.ok(!route.includes("/api"), "must not expose API URLs");
     assert.ok(!route.includes("/preview"), "must not expose preview URLs");
+  });
+
+  it("does not expose /master login route", () => {
+    const route = readFile("app/llms.txt/route.ts");
+    assert.ok(!route.includes("/master"), "must not expose /master login route");
   });
 
   it("uses force-dynamic to prevent stale caching", () => {
