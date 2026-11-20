@@ -33,7 +33,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
   if (!isOpen) return null;
 
   return (
-    <div id="public-mobile-menu" className="fixed inset-0 z-50">
+    <div id="public-mobile-menu" className="fixed inset-0 z-[110]">
       <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
         ref={menuRef}

@@ -1,7 +1,9 @@
 import { Container, Button } from "@/components/ui";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 
 export default function NotFound() {
   return (
+    <PublicLayout>
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Container className="text-center">
         <h1 className="font-display text-6xl md:text-7xl font-bold text-text mb-6">
@@ -16,5 +18,6 @@ export default function NotFound() {
         </Button>
       </Container>
     </div>
+    </PublicLayout>
   );
 }

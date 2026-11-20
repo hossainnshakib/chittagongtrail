@@ -242,17 +242,13 @@ export function Hero({
         const ctaEl = heroRef.current.querySelector(".hero-cta");
         if (!titleEl || !subtitleEl || !ctaEl) return;
 
-        const tl = gsap.timeline({ delay: 0.3 });
-        tl.fromTo(titleEl, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", immediateRender: false })
-          .fromTo(subtitleEl, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out", immediateRender: false }, "-=0.4")
-          .fromTo(ctaEl, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, "-=0.3");
+        const tl = gsap.timeline({ delay: 0.1 });
+        tl.fromTo(titleEl, { y: 60, opacity: 0.3 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", immediateRender: false })
+          .fromTo(subtitleEl, { y: 40, opacity: 0.3 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out", immediateRender: false }, "-=0.4")
+          .fromTo(ctaEl, { y: 30, opacity: 0.3 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, "-=0.3");
       });
     };
-    if (typeof requestIdleCallback !== "undefined") {
-      requestIdleCallback(run, { timeout: 2000 });
-    } else {
-      setTimeout(run, 0);
-    }
+    run();
     return () => { cancelled = true; };
   }, [reducedMotion]);
 
