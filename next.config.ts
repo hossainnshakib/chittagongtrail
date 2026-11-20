@@ -5,9 +5,9 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cspDirectives = [
   "default-src 'self'",
-  `script-src 'self'${isProd ? "" : " 'unsafe-eval'"} 'unsafe-inline'`,
+  `script-src 'self'${isProd ? "" : " 'unsafe-eval'"} 'unsafe-inline' https://www.googletagmanager.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com https://cdn.pixabay.com",
+  "img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com https://cdn.pixabay.com https://www.google-analytics.com",
   "media-src 'self' blob: data: https://res.cloudinary.com https://videos.unsplash.com",
   "font-src 'self' data:",
   "object-src 'none'",
@@ -15,7 +15,7 @@ const cspDirectives = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
-  "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com",
+  "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com",
 ].join("; ");
 
 const nextConfig: NextConfig = {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
@@ -56,6 +57,7 @@ export default async function RootLayout({
         >
           Skip to main content
         </a>
+        <GoogleAnalytics />
         {children}
       </body>
     </html>
