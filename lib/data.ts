@@ -39,7 +39,7 @@ export async function getTrailBySlug(slug: string) {
           orderBy: { sortOrder: "asc" },
         },
         journalPosts: {
-          where: { status: ContentStatus.PUBLISHED },
+          where: { status: ContentStatus.PUBLISHED, type: JournalType.STORY },
           orderBy: { publishedAt: "desc" },
           include: { coverMedia: true },
           take: 5,
@@ -161,12 +161,13 @@ export async function getTrailsWithCoordinates() {
   }
 }
 
-export async function getLatestJournalPosts(limit: number = 3) {
+export async function getLatestJournalPosts(limit: number = 3, excludeIds: number[] = []) {
   try {
     const posts = await prisma.journalPost.findMany({
       where: {
         status: ContentStatus.PUBLISHED,
         type: JournalType.STORY,
+        id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
       },
       orderBy: [{ isFeatured: "desc" }, { featuredOrder: "asc" }, { publishedAt: "desc" }],
       take: limit,

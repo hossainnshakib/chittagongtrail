@@ -125,7 +125,6 @@ export default function JournalForm({
       <input type="hidden" name="coverMediaId" value={coverAsset?.id || ""} />
       <input type="hidden" name="ogMediaId" value={effectiveOgId} />
       <input type="hidden" name="galleryIds" value={galleryAssets.map((a) => a.id).join(",")} />
-      <input type="hidden" name="trailId" value={trailId || ""} />
 
       {state.error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm mb-4">

@@ -9,7 +9,7 @@ interface StoryItem {
   slug: string;
   excerpt?: string | null;
   coverMedia?: { secureUrl: string; altText: string | null } | null;
-  trail?: { id: number; name: string; slug: string } | null;
+  trail?: { name: string; slug: string } | null;
 }
 
 interface JourneysProps {

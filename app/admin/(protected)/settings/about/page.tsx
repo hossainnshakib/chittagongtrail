@@ -61,7 +61,7 @@ export default function AdminAboutSettingsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save settings");
 
-      setSuccess("Introduction and About settings saved successfully.");
+      setSuccess("Introduction and sign-off settings saved successfully.");
       setTimeout(() => setSuccess(null), 5000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
@@ -79,10 +79,10 @@ export default function AdminAboutSettingsPage() {
       <div className="flex items-center justify-between border-b border-[#E8DCC8] pb-4">
         <div>
           <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold text-[#5D4037]">
-            Introduction &amp; About Settings
+            Introduction &amp; Sign-off Settings
           </h1>
           <p className="text-sm text-[#5D4037]/70 mt-1">
-            Configure homepage introduction statement and full /about editorial content.
+            Configure the homepage introduction statement and closing invitation sign-off. The /about page copy is edited from Page SEO settings.
           </p>
         </div>
         <div className="flex gap-2">
@@ -169,7 +169,7 @@ export default function AdminAboutSettingsPage() {
             disabled={saving}
             className="px-6 py-3 bg-[#3E2723] text-[#FDF5E6] font-medium rounded-md hover:bg-[#5D4037] transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {saving ? "Saving Changes..." : "Save Introduction & About"}
+            {saving ? "Saving Changes..." : "Save Introduction & Sign-off"}
           </button>
         </div>
       </form>

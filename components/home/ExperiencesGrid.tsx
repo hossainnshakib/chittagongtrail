@@ -4,8 +4,15 @@ import { PublicEmptyState, SectionReveal } from "@/components/ui";
 import { getLatestJournalPosts } from "@/lib/data";
 import type { HomepageSectionCopy } from "@/lib/public-content";
 
-export async function ExperiencesGrid({ section }: { section?: HomepageSectionCopy }) {
-  const stories = await getLatestJournalPosts(3);
+type JournalPost = Awaited<ReturnType<typeof getLatestJournalPosts>>[number];
+
+interface ExperiencesGridProps {
+  section?: HomepageSectionCopy;
+  stories?: JournalPost[];
+}
+
+export async function ExperiencesGrid({ section, stories: providedStories }: ExperiencesGridProps) {
+  const stories = providedStories ?? await getLatestJournalPosts(3);
   const ctaHref = section?.ctaHref || "/journal";
   const ctaLabel = section?.ctaLabel || "Read all stories";
 
