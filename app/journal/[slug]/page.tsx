@@ -141,7 +141,7 @@ export default async function JournalDetailPage({ params }: JournalPageProps) {
         <Container>
           <div className="max-w-3xl mx-auto">
             <article
-              className="prose prose-lg prose-headings:font-display prose-headings:text-text prose-p:text-text-secondary prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
+              className="article-body prose prose-lg prose-headings:font-display prose-headings:text-text prose-p:text-text-secondary prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: story.content }}
             />
           </div>

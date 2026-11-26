@@ -46,7 +46,7 @@ export default async function AboutPage() {
       <section className="ct-page-body ct-warm">
         <Container>
           <div className="max-w-3xl mx-auto">
-            <div className="prose prose-lg prose-headings:font-display prose-headings:text-text prose-p:text-text-secondary">
+            <div className="article-body prose prose-lg prose-headings:font-display prose-headings:text-text prose-p:text-text-secondary">
               <h2>The Platform</h2>
               <p>
                 {settings.siteName} is an independently operated exploration and storytelling platform focused on presenting Chittagong in its full geographic, cultural, historical, natural, culinary, and human context. The platform documents places, stories, food, culture, history, landscapes, and people across Chittagong - from the hills to the coast, from ancient heritage to modern urban life.

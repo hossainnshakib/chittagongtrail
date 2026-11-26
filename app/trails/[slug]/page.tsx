@@ -137,7 +137,7 @@ export default async function TrailPage({ params }: TrailPageProps) {
             {/* Main Content */}
             <div className="lg:col-span-2">
               <div
-                className="prose prose-lg max-w-none text-text-secondary leading-relaxed"
+                className="article-body prose prose-lg max-w-none text-text-secondary leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: trail.description }}
               />
 

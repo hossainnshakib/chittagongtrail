@@ -4,6 +4,7 @@ import { PageSeoSetting, HomepageSectionSetting } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "./prisma";
 import { sanitizeContent } from "./validation";
+import { decodeHtmlEntities } from "./html-entities";
 import { firstZodFieldError, metaDescriptionSchema } from "./meta-description";
 import { validateImageMediaId } from "./media-validation";
 import { revalidatePath } from "next/cache";
@@ -42,8 +43,7 @@ function getPageDefinition(pageKey: string) {
 
 function plainText(value: string | null | undefined): string {
   if (!value) return "";
-  return sanitizeContent(value)
-    .replace(/<[^>]*>/g, " ")
+  return decodeHtmlEntities(sanitizeContent(value).replace(/<[^>]*>/g, " "))
     .replace(/\s+/g, " ")
     .trim();
 }

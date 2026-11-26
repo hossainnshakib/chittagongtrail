@@ -110,7 +110,7 @@ export default async function TrailPreviewPage({ params }: TrailPreviewPageProps
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
               <div
-                className="prose prose-lg max-w-none text-text-secondary leading-relaxed"
+                className="article-body prose prose-lg max-w-none text-text-secondary leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: trail.description }}
               />
 

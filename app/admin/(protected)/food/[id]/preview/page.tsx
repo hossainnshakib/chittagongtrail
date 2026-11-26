@@ -111,7 +111,7 @@ export default async function FoodPreviewPage({ params }: FoodPreviewPageProps) 
       <section className="py-16 bg-white">
         <Container className="max-w-3xl">
           <div
-            className="prose prose-lg max-w-none text-[#5D4037] leading-relaxed"
+            className="article-body prose prose-lg max-w-none text-[#5D4037] leading-relaxed"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </Container>

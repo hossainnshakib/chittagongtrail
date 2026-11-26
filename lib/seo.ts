@@ -3,6 +3,13 @@ import { headers } from "next/headers";
 import { getPublicSiteSettings } from "./settings-service";
 import { getPublicPageSeo, type PublicPageKey } from "./public-content";
 import { getConfiguredSiteOrigin, getConfiguredSiteUrl } from "./site-url";
+import {
+  withSiteName,
+  withoutSiteNamePrefix,
+  withoutSiteNameSuffix,
+} from "./title-formatting";
+
+export { TITLE_SEPARATOR, withSiteName, withoutSiteNamePrefix, withoutSiteNameSuffix } from "./title-formatting";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -93,7 +100,8 @@ export function buildMetadata(options: BaseMetadataOptions): Metadata {
     : undefined;
 
   return {
-    title,
+    // The root layout template appends the site name for child segments.
+    title: withoutSiteNameSuffix(title, siteName),
     description,
     ...(url ? { alternates: { canonical: url } } : {}),
     openGraph: {
@@ -136,7 +144,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImageUrl = settings.defaultOgMedia?.secureUrl || (SITE_URL ? DEFAULT_OG_IMAGE : "");
   const ogWidth = settings.defaultOgMedia?.width || DEFAULT_OG_IMAGE_WIDTH;
   const ogHeight = settings.defaultOgMedia?.height || DEFAULT_OG_IMAGE_HEIGHT;
-  const defaultTitle = settings.defaultMetaTitle || `${settings.siteName} — Places, Stories, Food & Journeys from Chittagong`;
+  const defaultTitle = withoutSiteNamePrefix(
+    settings.defaultMetaTitle || "Places, Stories, Food & Journeys from Chittagong",
+    settings.siteName
+  );
   const defaultDesc = settings.defaultMetaDescription || settings.siteTagline || SITE_DESCRIPTION;
   const defaultOgTitle = settings.defaultOgTitle || defaultTitle;
   const defaultOgDescription = settings.defaultOgDescription || defaultDesc;
@@ -221,7 +232,7 @@ export async function buildPublicPageMetadata(pageKey: PublicPageKey): Promise<M
   const description = page.metaDescription || settings.defaultMetaDescription || page.visibleDescription;
   const ogImage = page.ogMedia || settings.defaultOgMedia;
 
-  return buildMetadata({
+  const metadata = buildMetadata({
     title,
     description,
     path: page.routePath,
@@ -235,6 +246,12 @@ export async function buildPublicPageMetadata(pageKey: PublicPageKey): Promise<M
     noindex: !settings.allowIndexing || !page.robotsIndex,
     nofollow: !settings.allowIndexing || !page.robotsFollow,
   });
+
+  // The root title template does not apply to the homepage's own segment.
+  if (pageKey === "home") {
+    return { ...metadata, title: { absolute: withSiteName(title, settings.siteName) } };
+  }
+  return metadata;
 }
 
 export async function buildDynamicContentMetadata(options: BaseMetadataOptions): Promise<Metadata> {

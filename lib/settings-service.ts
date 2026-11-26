@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { SiteSettings, MediaAsset, HeroVideoProvider } from "@prisma/client";
 import { z } from "zod";
 import { sanitizeContent } from "./validation";
+import { normalizePlainText } from "./html-entities";
 import { firstZodFieldError, metaDescriptionSchema } from "./meta-description";
 import { revalidatePath } from "next/cache";
 import { revalidatePublicContent } from "./revalidation";
@@ -58,33 +59,62 @@ function isValidCloudinaryVideoUrl(url: string, asset: { secureUrl: string; publ
 
 export const heroVideoProviderValues = Object.values(HeroVideoProvider);
 
+const cleanPlainText = (value: string | null | undefined) => (value && value.trim() !== "" ? normalizePlainText(value) : "");
+
+const PLAIN_TEXT_SETTING_KEYS = [
+  "siteName",
+  "siteTagline",
+  "defaultMetaTitle",
+  "defaultMetaDescription",
+  "defaultOgTitle",
+  "defaultOgDescription",
+  "publisherName",
+  "heroTitle",
+  "heroSubtitle",
+  "introductionHeading",
+  "seasonalEyebrow",
+  "seasonalTitle",
+  "aboutHeading",
+  "footerText",
+  "footerLogoAltText",
+] as const;
+
+function decodePlainSettingFields<T extends object>(settings: T): T {
+  const decoded = { ...settings } as Record<string, unknown>;
+  for (const key of PLAIN_TEXT_SETTING_KEYS) {
+    const value = decoded[key];
+    if (typeof value === "string") decoded[key] = normalizePlainText(value);
+  }
+  return decoded as T;
+}
+
 export const siteSettingsSchema = z.object({
-  siteName: z.string().min(1, "Site name is required").max(100).transform((v) => v.trim()),
-  siteTagline: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  defaultMetaTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  defaultMetaDescription: metaDescriptionSchema.optional().nullable().refine((v) => !/[<>]/.test(v || ""), "HTML is not allowed in meta descriptions"),
-  defaultOgTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG titles"),
-  defaultOgDescription: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG descriptions"),
+  siteName: z.string().min(1, "Site name is required").max(100).transform(cleanPlainText),
+  siteTagline: z.string().max(255).optional().nullable().transform(cleanPlainText),
+  defaultMetaTitle: z.string().max(255).optional().nullable().transform(cleanPlainText),
+  defaultMetaDescription: metaDescriptionSchema.optional().nullable().transform(cleanPlainText).refine((v) => !/[<>]/.test(v || ""), "HTML is not allowed in meta descriptions"),
+  defaultOgTitle: z.string().max(255).optional().nullable().transform(cleanPlainText).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG titles"),
+  defaultOgDescription: z.string().max(500).optional().nullable().transform(cleanPlainText).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG descriptions"),
   defaultOgMediaId: z.coerce.number().int().optional().nullable(),
-  publisherName: z.string().max(100).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  publisherName: z.string().max(100).optional().nullable().transform(cleanPlainText),
   googleSiteVerification: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in verification tokens"),
   bingSiteVerification: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in verification tokens"),
   allowIndexing: z.coerce.boolean().default(true),
-  heroTitle: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  heroSubtitle: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  heroTitle: z.string().max(200).optional().nullable().transform(cleanPlainText),
+  heroSubtitle: z.string().max(500).optional().nullable().transform(cleanPlainText),
   heroMediaId: z.coerce.number().int().optional().nullable(),
   heroVideoEnabled: z.coerce.boolean().default(false),
   heroVideoProvider: z.enum(["NONE", "YOUTUBE", "VIMEO", "DIRECT"]).default("NONE"),
   heroVideoUrl: z.string().max(500).optional().nullable().transform((v) => (v && v.trim() !== "" ? v.trim() : null)),
   heroVideoMediaId: z.coerce.number().int().optional().nullable(),
   heroVideoOverlay: z.coerce.number().int().min(0).max(100).default(45),
-  introductionHeading: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  introductionHeading: z.string().max(200).optional().nullable().transform(cleanPlainText),
   introductionContent: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? sanitizeContent(v) : null)),
-  seasonalEyebrow: z.string().max(100).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  seasonalTitle: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  seasonalEyebrow: z.string().max(100).optional().nullable().transform(cleanPlainText),
+  seasonalTitle: z.string().max(200).optional().nullable().transform(cleanPlainText),
   seasonalContent: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? sanitizeContent(v) : null)),
   seasonalMediaId: z.coerce.number().int().optional().nullable(),
-  aboutHeading: z.string().max(200).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  aboutHeading: z.string().max(200).optional().nullable().transform(cleanPlainText),
   aboutContent: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? sanitizeContent(v) : null)),
   contactEmail: z
     .string()
@@ -209,9 +239,9 @@ export const siteSettingsSchema = z.object({
       { message: "Invalid TikTok URL (must be valid http/https URL)" }
     )
     .transform((v) => (v === "" ? null : v)),
-  footerText: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  footerText: z.string().max(500).optional().nullable().transform(cleanPlainText),
   footerLogoMediaId: z.coerce.number().int().optional().nullable(),
-  footerLogoAltText: z.string().max(191).optional().nullable().transform((v) => (v ? v.trim() : "")),
+  footerLogoAltText: z.string().max(191).optional().nullable().transform(cleanPlainText),
   footerLogoDecorative: z.coerce.boolean().default(false),
   footerLogoIncludesWordmark: z.coerce.boolean().default(true),
 }).refine(
@@ -342,7 +372,7 @@ export async function getSiteSettings() {
 
 export async function getAdminSiteSettings() {
   return {
-    ...(await initializeSiteSettingsIfMissing()),
+    ...decodePlainSettingFields(await initializeSiteSettingsIfMissing()),
     siteOrigin: getConfiguredSiteOrigin(),
   };
 }
@@ -518,7 +548,7 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
 }
 
 export async function getPublicSiteSettings() {
-  const settings = await initializeSiteSettingsIfMissing();
+  const settings = decodePlainSettingFields(await initializeSiteSettingsIfMissing());
   let heroVideoFormat: string | null = null;
   let heroVideoAsset: { id: number; secureUrl: string; format: string | null; resourceType: string } | null = null;
   let heroVideoUrl: string | null = settings.heroVideoUrl || null;
