@@ -1678,7 +1678,7 @@ Footer provides secondary navigation.
 
 ```text
 Fields:
-  - coverImage (required)
+  - coverImage (optional, fallback state shown when absent)
   - name (required)
   - slug (required)
   - excerpt (optional)
@@ -1703,7 +1703,7 @@ Variants:
 
 ```text
 Fields:
-  - coverImage (required)
+  - coverImage (optional, fallback state shown when absent)
   - title (required)
   - slug (required)
   - publishedDate (required)
