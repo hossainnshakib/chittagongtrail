@@ -47,7 +47,6 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
   });
   const [galleryAssets, setGalleryAssets] = useState<MediaAssetData[]>(initialGallery || []);
   const [status, setStatus] = useState<string>(trail?.status ?? "DRAFT");
-  const [isFeatured, setIsFeatured] = useState(trail?.isFeatured ?? false);
   const [slug, setSlug] = useState(trail?.slug ?? "");
   const [title, setTitle] = useState(trail?.name ?? "");
 
@@ -292,33 +291,9 @@ export default function TrailForm({ trail, mode, initialCover, initialOg, initia
                   className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent disabled:bg-[#F5F0EB] disabled:opacity-60"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isFeatured"
-                  name="isFeatured"
-                  checked={isFeatured}
-                  onChange={(e) => setIsFeatured(e.target.checked)}
-                  value="true"
-                  className="w-3.5 h-3.5 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
-                />
-                <label htmlFor="isFeatured" className="text-xs text-[#5D4037]">Featured on homepage</label>
-              </div>
-              {isFeatured && (
-                <div>
-                  <label htmlFor="featuredOrder" className="block text-xs font-medium text-[#5D4037] mb-1">
-                    Featured Order <span className="text-[#8D6E63] font-normal">(lower = first)</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="featuredOrder"
-                    name="featuredOrder"
-                    defaultValue={trail?.featuredOrder ?? ""}
-                    min="0"
-                    className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] focus:border-transparent"
-                  />
-                </div>
-              )}
+              <p className="text-[11px] leading-relaxed text-[#8D6E63]">
+                Homepage placement is managed in the Featured Trails workspace.
+              </p>
               <div className="pt-2">
                 <button
                   type="submit"

@@ -113,8 +113,9 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
     it("overview includes featured counts out of limits", () => {
       const svc = readFile("lib/homepage-service.ts");
       assert.ok(svc.includes("featuredTrails"));
-      assert.ok(svc.includes("limit: 4"));
-      assert.ok(svc.includes("limit: 3"));
+      assert.ok(svc.includes("HOMEPAGE_FEATURED_LIMITS.trails"));
+      assert.ok(svc.includes("HOMEPAGE_FEATURED_LIMITS.stories"));
+      assert.ok(svc.includes("HOMEPAGE_FEATURED_LIMITS.food"));
     });
 
     it("overview shows seasonal configured/incomplete and gallery count warning", () => {
@@ -394,10 +395,10 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       assert.ok(svc.includes("featuredOrder"));
     });
 
-    it("UI shows N/4, prevents beyond 4, move up/down, cover thumbnail", () => {
+    it("UI shows N/limit, prevents beyond the limit, move up/down, cover thumbnail", () => {
       const comp = readFile("components/admin/homepage/FeaturedTrailsEditor.tsx");
-      assert.ok(comp.includes("Selected:") && comp.includes("/ 4"));
-      assert.ok(comp.includes("Maximum 4"));
+      assert.ok(comp.includes("Selected:") && comp.includes("HOMEPAGE_FEATURED_LIMITS.trails"));
+      assert.ok(comp.includes("HOMEPAGE_FEATURED_LIMITS.trails"));
       assert.ok(comp.includes("Move up") || comp.includes("↑"));
       assert.ok(comp.includes("coverMedia"));
     });
@@ -406,14 +407,15 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       const overviewRoute = readFile("app/api/admin/homepage/overview/route.ts");
       assert.ok(overviewRoute.includes("trailWarnings"));
       const svc = readFile("lib/homepage-service.ts");
-      assert.ok(svc.includes("isFeatured"));
+      assert.ok(svc.includes("isFeatured: true"));
     });
 
-    it("use existing isFeatured/featuredOrder truthfully", () => {
+    it("uses the canonical featured read with shared limits", () => {
       const page = readFile("app/page.tsx");
-      assert.ok(page.includes("isFeatured: true"));
-      assert.ok(page.includes("featuredOrder"));
-      assert.ok(page.includes("take: 4"));
+      assert.ok(page.includes("getPublicHomepageFeatured()"));
+      const svc = readFile("lib/homepage-service.ts");
+      assert.ok(svc.includes("HOMEPAGE_FEATURED_LIMITS.trails"));
+      assert.ok(svc.includes("sortFeaturedItems"));
     });
   });
 
@@ -661,29 +663,28 @@ describe("A7R.6 — Homepage CMS & Hero Media Tests", () => {
       assert.ok(svc.includes("initializeSiteSettingsIfMissing"));
     });
 
-    it("featured trails PUBLISHED only, isFeatured=true, ordered, max 4", () => {
-      const page = readFile("app/page.tsx");
-      assert.ok(page.includes('status: ContentStatus.PUBLISHED'));
-      assert.ok(page.includes('isFeatured: true'));
-      assert.ok(page.includes('take: 4'));
-      assert.ok(page.includes('featuredOrder'));
+    it("featured trails use the canonical published-only curated read", () => {
+      const svc = readFile("lib/homepage-service.ts");
+      assert.ok(svc.includes('status: ContentStatus.PUBLISHED, isFeatured: true'));
+      assert.ok(svc.includes('HOMEPAGE_FEATURED_LIMITS.trails'));
     });
 
-    it("featured Stories type=STORY, PUBLISHED, isFeatured, max 3", () => {
-      const page = readFile("app/page.tsx");
-      assert.ok(page.includes('type: JournalType.STORY'));
-      assert.ok(page.includes('take: 3'));
+    it("featured Stories use the canonical STORY-only curated read", () => {
+      const svc = readFile("lib/homepage-service.ts");
+      assert.ok(svc.includes('type: JournalType.STORY, isFeatured: true'));
+      assert.ok(svc.includes('HOMEPAGE_FEATURED_LIMITS.stories'));
     });
 
-    it("featured Food type=FOOD, PUBLISHED, max 3, ordered", () => {
-      const page = readFile("app/page.tsx");
-      assert.ok(page.includes('type: JournalType.FOOD'));
+    it("featured Food uses the canonical FOOD-only curated read", () => {
+      const svc = readFile("lib/homepage-service.ts");
+      assert.ok(svc.includes('type: JournalType.FOOD, isFeatured: true'));
+      assert.ok(svc.includes('HOMEPAGE_FEATURED_LIMITS.food'));
     });
 
     it("HomepageGallery ordered deterministically", () => {
-      const page = readFile("app/page.tsx");
-      assert.ok(page.includes("homepageGallery") || page.includes("HomepageGallery"));
-      assert.ok(page.includes('sortOrder'));
+      const svc = readFile("lib/homepage-service.ts");
+      assert.ok(svc.includes("getHomepageGallery"));
+      assert.ok(svc.includes('sortOrder: "asc"'));
     });
 
     it("safe empty states — no drafts leakage", () => {

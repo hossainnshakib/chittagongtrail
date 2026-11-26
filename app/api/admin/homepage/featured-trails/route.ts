@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus } from "@prisma/client";
-import { updateFeaturedTrails } from "@/lib/homepage-service";
+import { getAdminFeaturedTrails, updateFeaturedTrails } from "@/lib/homepage-service";
 
 export async function GET(request: NextRequest) {
   const session = await verifySession(request.cookies.get("ct_admin_session")?.value || "");
@@ -11,11 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get("search") || "";
-    const featured = await prisma.trailLocation.findMany({
-      where: { isFeatured: true },
-      orderBy: [{ featuredOrder: "asc" }, { id: "asc" }],
-      include: { coverMedia: true },
-    });
+    const featured = await getAdminFeaturedTrails();
     const published = await prisma.trailLocation.findMany({
       where: {
         status: ContentStatus.PUBLISHED,

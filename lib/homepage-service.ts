@@ -4,12 +4,63 @@ import { ContentStatus, JournalType } from "@prisma/client";
 import { sanitizeContent } from "./validation";
 import { revalidatePath } from "next/cache";
 import { revalidatePublicContent } from "./revalidation";
+import {
+  HOMEPAGE_FEATURED_LIMITS,
+  HOMEPAGE_GALLERY_LIMITS,
+  limitFeaturedItems,
+  sortFeaturedItems,
+} from "./homepage-featured";
 
 const LOG_PREFIX = "[chittagongtrail:homepage-service]";
 
 function logError(op: string, err: unknown) {
   const msg = err instanceof Error ? err.message : String(err);
   console.error(`${LOG_PREFIX} ${op} failed: ${msg}`);
+}
+
+// --- Shared featured reads ---
+
+/** Public homepage data, ordered and limited by the canonical curation contract. */
+export async function getPublicHomepageFeatured() {
+  const [trails, stories, food, gallery] = await Promise.all([
+    prisma.trailLocation.findMany({
+      where: { status: ContentStatus.PUBLISHED, isFeatured: true },
+      include: { coverMedia: true },
+    }),
+    prisma.journalPost.findMany({
+      where: { status: ContentStatus.PUBLISHED, type: JournalType.STORY, isFeatured: true },
+      include: { coverMedia: true, trail: true },
+    }),
+    prisma.journalPost.findMany({
+      where: { status: ContentStatus.PUBLISHED, type: JournalType.FOOD, isFeatured: true },
+      include: { coverMedia: true, trail: true },
+    }),
+    getHomepageGallery(),
+  ]);
+
+  return {
+    trails: limitFeaturedItems(sortFeaturedItems(trails), HOMEPAGE_FEATURED_LIMITS.trails),
+    stories: limitFeaturedItems(sortFeaturedItems(stories), HOMEPAGE_FEATURED_LIMITS.stories),
+    food: limitFeaturedItems(sortFeaturedItems(food), HOMEPAGE_FEATURED_LIMITS.food),
+    gallery,
+  };
+}
+
+/** Admin curation data uses the same ordering, but includes ineligible featured rows. */
+export async function getAdminFeaturedTrails() {
+  const trails = await prisma.trailLocation.findMany({
+    where: { isFeatured: true },
+    include: { coverMedia: true },
+  });
+  return sortFeaturedItems(trails);
+}
+
+export async function getAdminFeaturedPosts(type: JournalType) {
+  const posts = await prisma.journalPost.findMany({
+    where: { isFeatured: true, type },
+    include: { coverMedia: true, trail: { select: { id: true, name: true, slug: true } } },
+  });
+  return sortFeaturedItems(posts);
 }
 
 // --- Overview ---
@@ -63,8 +114,7 @@ export async function getHomepageOverview(): Promise<HomepageOverviewPayload> {
     const seasonalTitle = settings?.seasonalTitle || "";
     const seasonalMediaPresent = !!settings?.seasonalMediaId;
 
-    const recommendedMin = 6;
-    const recommendedMax = 8;
+    const { recommendedMin, recommendedMax } = HOMEPAGE_GALLERY_LIMITS;
 
     return {
       hero: {
@@ -75,9 +125,21 @@ export async function getHomepageOverview(): Promise<HomepageOverviewPayload> {
         titlePresent: heroTitlePresent,
         subtitlePresent: heroSubtitlePresent,
       },
-      featuredTrails: { count: trails, limit: 4, complete: trails > 0 },
-      featuredStories: { count: stories, limit: 3, complete: stories > 0 },
-      featuredFood: { count: food, limit: 3, complete: food > 0 },
+      featuredTrails: {
+        count: trails,
+        limit: HOMEPAGE_FEATURED_LIMITS.trails,
+        complete: trails > 0,
+      },
+      featuredStories: {
+        count: stories,
+        limit: HOMEPAGE_FEATURED_LIMITS.stories,
+        complete: stories > 0,
+      },
+      featuredFood: {
+        count: food,
+        limit: HOMEPAGE_FEATURED_LIMITS.food,
+        complete: food > 0,
+      },
       seasonal: { configured: seasonalConfigured, eyebrow: seasonalEyebrow, title: seasonalTitle, mediaPresent: seasonalMediaPresent },
       gallery: {
         count: galleryCount,
@@ -90,11 +152,16 @@ export async function getHomepageOverview(): Promise<HomepageOverviewPayload> {
     logError("getHomepageOverview", e);
     return {
       hero: { enabled: false, posterPresent: false, videoPresent: false, videoProvider: "NONE", titlePresent: false, subtitlePresent: false },
-      featuredTrails: { count: 0, limit: 4, complete: false },
-      featuredStories: { count: 0, limit: 3, complete: false },
-      featuredFood: { count: 0, limit: 3, complete: false },
+      featuredTrails: { count: 0, limit: HOMEPAGE_FEATURED_LIMITS.trails, complete: false },
+      featuredStories: { count: 0, limit: HOMEPAGE_FEATURED_LIMITS.stories, complete: false },
+      featuredFood: { count: 0, limit: HOMEPAGE_FEATURED_LIMITS.food, complete: false },
       seasonal: { configured: false, eyebrow: "", title: "", mediaPresent: false },
-      gallery: { count: 0, recommendedMin: 6, recommendedMax: 8, warning: true },
+      gallery: {
+        count: 0,
+        recommendedMin: HOMEPAGE_GALLERY_LIMITS.recommendedMin,
+        recommendedMax: HOMEPAGE_GALLERY_LIMITS.recommendedMax,
+        warning: true,
+      },
     };
   }
 }
@@ -103,7 +170,7 @@ export async function getHomepageOverview(): Promise<HomepageOverviewPayload> {
 
 export async function updateFeaturedTrails(ids: number[]) {
   if (!Array.isArray(ids)) throw new Error("ids must be array");
-  if (ids.length > 4) throw new Error("Maximum 4 featured trails allowed");
+  if (ids.length > HOMEPAGE_FEATURED_LIMITS.trails) throw new Error("Maximum 4 featured trails allowed");
   const unique = new Set(ids);
   if (unique.size !== ids.length) throw new Error("Duplicate trail IDs not allowed");
   for (const id of ids) {
@@ -132,7 +199,7 @@ export async function updateFeaturedTrails(ids: number[]) {
 
 export async function updateFeaturedStories(ids: number[]) {
   if (!Array.isArray(ids)) throw new Error("ids must be array");
-  if (ids.length > 3) throw new Error("Maximum 3 featured stories allowed");
+  if (ids.length > HOMEPAGE_FEATURED_LIMITS.stories) throw new Error("Maximum 3 featured stories allowed");
   const unique = new Set(ids);
   if (unique.size !== ids.length) throw new Error("Duplicate story IDs not allowed");
   for (const id of ids) {
@@ -160,7 +227,7 @@ export async function updateFeaturedStories(ids: number[]) {
 
 export async function updateFeaturedFood(ids: number[]) {
   if (!Array.isArray(ids)) throw new Error("ids must be array");
-  if (ids.length > 3) throw new Error("Maximum 3 featured food posts allowed");
+  if (ids.length > HOMEPAGE_FEATURED_LIMITS.food) throw new Error("Maximum 3 featured food posts allowed");
   const unique = new Set(ids);
   if (unique.size !== ids.length) throw new Error("Duplicate food IDs not allowed");
   for (const id of ids) {
@@ -197,7 +264,7 @@ export async function getHomepageGallery() {
 
 export async function setHomepageGallery(mediaAssetIds: number[]) {
   if (!Array.isArray(mediaAssetIds)) throw new Error("mediaAssetIds must be array");
-  if (mediaAssetIds.length > 12) throw new Error("Maximum 12 gallery images allowed");
+  if (mediaAssetIds.length > HOMEPAGE_GALLERY_LIMITS.hardMax) throw new Error("Maximum 12 gallery images allowed");
   const unique = new Set(mediaAssetIds);
   if (unique.size !== mediaAssetIds.length) throw new Error("Duplicate media IDs not allowed");
   for (const id of mediaAssetIds) {

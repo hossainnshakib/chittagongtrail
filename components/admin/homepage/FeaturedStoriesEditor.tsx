@@ -6,6 +6,7 @@ import Image from "next/image";
 import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
 import AdminButton from "@/components/admin/ui/AdminButton";
 import AdminSectionCard from "@/components/admin/ui/AdminSectionCard";
+import { HOMEPAGE_FEATURED_LIMITS } from "@/lib/homepage-featured";
 
 interface Post {
   id: number;
@@ -39,7 +40,10 @@ export default function FeaturedStoriesEditor() {
     setError(null);
     if (isSelected(p.id)) setFeatured((prev) => prev.filter((x) => x.id !== p.id));
     else {
-      if (featured.length >= 3) { setError("Maximum 3 featured stories allowed."); return; }
+      if (featured.length >= HOMEPAGE_FEATURED_LIMITS.stories) {
+        setError(`Maximum ${HOMEPAGE_FEATURED_LIMITS.stories} featured stories allowed.`);
+        return;
+      }
       setFeatured((prev) => [...prev, p]);
     }
   };
@@ -58,11 +62,11 @@ export default function FeaturedStoriesEditor() {
 
   return (
     <div style={{ maxWidth: "960px", margin: "0 auto" }}>
-      <AdminPageHeader title="Featured Stories" description="STORY-only · published-only · max 3 · persistent ordering" primaryAction={<AdminButton href="/admin/homepage" variant="ghost" size="sm">Back</AdminButton>} />
+      <AdminPageHeader title="Featured Stories" description={`STORY-only · published-only · max ${HOMEPAGE_FEATURED_LIMITS.stories} · persistent ordering`} primaryAction={<AdminButton href="/admin/homepage" variant="ghost" size="sm">Back</AdminButton>} />
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
       {msg && <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">{msg}</div>}
 
-      <AdminSectionCard title={`Selected: ${featured.length} / 3`} description="STORY-only server query — never includes FOOD.">
+      <AdminSectionCard title={`Selected: ${featured.length} / ${HOMEPAGE_FEATURED_LIMITS.stories}`} description="STORY-only server query — never includes FOOD.">
         {featured.length === 0 ? <p className="text-sm py-4 text-center" style={{ color: "var(--admin-text-muted)" }}>No featured stories. Empty state — add at least one.</p> : (
           <div className="space-y-2">
             {featured.map((p, idx) => (
@@ -97,7 +101,7 @@ export default function FeaturedStoriesEditor() {
               <div key={p.id} className="flex items-center gap-3 p-3 border rounded" style={{ borderColor: selected ? "var(--admin-brand-accent)" : "var(--admin-border)", background: selected ? "#FDF5E6" : "var(--admin-surface)" }}>
                 <div className="w-12 h-12 rounded overflow-hidden relative flex-shrink-0 border" style={{ borderColor: "var(--admin-border)" }}>{p.coverMedia?.secureUrl ? <Image src={p.coverMedia.secureUrl} alt={p.coverMedia.altText || p.title} fill className="object-cover" sizes="48px" /> : <div className="w-full h-full bg-gray-100" />}</div>
                 <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{p.title}</p><p className="text-xs" style={{ color: "var(--admin-text-secondary)" }}>STORY · {p.status}</p></div>
-                <button onClick={() => toggleSelect(p)} disabled={!selected && featured.length >= 3} className={`admin-btn admin-btn-sm ${selected ? "admin-btn-ghost" : "admin-btn-primary"}`} style={{ minHeight: "44px", minWidth: "88px" }}>{selected ? "Selected" : "Select"}</button>
+                <button onClick={() => toggleSelect(p)} disabled={!selected && featured.length >= HOMEPAGE_FEATURED_LIMITS.stories} className={`admin-btn admin-btn-sm ${selected ? "admin-btn-ghost" : "admin-btn-primary"}`} style={{ minHeight: "44px", minWidth: "88px" }}>{selected ? "Selected" : "Select"}</button>
               </div>
             );
           })}

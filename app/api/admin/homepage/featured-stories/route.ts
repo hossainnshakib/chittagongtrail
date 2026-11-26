@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
-import { updateFeaturedStories } from "@/lib/homepage-service";
+import { getAdminFeaturedPosts, updateFeaturedStories } from "@/lib/homepage-service";
 
 export async function GET(request: NextRequest) {
   const session = await verifySession(request.cookies.get("ct_admin_session")?.value || "");
@@ -11,11 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get("search") || "";
-    const featured = await prisma.journalPost.findMany({
-      where: { isFeatured: true, type: JournalType.STORY },
-      orderBy: [{ featuredOrder: "asc" }, { id: "asc" }],
-      include: { coverMedia: true, trail: { select: { id: true, name: true, slug: true } } },
-    });
+    const featured = await getAdminFeaturedPosts(JournalType.STORY);
     const published = await prisma.journalPost.findMany({
       where: {
         status: ContentStatus.PUBLISHED,

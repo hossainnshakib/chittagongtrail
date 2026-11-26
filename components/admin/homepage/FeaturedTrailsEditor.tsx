@@ -6,6 +6,7 @@ import Image from "next/image";
 import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
 import AdminButton from "@/components/admin/ui/AdminButton";
 import AdminSectionCard from "@/components/admin/ui/AdminSectionCard";
+import { HOMEPAGE_FEATURED_LIMITS } from "@/lib/homepage-featured";
 
 interface Trail {
   id: number;
@@ -42,7 +43,10 @@ export default function FeaturedTrailsEditor() {
     if (isSelected(trail.id)) {
       setFeatured((prev) => prev.filter((p) => p.id !== trail.id));
     } else {
-      if (featured.length >= 4) { setError("Maximum 4 featured trails allowed."); return; }
+      if (featured.length >= HOMEPAGE_FEATURED_LIMITS.trails) {
+        setError(`Maximum ${HOMEPAGE_FEATURED_LIMITS.trails} featured trails allowed.`);
+        return;
+      }
       setFeatured((prev) => [...prev, { ...trail, featuredOrder: prev.length }]);
     }
   };
@@ -70,11 +74,11 @@ export default function FeaturedTrailsEditor() {
 
   return (
     <div style={{ maxWidth: "960px", margin: "0 auto" }}>
-      <AdminPageHeader title="Featured Trails" description="Select up to 4 published trails. Ordering persists server-side." primaryAction={<AdminButton href="/admin/homepage" variant="ghost" size="sm">Back</AdminButton>} />
+      <AdminPageHeader title="Featured Trails" description={`Select up to ${HOMEPAGE_FEATURED_LIMITS.trails} published trails. Ordering persists server-side.`} primaryAction={<AdminButton href="/admin/homepage" variant="ghost" size="sm">Back</AdminButton>} />
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
       {msg && <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">{msg}</div>}
 
-      <AdminSectionCard title={`Selected: ${featured.length} / 4`} description="Use Move Up/Down to order. Unpublished trails cannot be selected; public homepage excludes unpublished already-selected items with Admin warning.">
+      <AdminSectionCard title={`Selected: ${featured.length} / ${HOMEPAGE_FEATURED_LIMITS.trails}`} description="Use Move Up/Down to order. Unpublished trails cannot be selected; public homepage excludes unpublished already-selected items with Admin warning.">
         {featured.length === 0 ? <p className="text-sm py-4 text-center" style={{ color: "var(--admin-text-muted)" }}>No featured trails selected.</p> : (
           <div className="space-y-2">
             {featured.map((t, idx) => (
@@ -99,7 +103,7 @@ export default function FeaturedTrailsEditor() {
         )}
         <div className="mt-4">
           <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary admin-btn-md" style={{ minHeight: "44px" }}>{saving ? "Saving…" : "Save order"}</button>
-          <span className="ml-3 text-xs" style={{ color: "var(--admin-text-muted)" }}>Deterministic ordering via featuredOrder sequential values; server-side limit 4.</span>
+          <span className="ml-3 text-xs" style={{ color: "var(--admin-text-muted)" }}>Deterministic ordering via featuredOrder sequential values; server-side limit {HOMEPAGE_FEATURED_LIMITS.trails}.</span>
         </div>
       </AdminSectionCard>
 
@@ -119,7 +123,7 @@ export default function FeaturedTrailsEditor() {
                   <p className="text-sm font-medium truncate">{t.name}</p>
                   <p className="text-xs truncate" style={{ color: "var(--admin-text-secondary)" }}>{t.district} · {t.status}</p>
                 </div>
-                <button onClick={() => toggleSelect(t)} disabled={!selected && featured.length >= 4} className={`admin-btn admin-btn-sm ${selected ? "admin-btn-ghost" : "admin-btn-primary"}`} style={{ minHeight: "44px", minWidth: "88px" }}>{selected ? "Selected" : "Select"}</button>
+                <button onClick={() => toggleSelect(t)} disabled={!selected && featured.length >= HOMEPAGE_FEATURED_LIMITS.trails} className={`admin-btn admin-btn-sm ${selected ? "admin-btn-ghost" : "admin-btn-primary"}`} style={{ minHeight: "44px", minWidth: "88px" }}>{selected ? "Selected" : "Select"}</button>
               </div>
             );
           })}

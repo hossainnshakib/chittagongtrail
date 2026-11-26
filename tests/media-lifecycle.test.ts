@@ -1,5 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert";
+import fs from "node:fs";
 import {
   ALLOWED_UPLOAD_FOLDERS,
   ALLOWED_IMAGE_TYPES,
@@ -513,22 +514,19 @@ describe("Publishing Workflow Behavior", () => {
     assert.strictEqual(isDisabled, true);
   });
 
-  test("Featured Order hidden when Featured is unchecked", () => {
-    const isFeatured = false;
-    const showOrder = isFeatured;
-    assert.strictEqual(showOrder, false);
+  test("featured placement lives in the homepage workspace, not content forms", () => {
+    const trailForm = fs.readFileSync("components/admin/TrailForm.tsx", "utf8");
+    const journalForm = fs.readFileSync("components/admin/JournalForm.tsx", "utf8");
+    assert.ok(!trailForm.includes("name=\"featuredOrder\""));
+    assert.ok(!journalForm.includes("name=\"featuredOrder\""));
+    assert.ok(trailForm.includes("Featured Trails workspace"));
+    assert.ok(journalForm.includes("Featured Stories"));
   });
 
-  test("Featured Order visible when Featured is checked", () => {
-    const isFeatured = true;
-    const showOrder = isFeatured;
-    assert.strictEqual(showOrder, true);
-  });
-
-  test("Featured Order has lower = first guidance", () => {
-    const guidance = "(lower = first)";
-    assert.ok(guidance.includes("lower"));
-    assert.ok(guidance.includes("first"));
+  test("canonical featured helper documents lower = first", () => {
+    const helper = fs.readFileSync("lib/homepage-featured.ts", "utf8");
+    assert.ok(helper.includes("Lower featuredOrder means earlier"));
+    assert.ok(helper.includes("NULL"));
   });
 });
 
