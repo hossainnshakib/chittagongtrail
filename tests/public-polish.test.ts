@@ -206,7 +206,7 @@ describe("A7R.9 Public Layout, Contrast, and Empty-State Polish", () => {
 
   it("keeps dependencies and Cloudinary implementation unchanged", () => {
     const files = changedFiles().map((file) => file.replaceAll("\\\\", "/"));
-    const baseline = JSON.parse(execSync("git -c safe.directory=G:/ctgtrail show 4201588:package.json", { encoding: "utf8" }));
+    const baseline = JSON.parse(execSync("git -c safe.directory=G:/ctgtrail show 57baa09:package.json", { encoding: "utf8" }));
     const current = JSON.parse(readFile("package.json"));
     const currentDeps = { ...current.dependencies };
     const baselineDeps = { ...baseline.dependencies };
