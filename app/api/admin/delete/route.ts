@@ -1,7 +1,9 @@
 import { validateSameOrigin } from "@/lib/csrf";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicContent } from "@/lib/revalidation";
 import { JournalType } from "@prisma/client";
 
 const VALID_SCOPES = ["trail", "story", "food"] as const;
@@ -67,6 +69,15 @@ export async function POST(request: NextRequest) {
 
       await prisma.journalPost.delete({ where: { id } });
     }
+
+    revalidatePublicContent();
+    revalidatePath(
+      scope === "trail"
+        ? "/admin/trails"
+        : scope === "food"
+          ? "/admin/food"
+          : "/admin/journal"
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -6,6 +6,7 @@ import { prisma } from "./prisma";
 import { sanitizeContent } from "./validation";
 import { validateImageMediaId } from "./media-validation";
 import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "./revalidation";
 
 import { PUBLIC_PAGE_DEFINITIONS, HOMEPAGE_SECTION_DEFINITIONS, type PublicPageKey, type HomepageSectionKey } from "./public-content-definitions";
 export { PUBLIC_PAGE_DEFINITIONS, HOMEPAGE_SECTION_DEFINITIONS, type PublicPageKey, type HomepageSectionKey } from "./public-content-definitions";
@@ -247,6 +248,7 @@ export async function updatePageSeoSettings(input: unknown) {
 
   for (const definition of PUBLIC_PAGE_DEFINITIONS) revalidatePath(definition.routePath);
   revalidatePath("/sitemap.xml");
+  revalidatePublicContent();
   return updated;
 }
 
@@ -352,5 +354,6 @@ export async function updateHomepageSectionSettings(input: unknown) {
 
   revalidatePath("/");
   revalidatePath("/admin/homepage/sections");
+  revalidatePublicContent();
   return updated;
 }

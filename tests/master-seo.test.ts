@@ -457,6 +457,7 @@ describe("S5. Homepage section descriptions", () => {
       "./validation": { sanitizeContent },
       "./media-validation": {},
       "next/cache": { revalidatePath: () => {} },
+      "./revalidation": { revalidatePublicContent: () => {} },
       "./prisma": { prisma: { homepageSectionSetting: { findMany: async () => rows } } },
     });
     const sections = (await loadedModule.getHomepageSectionSettings()) as Array<{ sectionKey: string; description: string }>;

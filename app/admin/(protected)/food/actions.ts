@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
 import { validateImageMediaId } from "@/lib/media-validation";
@@ -98,6 +99,7 @@ export async function createFoodPost(
 
     revalidatePath("/admin/food");
     revalidatePath("/food");
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:food:create]", error);
     return { success: false, error: "Failed to create food post" };
@@ -206,6 +208,7 @@ export async function updateFoodPost(
     if (existing.slug !== data.slug) {
       revalidatePath(`/food/${existing.slug}`);
     }
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:food:update]", error);
     return { success: false, error: "Failed to update food post" };

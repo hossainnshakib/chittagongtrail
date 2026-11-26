@@ -35,6 +35,7 @@ describe("Public content and indexing runtime audit", () => {
     const loadedModule = load("lib/public-content.ts", {
       "server-only": {}, "./public-content-definitions": definitions, "./validation": { sanitizeContent },
       "./media-validation": {}, "next/cache": { revalidatePath: () => {} },
+      "./revalidation": { revalidatePublicContent: () => {} },
       "./prisma": { prisma: { ...tx, $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(tx) } },
     });
     const changed = records.map(p => ({ ...p, visibleTitle: `Edited ${p.pageKey}`, visibleDescription: `Saved description for ${p.pageKey}`, useVisibleTitleAsMetaTitle: false, useVisibleDescriptionAsMetaDescription: false }));
@@ -50,6 +51,7 @@ describe("Public content and indexing runtime audit", () => {
     const loadedModule = load("lib/public-content.ts", {
       "server-only": {}, "./public-content-definitions": definitions, "./validation": { sanitizeContent },
       "./media-validation": {}, "next/cache": {},
+      "./revalidation": { revalidatePublicContent: () => {} },
       "./prisma": { prisma: { homepageSectionSetting: { findMany: async () => rows } } },
     });
     const sections = await loadedModule.getHomepageSectionSettings() as typeof rows;

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { trailSchema } from "@/lib/validation";
 import { validateAllMediaIds } from "@/lib/media-validation";
@@ -120,6 +121,7 @@ export async function createTrail(
 
     revalidatePath("/admin/trails");
     revalidatePath("/trails");
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:trails:create]", error);
     return { success: false, error: "Failed to create trail" };
@@ -254,6 +256,7 @@ export async function updateTrail(
     if (existing.slug !== data.slug) {
       revalidatePath(`/trails/${existing.slug}`);
     }
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:trails:update]", error);
     return { success: false, error: "Failed to update trail" };
@@ -287,6 +290,7 @@ export async function deleteTrail(id: number): Promise<TrailActionResult> {
 
     revalidatePath("/admin/trails");
     revalidatePath("/trails");
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:trails:delete]", error);
     return { success: false, error: "Failed to delete trail" };

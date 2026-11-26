@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
 import { validateImageMediaId } from "@/lib/media-validation";
@@ -98,6 +99,7 @@ export async function createJournalPost(
 
     revalidatePath("/admin/journal");
     revalidatePath("/journal");
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:journal:create]", error);
     return { success: false, error: "Failed to create journal post" };
@@ -206,6 +208,7 @@ export async function updateJournalPost(
     if (existing.slug !== data.slug) {
       revalidatePath(`/journal/${existing.slug}`);
     }
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:journal:update]", error);
     return { success: false, error: "Failed to update journal post" };
@@ -228,6 +231,7 @@ export async function deleteJournalPost(id: number): Promise<JournalActionResult
     revalidatePath("/admin/journal");
     revalidatePath("/journal");
     revalidatePath("/food");
+    revalidatePublicContent();
   } catch (error) {
     console.error("[admin:journal:delete]", error);
     return { success: false, error: "Failed to delete journal post" };

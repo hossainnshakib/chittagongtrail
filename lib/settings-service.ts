@@ -4,6 +4,7 @@ import { SiteSettings, MediaAsset, HeroVideoProvider } from "@prisma/client";
 import { z } from "zod";
 import { sanitizeContent } from "./validation";
 import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "./revalidation";
 import { CLOUDINARY_CLOUD_NAME, ALLOWED_UPLOAD_FOLDERS } from "./cloudinary";
 import { getConfiguredSiteOrigin } from "./site-url";
 
@@ -505,6 +506,7 @@ export async function updateSiteSettings(input: SiteSettingsInput) {
   revalidatePath("/journal");
   revalidatePath("/food");
   revalidatePath("/sitemap.xml");
+  revalidatePublicContent();
 
   return updated;
 }

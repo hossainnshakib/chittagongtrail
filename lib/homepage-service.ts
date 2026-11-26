@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { ContentStatus, JournalType } from "@prisma/client";
 import { sanitizeContent } from "./validation";
 import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "./revalidation";
 
 const LOG_PREFIX = "[chittagongtrail:homepage-service]";
 
@@ -124,6 +125,7 @@ export async function updateFeaturedTrails(ids: number[]) {
     }
   });
   revalidatePath("/");
+  revalidatePublicContent();
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/homepage/featured-trails");
 }
@@ -151,6 +153,7 @@ export async function updateFeaturedStories(ids: number[]) {
     }
   });
   revalidatePath("/");
+  revalidatePublicContent();
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/homepage/featured-stories");
 }
@@ -178,6 +181,7 @@ export async function updateFeaturedFood(ids: number[]) {
     }
   });
   revalidatePath("/");
+  revalidatePublicContent();
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/homepage/featured-food");
 }
@@ -213,6 +217,7 @@ export async function setHomepageGallery(mediaAssetIds: number[]) {
     }
   });
   revalidatePath("/");
+  revalidatePublicContent();
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/homepage/gallery");
 }
@@ -252,6 +257,7 @@ export async function updateSeasonal(input: {
     },
   });
   revalidatePath("/");
+  revalidatePublicContent();
   revalidatePath("/admin/homepage");
   revalidatePath("/admin/homepage/seasonal");
 }
