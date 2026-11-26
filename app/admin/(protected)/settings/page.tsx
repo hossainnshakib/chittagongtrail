@@ -201,18 +201,18 @@ export default function AdminGeneralSettingsPage() {
               <label htmlFor="defaultMetaDescription" className="block text-sm font-medium text-[#5D4037]">
                 Default Meta Description
               </label>
-              <span className={`text-xs ${defaultMetaDescription.length > 160 ? "text-amber-600 font-semibold" : "text-[#5D4037]/60"}`}>
-                {defaultMetaDescription.length}/160 chars {defaultMetaDescription.length > 160 && "(recommend ≤ 160)"}
+              <span className={`text-xs ${defaultMetaDescription.length > 160 ? "text-red-600 font-semibold" : "text-[#5D4037]/60"}`}>
+                {defaultMetaDescription.length > 160 ? `Over limit (${defaultMetaDescription.length}/160)` : `${defaultMetaDescription.length}/160 chars`}
               </span>
             </div>
             <textarea
               id="defaultMetaDescription"
               rows={3}
-              maxLength={500}
+              maxLength={160}
               value={defaultMetaDescription}
               onChange={(e) => setDefaultMetaDescription(e.target.value)}
               placeholder="Explore places, stories, food and landscapes across Chittagong's five districts through genuine discovery."
-              className="w-full px-3 py-2 border border-[#D7C9B8] rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] text-sm"
+              className={`w-full px-3 py-2 border rounded-md bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] text-sm ${defaultMetaDescription.length > 160 ? "border-red-500" : "border-[#D7C9B8]"}`}
             />
             <p className="text-xs text-[#5D4037]/60 mt-1">
               Fallback summary across Chittagong&apos;s five districts (Chittagong, Cox&apos;s Bazar, Rangamati, Bandarban, Khagrachari).

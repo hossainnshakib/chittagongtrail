@@ -1,13 +1,18 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TrailForm from "@/components/admin/TrailForm";
+import { safeAdminReturnTo } from "@/lib/admin-return-to";
 
 export default async function EditTrailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const { returnTo } = await searchParams;
+  const safeReturnTo = safeAdminReturnTo(returnTo, "/admin/trails");
   const trailId = parseInt(id, 10);
 
   if (isNaN(trailId)) {
@@ -73,7 +78,7 @@ export default async function EditTrailPage({
           Editing &ldquo;{trail.name}&rdquo;
         </p>
       </div>
-      <TrailForm trail={trail} mode="edit" initialCover={initialCover} initialOg={initialOg} initialGallery={initialGallery} />
+      <TrailForm trail={trail} mode="edit" returnTo={safeReturnTo} initialCover={initialCover} initialOg={initialOg} initialGallery={initialGallery} />
     </div>
   );
 }

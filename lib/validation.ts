@@ -1,5 +1,6 @@
 import sanitizeHtml from "sanitize-html";
 import { z } from "zod";
+import { metaDescriptionSchema } from "./meta-description";
 
 export const sanitizeContent = (dirty: string): string => {
   if (!dirty || typeof dirty !== "string") return "";
@@ -75,7 +76,7 @@ export const trailSchema = z.object({
   coverMediaId: z.coerce.number().int().optional().nullable(),
   ogMediaId: z.coerce.number().int().optional().nullable(),
   metaTitle: z.string().optional().nullable(),
-  metaDescription: z.string().optional().nullable(),
+  metaDescription: metaDescriptionSchema.optional().nullable(),
   placeType: z.enum(["TOURIST_ATTRACTION", "PLACE", "NATURAL_FEATURE", "PARK"]).default("PLACE"),
 });
 
@@ -92,6 +93,6 @@ export const journalSchema = z.object({
   coverMediaId: z.coerce.number().int().optional().nullable(),
   ogMediaId: z.coerce.number().int().optional().nullable(),
   metaTitle: z.string().optional().nullable(),
-  metaDescription: z.string().optional().nullable(),
+  metaDescription: metaDescriptionSchema.optional().nullable(),
   trailId: z.coerce.number().int().optional().nullable(),
 });

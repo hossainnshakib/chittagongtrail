@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
+import { statusFromIntent } from "@/lib/admin-content-intent";
+import { safeAdminReturnTo } from "@/lib/admin-return-to";
 import { validateImageMediaId } from "@/lib/media-validation";
 import { ContentStatus, JournalType } from "@prisma/client";
 
@@ -26,7 +28,7 @@ export async function createFoodPost(
     slug: formData.get("slug"),
     excerpt: formData.get("excerpt"),
     content: formData.get("content"),
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -101,7 +103,7 @@ export async function createFoodPost(
     return { success: false, error: "Failed to create food post" };
   }
 
-  redirect("/admin/food");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/food"));
 }
 
 export async function updateFoodPost(
@@ -116,7 +118,7 @@ export async function updateFoodPost(
     slug: formData.get("slug"),
     excerpt: formData.get("excerpt"),
     content: formData.get("content"),
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -206,5 +208,5 @@ export async function updateFoodPost(
     return { success: false, error: "Failed to update food post" };
   }
 
-  redirect("/admin/food");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/food"));
 }

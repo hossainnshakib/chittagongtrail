@@ -91,4 +91,23 @@ describe("Tiptap Rich Text Editor & On-Page SEO Polish Tests", () => {
       assert.strictEqual(parsedJournal.data.content, "<h2>Journey</h2><p>Rich story content.</p>");
     }
   });
+
+  test("metaDescription enforces one 160-character limit for trails and stories", () => {
+    const trailBase = {
+      name: "Boga Lake Trail",
+      slug: "boga-lake-trail",
+      description: "<p>Rich editorial description.</p>",
+      district: "BANDARBAN",
+    };
+    const journalBase = {
+      title: "Hill Story",
+      slug: "hill-story",
+      content: "<p>Story.</p>",
+    };
+
+    assert.strictEqual(trailSchema.safeParse({ ...trailBase, metaDescription: "a".repeat(160) }).success, true);
+    assert.strictEqual(trailSchema.safeParse({ ...trailBase, metaDescription: "a".repeat(161) }).success, false);
+    assert.strictEqual(journalSchema.safeParse({ ...journalBase, metaDescription: "a".repeat(160) }).success, true);
+    assert.strictEqual(journalSchema.safeParse({ ...journalBase, metaDescription: "a".repeat(161) }).success, false);
+  });
 });

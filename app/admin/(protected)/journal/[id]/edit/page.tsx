@@ -2,13 +2,18 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { JournalType } from "@prisma/client";
 import JournalForm from "@/components/admin/JournalForm";
+import { safeAdminReturnTo } from "@/lib/admin-return-to";
 
 export default async function EditJournalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { id } = await params;
+  const { returnTo } = await searchParams;
+  const safeReturnTo = safeAdminReturnTo(returnTo, "/admin/journal");
   const postId = parseInt(id, 10);
 
   if (isNaN(postId)) {
@@ -67,6 +72,7 @@ export default async function EditJournalPage({
         trails={trails}
         mode="edit"
         contentType="STORY"
+        returnTo={safeReturnTo}
         initialCover={initialCover}
         initialOg={initialOg}
       />

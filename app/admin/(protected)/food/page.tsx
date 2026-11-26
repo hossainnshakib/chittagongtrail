@@ -68,8 +68,11 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
   };
 
   const buildPageUrl = (p: number) => buildQueryString({ page: p > 1 ? String(p) : "" });
+  const listHref = buildQueryString({});
+  const clearHref = "/admin/food";
+  const editHref = (id: number) => `/admin/food/${id}/edit?returnTo=${encodeURIComponent(listHref)}`;
 
-  const hasFilters = search || status !== "ALL" || isFeatured !== "ALL" || trailId !== "ALL";
+  const hasFilters = Boolean(search) || status !== "ALL" || isFeatured !== "ALL" || trailId !== "ALL" || sortBy !== "updatedAt" || sortOrder !== "desc";
 
   return (
     <div style={{ "--admin-content-max-width": "1400px" } as React.CSSProperties}>
@@ -79,7 +82,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
         primaryAction={<AdminButton href="/admin/food/new" variant="primary" size="sm">New Food Post</AdminButton>}
       />
 
-      <AdminContentToolbar>
+      <AdminContentToolbar key={JSON.stringify(params)}>
         <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <AdminSearchInput defaultValue={search} placeholder="Search title, slug, excerpt..." />
         </div>
@@ -127,7 +130,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
           />
           <button type="submit" className="admin-btn admin-btn-primary admin-btn-sm">Apply</button>
           {hasFilters && (
-            <Link href="/admin/food" className="admin-btn admin-btn-secondary admin-btn-sm">Clear</Link>
+            <Link href={clearHref} className="admin-btn admin-btn-secondary admin-btn-sm">Clear filters</Link>
           )}
         </div>
       </AdminContentToolbar>
@@ -142,7 +145,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
           description={hasFilters ? "Try adjusting your search or filters." : "Create your first food post to get started."}
           action={
             hasFilters ? (
-              <Link href="/admin/food" className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
+              <Link href={clearHref} className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
             ) : (
               <AdminButton href="/admin/food/new" variant="primary" size="sm">Create First Food Post</AdminButton>
             )
@@ -180,7 +183,7 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                         <AdminMediaThumbnail url={post.coverMedia?.secureUrl ?? null} alt={post.title} size={40} />
                       </td>
                       <td>
-                        <Link href={`/admin/food/${post.id}/edit`} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
+                        <Link href={editHref(post.id)} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
                           {post.title}
                         </Link>
                       </td>
@@ -221,8 +224,8 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                       </td>
                       <td>
                         <AdminRowActions actions={[
-                          { label: "Edit", href: `/admin/food/${post.id}/edit` },
-                          ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
+                          { label: "Edit", href: editHref(post.id) },
+                          ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}`, newTab: true }] : []),
                         ]} />
                       </td>
                     </tr>
@@ -252,8 +255,8 @@ export default async function AdminFoodPage({ searchParams }: AdminFoodPageProps
                   updatedAt={post.updatedAt}
                   seoStatus={<AdminSeoStatus status={seo.status} missingFields={seo.missingFields} />}
                   actions={[
-                    { label: "Edit", href: `/admin/food/${post.id}/edit` },
-                    ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}` }] : []),
+                    { label: "Edit", href: editHref(post.id) },
+                    ...(post.status === "PUBLISHED" ? [{ label: "View", href: `/food/${post.slug}`, newTab: true }] : []),
                   ]}
                 />
               );

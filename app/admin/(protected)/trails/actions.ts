@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { trailSchema } from "@/lib/validation";
+import { statusFromIntent } from "@/lib/admin-content-intent";
+import { safeAdminReturnTo } from "@/lib/admin-return-to";
 import { validateAllMediaIds } from "@/lib/media-validation";
 import { ContentStatus, District, TerrainType, PlaceType } from "@prisma/client";
 
@@ -32,7 +34,7 @@ export async function createTrail(
     terrainType: formData.get("terrainType") || null,
     latitude: formData.get("latitude") !== "" ? formData.get("latitude") : null,
     longitude: formData.get("longitude") !== "" ? formData.get("longitude") : null,
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -123,7 +125,7 @@ export async function createTrail(
     return { success: false, error: "Failed to create trail" };
   }
 
-  redirect("/admin/trails");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/trails"));
 }
 
 export async function updateTrail(
@@ -144,7 +146,7 @@ export async function updateTrail(
     terrainType: formData.get("terrainType") || null,
     latitude: formData.get("latitude") !== "" ? formData.get("latitude") : null,
     longitude: formData.get("longitude") !== "" ? formData.get("longitude") : null,
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -254,7 +256,7 @@ export async function updateTrail(
     return { success: false, error: "Failed to update trail" };
   }
 
-  redirect("/admin/trails");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/trails"));
 }
 
 export async function deleteTrail(id: number): Promise<TrailActionResult> {

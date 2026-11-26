@@ -60,12 +60,15 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
       if (!v || v === "ALL" || v === "") sp.delete(k); else sp.set(k, v);
     }
     const s = sp.toString();
-    return s ? `?${s}` : "/admin/trails";
+    return s ? `/admin/trails?${s}` : "/admin/trails";
   };
 
   const buildPageUrl = (p: number) => buildQueryString({ page: p > 1 ? String(p) : "" });
+  const listHref = buildQueryString({});
+  const clearHref = "/admin/trails";
+  const editHref = (id: number) => `/admin/trails/${id}/edit?returnTo=${encodeURIComponent(listHref)}`;
 
-  const hasFilters = search || district !== "ALL" || status !== "ALL" || isFeatured !== "ALL" || terrainType !== "ALL" || placeType !== "ALL";
+  const hasFilters = Boolean(search) || district !== "ALL" || status !== "ALL" || isFeatured !== "ALL" || terrainType !== "ALL" || placeType !== "ALL" || sortBy !== "updatedAt" || sortOrder !== "desc";
 
   return (
     <div style={{ "--admin-content-max-width": "1400px" } as React.CSSProperties}>
@@ -75,7 +78,7 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
         primaryAction={<AdminButton href="/admin/trails/new" variant="primary" size="sm">New Trail</AdminButton>}
       />
 
-      <AdminContentToolbar>
+      <AdminContentToolbar key={JSON.stringify(params)}>
         <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <AdminSearchInput defaultValue={search} placeholder="Search name, slug, area..." />
         </div>
@@ -152,7 +155,7 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
           />
           <button type="submit" className="admin-btn admin-btn-primary admin-btn-sm">Apply</button>
           {hasFilters && (
-            <Link href="/admin/trails" className="admin-btn admin-btn-secondary admin-btn-sm">Clear</Link>
+            <Link href={clearHref} className="admin-btn admin-btn-secondary admin-btn-sm">Clear filters</Link>
           )}
         </div>
       </AdminContentToolbar>
@@ -167,7 +170,7 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
           description={hasFilters ? "Try adjusting your search or filters." : "Create your first trail to get started."}
           action={
             hasFilters ? (
-              <Link href="/admin/trails" className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
+              <Link href={clearHref} className="admin-btn admin-btn-secondary admin-btn-sm">Clear Filters</Link>
             ) : (
               <AdminButton href="/admin/trails/new" variant="primary" size="sm">Create First Trail</AdminButton>
             )
@@ -205,7 +208,7 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
                         <AdminMediaThumbnail url={trail.coverMedia?.secureUrl ?? null} alt={trail.name} size={40} />
                       </td>
                       <td>
-                        <Link href={`/admin/trails/${trail.id}/edit`} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
+                        <Link href={editHref(trail.id)} className="font-medium hover:underline" style={{ color: "var(--admin-text-primary)" }}>
                           {trail.name}
                         </Link>
                       </td>
@@ -235,9 +238,9 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
                       </td>
                       <td>
                         <AdminRowActions actions={[
-                          { label: "Edit", href: `/admin/trails/${trail.id}/edit` },
-                          { label: "Preview", href: `/admin/trails/${trail.id}/preview` },
-                          ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}` }] : []),
+                          { label: "Edit", href: editHref(trail.id) },
+                          { label: "Preview", href: `/admin/trails/${trail.id}/preview`, newTab: true },
+                          ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}`, newTab: true }] : []),
                         ]} />
                       </td>
                     </tr>
@@ -267,9 +270,9 @@ export default async function AdminTrailsPage({ searchParams }: AdminTrailsPageP
                   updatedAt={trail.updatedAt}
                   seoStatus={<AdminSeoStatus status={seo.status} missingFields={seo.missingFields} />}
                   actions={[
-                    { label: "Edit", href: `/admin/trails/${trail.id}/edit` },
-                    { label: "Preview", href: `/admin/trails/${trail.id}/preview` },
-                    ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}` }] : []),
+                    { label: "Edit", href: editHref(trail.id) },
+                    { label: "Preview", href: `/admin/trails/${trail.id}/preview`, newTab: true },
+                    ...(trail.status === "PUBLISHED" ? [{ label: "View", href: `/trails/${trail.slug}`, newTab: true }] : []),
                   ]}
                 />
               );

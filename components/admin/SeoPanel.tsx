@@ -42,11 +42,11 @@ export default function SeoPanel({
   const descStatus =
     descLen === 0
       ? { text: "Will fallback to excerpt", color: "text-[#8D6E63]" }
-      : descLen >= 120 && descLen <= 165
+      : descLen > 160
+      ? { text: `Over limit (${descLen}/160)`, color: "text-red-700" }
+      : descLen >= 120
       ? { text: `Optimal (${descLen}/160)`, color: "text-green-700" }
-      : descLen < 120
-      ? { text: `Too short (${descLen}/160 recommended)`, color: "text-amber-700" }
-      : { text: `Too long (${descLen}/160 recommended)`, color: "text-red-700" };
+      : { text: `Too short (${descLen}/160 recommended)`, color: "text-amber-700" };
 
   const fullCanonicalUrl = isSiteUrlConfigured ? getSiteUrl(canonicalPath) : "";
 
@@ -93,6 +93,7 @@ export default function SeoPanel({
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder={defaultDescription}
               rows={3}
+              maxLength={160}
               className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
             />
           </div>

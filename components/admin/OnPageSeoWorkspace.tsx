@@ -12,6 +12,8 @@ interface OnPageSeoWorkspaceProps {
   initialMetaDescription?: string | null;
   coverUrl?: string | null;
   status?: string;
+  metaTitleError?: string;
+  metaDescriptionError?: string;
 }
 
 export default function OnPageSeoWorkspace({
@@ -23,6 +25,8 @@ export default function OnPageSeoWorkspace({
   initialMetaDescription = "",
   coverUrl,
   status = "DRAFT",
+  metaTitleError,
+  metaDescriptionError,
 }: OnPageSeoWorkspaceProps) {
   const [metaTitle, setMetaTitle] = useState(initialMetaTitle || "");
   const [metaDescription, setMetaDescription] = useState(initialMetaDescription || "");
@@ -50,11 +54,11 @@ export default function OnPageSeoWorkspace({
   const descStatus =
     descLen === 0
       ? { label: "Fallback: excerpt", style: "text-[#8D6E63]" }
-      : descLen >= 120 && descLen <= 165
+      : descLen > 160
+      ? { label: `Over limit (${descLen}/160)`, style: "text-red-600" }
+      : descLen >= 120
       ? { label: `Recommended (${descLen}/160)`, style: "text-green-700" }
-      : descLen < 120
-      ? { label: `Short (${descLen}/160)`, style: "text-amber-700" }
-      : { label: `Long (${descLen}/160)`, style: "text-red-600" };
+      : { label: `Short (${descLen}/160)`, style: "text-amber-700" };
 
   const canonicalUrl = slugPreview && isSiteUrlConfigured ? getSiteUrl(slugPreview) : "";
 
@@ -90,6 +94,7 @@ export default function OnPageSeoWorkspace({
               placeholder={contentTitle || "Page title..."}
               className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
             />
+            {metaTitleError && <p className="text-red-600 text-xs mt-0.5">{metaTitleError}</p>}
           </div>
 
           {/* Meta Description */}
@@ -104,8 +109,10 @@ export default function OnPageSeoWorkspace({
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder={contentExcerpt || "Describe this page..."}
               rows={3}
-              className="w-full px-2.5 py-1.5 text-sm border border-[#D7C9B8] rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882]"
+              maxLength={160}
+              className={`w-full px-2.5 py-1.5 text-sm border rounded bg-white text-[#5D4037] focus:outline-none focus:ring-2 focus:ring-[#C9A882] ${descLen > 160 ? "border-red-500" : "border-[#D7C9B8]"}`}
             />
+            {metaDescriptionError && <p className="text-red-600 text-xs mt-0.5">{metaDescriptionError}</p>}
           </div>
 
           {/* Canonical URL */}

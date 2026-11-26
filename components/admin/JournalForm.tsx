@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import GalleryManager from "@/components/admin/media/GalleryManager";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import CoverImageModule from "@/components/admin/CoverImageModule";
 import OnPageSeoWorkspace from "@/components/admin/OnPageSeoWorkspace";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 import type { MediaAssetData } from "@/components/admin/media/types";
 
 interface JournalFormProps {
@@ -42,6 +43,7 @@ interface JournalFormProps {
   initialCover?: MediaAssetData | null;
   initialOg?: MediaAssetData | null;
   initialGallery?: MediaAssetData[];
+  returnTo?: string;
 }
 
 const initialState: JournalActionResult = { success: false };
@@ -54,6 +56,7 @@ export default function JournalForm({
   initialCover,
   initialOg,
   initialGallery,
+  returnTo,
 }: JournalFormProps) {
   const router = useRouter();
 
@@ -84,6 +87,10 @@ export default function JournalForm({
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [trailId, setTrailId] = useState<number | null>(post?.trailId ?? null);
+  const [isDirty, setIsDirty] = useState(false);
+  const saveFailed = !state.success && Boolean(state.error || state.errors);
+
+  useUnsavedChangesWarning(isDirty || saveFailed);
 
   const handleSlugGenerate = () => {
     if (title) {
@@ -107,7 +114,14 @@ export default function JournalForm({
   const seoContentType = contentType === "FOOD" ? "food" as const : "story" as const;
 
   return (
-    <form action={formAction} className="space-y-0">
+    <form
+      action={formAction}
+      className="space-y-0"
+      onChange={() => setIsDirty(true)}
+      onSubmit={() => setIsDirty(false)}
+    >
+      <input type="hidden" name="returnTo" value={returnTo || ""} />
+      <input type="hidden" name="currentStatus" value={post?.status ?? "DRAFT"} />
       <input type="hidden" name="coverMediaId" value={coverAsset?.id || ""} />
       <input type="hidden" name="ogMediaId" value={effectiveOgId} />
       <input type="hidden" name="galleryIds" value={galleryAssets.map((a) => a.id).join(",")} />
@@ -248,20 +262,45 @@ export default function JournalForm({
               <p className="text-[11px] leading-relaxed text-[#8D6E63]">
                 Homepage placement is managed in the {contentType === "FOOD" ? "Featured Food" : "Featured Stories"} workspace.
               </p>
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <button
                   type="submit"
+                  name="intent"
+                  value="save-draft"
                   disabled={isPending}
+                  onClick={() => setStatus("DRAFT")}
                   className="w-full bg-[#C9A882] hover:bg-[#D4956A] text-[#3E2723] font-medium py-2 px-4 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {isPending
-                    ? mode === "create" ? "Creating..." : "Saving..."
-                    : mode === "create" ? `Create ${contentType === "FOOD" ? "Food Post" : "Story"}` : "Save Changes"}
+                  {isPending ? "Saving..." : "Save Draft"}
                 </button>
                 <button
+                  type="submit"
+                  name="intent"
+                  value="publish"
+                  disabled={isPending}
+                  onClick={() => setStatus("PUBLISHED")}
+                  className="w-full bg-[#3E2723] hover:bg-[#5D4037] text-[#FDF5E6] font-medium py-2 px-4 rounded text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isPending ? "Publishing..." : "Publish"}
+                </button>
+                <button
+                  type="submit"
+                  name="intent"
+                  value="archive"
+                  disabled={isPending}
+                  onClick={() => setStatus("ARCHIVED")}
+                  className="w-full bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-2 px-4 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
+                >
+                  Archive
+                </button>
+                <p className="text-[11px] leading-relaxed text-[#8D6E63]">Current status: {status}</p>
+                <button
                   type="button"
-                  onClick={() => router.push(contentType === "FOOD" ? "/admin/food" : "/admin/journal")}
-                  className="w-full mt-2 bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-2 px-4 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
+                  onClick={() => {
+                    if ((isDirty || saveFailed) && !window.confirm("Discard unsaved changes?")) return;
+                    router.push(returnTo || (contentType === "FOOD" ? "/admin/food" : "/admin/journal"));
+                  }}
+                  className="w-full bg-white hover:bg-[#E8DCC8] text-[#5D4037] font-medium py-2 px-4 rounded text-sm border border-[#D7C9B8] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -300,6 +339,8 @@ export default function JournalForm({
           initialMetaDescription={post?.metaDescription}
           coverUrl={coverAsset?.secureUrl}
           status={status}
+          metaTitleError={state.errors?.metaTitle}
+          metaDescriptionError={state.errors?.metaDescription}
         />
       </div>
     </form>

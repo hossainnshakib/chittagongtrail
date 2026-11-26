@@ -4,6 +4,7 @@ import { PageSeoSetting, HomepageSectionSetting } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "./prisma";
 import { sanitizeContent } from "./validation";
+import { firstZodFieldError, metaDescriptionSchema } from "./meta-description";
 import { validateImageMediaId } from "./media-validation";
 import { revalidatePath } from "next/cache";
 import { revalidatePublicContent } from "./revalidation";
@@ -164,7 +165,7 @@ const pageSeoUpdateSchema = z.object({
   visibleTitle: z.string().trim().min(1).max(200),
   visibleDescription: z.string().trim().min(1).max(500),
   metaTitle: z.string().trim().max(255).refine(noHtml, "HTML is not allowed in meta titles"),
-  metaDescription: z.string().trim().max(500).refine(noHtml, "HTML is not allowed in meta descriptions"),
+  metaDescription: metaDescriptionSchema.refine(noHtml, "HTML is not allowed in meta descriptions"),
   useVisibleTitleAsMetaTitle: z.boolean(),
   useVisibleDescriptionAsMetaDescription: z.boolean(),
   ogTitle: z.string().trim().max(255).refine(noHtml, "HTML is not allowed in OG titles"),
@@ -177,7 +178,12 @@ const pageSeoUpdateSchema = z.object({
 
 export async function updatePageSeoSettings(input: unknown) {
   if (!Array.isArray(input)) throw new Error("Page SEO settings must be an array");
-  const parsed = input.map((item) => pageSeoUpdateSchema.parse(item));
+  let parsed: z.infer<typeof pageSeoUpdateSchema>[];
+  try {
+    parsed = input.map((item) => pageSeoUpdateSchema.parse(item));
+  } catch (error) {
+    throw new Error(firstZodFieldError(error, "Invalid page SEO settings"));
+  }
   const seen = new Set<string>();
   if (parsed.length !== PUBLIC_PAGE_DEFINITIONS.length) throw new Error("All public pages must be supplied");
 
@@ -186,6 +192,12 @@ export async function updatePageSeoSettings(input: unknown) {
     seen.add(page.pageKey);
     const definition = getPageDefinition(page.pageKey);
     if (!definition) throw new Error("Unknown public page key");
+    if (
+      page.useVisibleDescriptionAsMetaDescription &&
+      page.visibleDescription.trim().length > 160
+    ) {
+      throw new Error(`${page.pageKey}.visibleDescription: Meta description fallback must be 160 characters or fewer`);
+    }
     if (page.ogMediaId !== null) {
       const validation = await validateImageMediaId(page.ogMediaId, "OG media");
       if (!validation.valid) throw new Error(validation.error);

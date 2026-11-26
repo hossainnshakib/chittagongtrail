@@ -29,6 +29,8 @@ export default function CoverImageModule({
   const [altText, setAltText] = useState(asset?.altText || "");
   const [savingAlt, setSavingAlt] = useState(false);
   const [altSaved, setAltSaved] = useState(false);
+  const [altError, setAltError] = useState<string | null>(null);
+  const [altKeptFromPrevious, setAltKeptFromPrevious] = useState(false);
   const [isDecorative, setIsDecorative] = useState(!asset?.altText);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -45,22 +47,33 @@ export default function CoverImageModule({
           altText: isDecorative ? "" : altText.trim(),
         }),
       });
-      if (res.ok) {
-        onAssetChange({ ...asset, altText: isDecorative ? null : altText.trim() || null });
-        setAltSaved(true);
-        setTimeout(() => setAltSaved(false), 2000);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAltError(data.error || "Failed to save alt text");
+        return;
       }
+      onAssetChange({ ...asset, altText: isDecorative ? null : altText.trim() || null });
+      setAltError(null);
+      setAltKeptFromPrevious(false);
+      setAltSaved(true);
+      setTimeout(() => setAltSaved(false), 2000);
     } catch {
-      // silently fail
+      setAltError("Failed to save alt text");
     } finally {
       setSavingAlt(false);
     }
   }, [asset, altText, isDecorative, onAssetChange]);
 
   const handleSelect = (a: MediaAssetData) => {
-    onAssetChange(a);
-    setAltText(a.altText || "");
-    setIsDecorative(!a.altText);
+    const keptDraft = !a.altText && altText.trim();
+    onAssetChange(keptDraft ? { ...a, altText: altText.trim() } : a);
+    if (!a.altText && keptDraft) {
+      setAltKeptFromPrevious(true);
+    } else {
+      setAltText(a.altText || "");
+      setIsDecorative(!a.altText);
+      setAltKeptFromPrevious(false);
+    }
     setPickerOpen(false);
   };
 
@@ -160,13 +173,19 @@ export default function CoverImageModule({
               type="checkbox"
               id="coverIsDecorative"
               checked={isDecorative}
-              onChange={(e) => { setIsDecorative(e.target.checked); if (e.target.checked) setAltText(""); }}
+              onChange={(e) => setIsDecorative(e.target.checked)}
               className="w-3 h-3 text-[#C9A882] border-[#D7C9B8] rounded focus:ring-[#C9A882]"
             />
             <label htmlFor="coverIsDecorative" className="text-[11px] text-[#8D6E63]">Decorative image</label>
           </div>
           {!isDecorative && !altText.trim() && (
             <p className="text-[10px] text-amber-700">Add alt text for accessibility and SEO.</p>
+          )}
+          {altKeptFromPrevious && (
+            <p className="text-[10px] text-blue-700">Alt text kept from previous image — review it.</p>
+          )}
+          {altError && (
+            <p role="alert" className="text-[10px] text-red-600">{altError}</p>
           )}
           <div className="flex items-center gap-2">
             <button
@@ -175,7 +194,7 @@ export default function CoverImageModule({
               disabled={savingAlt || (!isDecorative && !altText.trim())}
               className="px-2.5 py-1 text-[11px] bg-[#5D4037] hover:bg-[#4E342E] text-white rounded transition-colors cursor-pointer disabled:opacity-50"
             >
-              {savingAlt ? "Saving..." : altSaved ? "Saved" : "Save Alt Text"}
+              {altError ? "Retry" : savingAlt ? "Saving..." : altSaved ? "Saved" : "Save Alt Text"}
             </button>
             {asset && (
               <p className="text-[10px] text-[#8D6E63] italic">

@@ -6,6 +6,7 @@ export interface AdminRowAction {
   onClick?: () => void;
   variant?: "default" | "primary" | "danger";
   disabled?: boolean;
+  newTab?: boolean;
 }
 
 export default function AdminRowActions({ actions }: { actions: AdminRowAction[] }) {
@@ -19,8 +20,8 @@ export default function AdminRowActions({ actions }: { actions: AdminRowAction[]
               href={action.href}
               className={`admin-content-row-action admin-content-row-action-${action.variant || "default"}`}
               aria-label={action.label}
-              target="_blank"
-              rel="noopener noreferrer"
+              target={action.newTab ? "_blank" : undefined}
+              rel={action.newTab ? "noopener noreferrer" : undefined}
             >
               {action.label}
             </Link>

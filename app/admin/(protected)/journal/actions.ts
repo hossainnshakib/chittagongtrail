@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePublicContent } from "@/lib/revalidation";
 import { requireAdmin } from "@/lib/auth";
 import { journalSchema } from "@/lib/validation";
+import { statusFromIntent } from "@/lib/admin-content-intent";
+import { safeAdminReturnTo } from "@/lib/admin-return-to";
 import { validateImageMediaId } from "@/lib/media-validation";
 import { ContentStatus, JournalType } from "@prisma/client";
 
@@ -26,7 +28,7 @@ export async function createJournalPost(
     slug: formData.get("slug"),
     excerpt: formData.get("excerpt"),
     content: formData.get("content"),
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -101,7 +103,7 @@ export async function createJournalPost(
     return { success: false, error: "Failed to create journal post" };
   }
 
-  redirect("/admin/journal");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/journal"));
 }
 
 export async function updateJournalPost(
@@ -116,7 +118,7 @@ export async function updateJournalPost(
     slug: formData.get("slug"),
     excerpt: formData.get("excerpt"),
     content: formData.get("content"),
-    status: formData.get("status") || "DRAFT",
+    status: statusFromIntent(formData.get("intent"), formData.get("currentStatus") || "DRAFT"),
     publishedAt: formData.get("publishedAt") ? new Date(formData.get("publishedAt") as string) : null,
     coverMediaId: formData.get("coverMediaId") !== "" ? formData.get("coverMediaId") : null,
     ogMediaId: formData.get("ogMediaId") !== "" ? formData.get("ogMediaId") : null,
@@ -206,7 +208,7 @@ export async function updateJournalPost(
     return { success: false, error: "Failed to update journal post" };
   }
 
-  redirect("/admin/journal");
+  redirect(safeAdminReturnTo(formData.get("returnTo"), "/admin/journal"));
 }
 
 export async function deleteJournalPost(id: number): Promise<JournalActionResult> {

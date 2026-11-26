@@ -22,7 +22,7 @@ export default function AdminMobileContentCard({
   metaInfo?: string;
   updatedAt: Date;
   seoStatus?: React.ReactNode;
-  actions: Array<{ label: string; href: string }>;
+  actions: Array<{ label: string; href: string; newTab?: boolean }>;
 }) {
   const statusClass =
     status === "PUBLISHED"
@@ -76,7 +76,13 @@ export default function AdminMobileContentCard({
       </div>
       <div className="admin-content-card-actions">
         {actions.map((a) => (
-          <Link key={a.href} href={a.href} className="admin-content-card-action">
+          <Link
+            key={a.href}
+            href={a.href}
+            className="admin-content-card-action"
+            target={a.newTab ? "_blank" : undefined}
+            rel={a.newTab ? "noopener noreferrer" : undefined}
+          >
             {a.label}
           </Link>
         ))}

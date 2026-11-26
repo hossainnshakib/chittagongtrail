@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { SiteSettings, MediaAsset, HeroVideoProvider } from "@prisma/client";
 import { z } from "zod";
 import { sanitizeContent } from "./validation";
+import { firstZodFieldError, metaDescriptionSchema } from "./meta-description";
 import { revalidatePath } from "next/cache";
 import { revalidatePublicContent } from "./revalidation";
 import { CLOUDINARY_CLOUD_NAME, ALLOWED_UPLOAD_FOLDERS } from "./cloudinary";
@@ -61,7 +62,7 @@ export const siteSettingsSchema = z.object({
   siteName: z.string().min(1, "Site name is required").max(100).transform((v) => v.trim()),
   siteTagline: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
   defaultMetaTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")),
-  defaultMetaDescription: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in meta descriptions"),
+  defaultMetaDescription: metaDescriptionSchema.optional().nullable().refine((v) => !/[<>]/.test(v || ""), "HTML is not allowed in meta descriptions"),
   defaultOgTitle: z.string().max(255).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG titles"),
   defaultOgDescription: z.string().max(500).optional().nullable().transform((v) => (v ? v.trim() : "")).refine((v) => !/[<>]/.test(v), "HTML is not allowed in OG descriptions"),
   defaultOgMediaId: z.coerce.number().int().optional().nullable(),
@@ -438,7 +439,12 @@ async function validateAndResolveHeroVideo(
 }
 
 export async function updateSiteSettings(input: SiteSettingsInput) {
-  const parsed = siteSettingsSchema.parse(input);
+  let parsed: z.infer<typeof siteSettingsSchema>;
+  try {
+    parsed = siteSettingsSchema.parse(input);
+  } catch (error) {
+    throw new Error(firstZodFieldError(error, "Invalid site settings"));
+  }
 
   await validateSiteSettingsMedia(parsed.heroMediaId, parsed.seasonalMediaId, parsed.defaultOgMediaId, parsed.footerLogoMediaId);
 
