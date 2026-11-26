@@ -1,10 +1,11 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PublicLayout } from "@/components/layout";
 import { Container, Button } from "@/components/ui";
 import { getTrailBySlug, getTrails } from "@/lib/data";
+import { resolveLegacyTrailSlug } from "@/lib/canonical-links";
 import {
   buildDynamicContentMetadata,
   buildTouristAttractionJsonLd,
@@ -21,7 +22,8 @@ export async function generateMetadata({
   params,
 }: TrailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const trail = await getTrailBySlug(slug);
+  const canonicalSlug = (await resolveLegacyTrailSlug(slug)) ?? slug;
+  const trail = await getTrailBySlug(canonicalSlug);
 
   if (!trail) {
     return { title: "Trail Not Found" };
@@ -53,6 +55,11 @@ export async function generateStaticParams() {
 
 export default async function TrailPage({ params }: TrailPageProps) {
   const { slug } = await params;
+  const canonicalSlug = (await resolveLegacyTrailSlug(slug)) ?? slug;
+  if (canonicalSlug !== slug) {
+    redirect(`/trails/${canonicalSlug}`);
+  }
+
   const trail = await getTrailBySlug(slug);
 
   if (!trail) {
